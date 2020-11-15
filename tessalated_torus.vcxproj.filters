@@ -1,0 +1,132 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\DTOs">
+      <UniqueIdentifier>{42a04a97-be36-4ea6-a21b-08035e473f8f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Rendering">
+      <UniqueIdentifier>{5f819229-c3c9-440f-aa3c-2fc7b330dd4a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Rendering\Models">
+      <UniqueIdentifier>{ff311be2-ecd8-4b6f-aebc-99ccf0e102b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Utils">
+      <UniqueIdentifier>{f3e8ece2-e5b1-43e1-a9bb-a4d1f4b3a4a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Constants">
+      <UniqueIdentifier>{e3ae95f2-cb79-42c4-98a3-068153d1f8a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Rendering\Utils">
+      <UniqueIdentifier>{ab82f5f7-7adf-4c7a-8ccd-0137a0d3a4a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HI">
+      <UniqueIdentifier>{229421fa-e782-441d-968e-e833dec9c37b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Control">
+      <UniqueIdentifier>{81a18a8d-55c1-4e60-9d25-656ad4f109a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Rendering\2D">
+      <UniqueIdentifier>{071c63ec-b48e-4b46-8e21-ade9bb1cbaa5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Rendering\3D">
+      <UniqueIdentifier>{646f8095-3f5c-4368-a8cf-0b57db15a5e5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="player.h">
+      <Filter>Source Files\DTOs</Filter>
+    </ClInclude>
+    <ClInclude Include="soldier.h">
+      <Filter>Source Files\DTOs</Filter>
+    </ClInclude>
+    <ClInclude Include="tree.h">
+      <Filter>Source Files\DTOs</Filter>
+    </ClInclude>
+    <ClInclude Include="data_supplier.h">
+      <Filter>Source Files\Rendering\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="soldier_data.h">
+      <Filter>Source Files\DTOs</Filter>
+    </ClInclude>
+    <ClInclude Include="model.h">
+      <Filter>Source Files\Rendering\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="constants.h">
+      <Filter>Source Files\Constants</Filter>
+    </ClInclude>
+    <ClInclude Include="type_traits.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="planet.h">
+      <Filter>Source Files\DTOs</Filter>
+    </ClInclude>
+    <ClInclude Include="hole.h">
+      <Filter>Source Files\DTOs</Filter>
+    </ClInclude>
+    <ClInclude Include="frame_data.h">
+      <Filter>Source Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="planet_entry.h">
+      <Filter>Source Files\DTOs</Filter>
+    </ClInclude>
+    <ClInclude Include="uniform_naming.h">
+      <Filter>Source Files\Rendering\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils.h">
+      <Filter>Source Files\Rendering\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="human_input.h">
+      <Filter>Source Files\HI</Filter>
+    </ClInclude>
+    <ClInclude Include="input_state.h">
+      <Filter>Source Files\HI</Filter>
+    </ClInclude>
+    <ClInclude Include="planet_model.h">
+      <Filter>Source Files\DTOs</Filter>
+    </ClInclude>
+    <ClInclude Include="scene.h">
+      <Filter>Source Files\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="timer.h">
+      <Filter>Source Files\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="font.h">
+      <Filter>Source Files\Rendering\2D</Filter>
+    </ClInclude>
+    <ClInclude Include="matrix_generator.h">
+      <Filter>Source Files\Rendering\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="camera.h">
+      <Filter>Source Files\Rendering\3D</Filter>
+    </ClInclude>
+    <ClInclude Include="model_renderer.h">
+      <Filter>Source Files\Rendering\3D</Filter>
+    </ClInclude>
+    <ClInclude Include="rendering_structs.h">
+      <Filter>Source Files\Rendering\3D</Filter>
+    </ClInclude>
+    <ClInclude Include="scene_renderer.h">
+      <Filter>Source Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="id_generator.h">
+      <Filter>Source Files\DTOs</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
