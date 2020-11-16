@@ -26,7 +26,14 @@ namespace my_math {
 		for(ret = 1; x != 0; ret *= exp, x--);
 		return ret;
 	}
+}
 
+namespace my_utils {
+
+	template<class T>
+	bool float_equal(T lhs, T rhs, double epsilon = 0.0001){
+		return fabs(lhs - rhs) < epsilon;
+	}
 }
 
 
@@ -61,7 +68,7 @@ namespace gl_wrapper {
 		
 		GLenum gl_error = glGetError();
 		if(gl_error != GL_NONE){
-			logger.warn("GL_ERROR [%s] -> glUniform3fv - loc = %d", get_enum_string(gl_error).c_str(), loc);
+			logger.warn("GL_ERROR [%s] -> glUniform3fv - loc = %d, vec3 = [%.3lf | %.3lf | %.3lf]", get_enum_string(gl_error).c_str(), loc, value.x, value.y, value.z);
 		}
 	}
 
@@ -333,7 +340,7 @@ namespace gl_wrapper {
 
 	struct Texture_2D{
 		typedef glm::vec2 Dimension;
-			static const GLenum BINDING_TARGET = GL_TEXTURE_2D;
+		static const GLenum BINDING_TARGET = GL_TEXTURE_2D;
 
 		static void tex_storage(int level, GLenum internal_format, const Dimension& size){
 			glTexStorage2D(BINDING_TARGET, level, internal_format, int(size.x), int(size.y));
@@ -341,6 +348,19 @@ namespace gl_wrapper {
 
 		static void fill_data(GLenum format, GLenum type, const GLvoid* pixels, const Dimension& offset, const Dimension& dim, GLint level){
 			glTexSubImage2D(BINDING_TARGET, level, int(offset.x), int(offset.y), int(dim.x), int(dim.y), format, type, pixels);
+		}
+	};
+	
+	struct Texture_Array_2D{
+		typedef glm::vec3 Dimension;
+		static const GLenum BINDING_TARGET = GL_TEXTURE_2D_ARRAY;
+
+		static void tex_storage(int level, GLenum internal_format, const Dimension& size){
+			glTexStorage3D(BINDING_TARGET, level, internal_format, int(size.x), int(size.y), int(size.z));
+		}
+
+		static void fill_data(GLenum format, GLenum type, const GLvoid* pixels, const Dimension& offset, const Dimension& dim, GLint level){
+			glTexSubImage3D(BINDING_TARGET, level, int(offset.x), int(offset.y), int(offset.z), int(dim.x), int(dim.y), int(dim.z), format, type, pixels);
 		}
 	};
 
@@ -377,15 +397,21 @@ namespace gl_wrapper {
 			gen_texture();
 		}
 
+		inline texture(texture<Type>&& rhs) :
+			name(rhs.name),
+			binding_target(rhs.binding_target),
+			size(rhs.size),
+			internal_format(rhs.internal_format),
+			levels(rhs.levels)
+		{
+			rhs.name = -1;
+		}
+
 		inline ~texture(){
-			glDeleteTextures(1, &name);
+			if (name != -1 && name)
+				glDeleteTextures(1, &name);
 		}
 
-
-/*		inline texture(const char* const file_name){
-		
-		}
-		*/
 
 		inline void resize(const Dimension& size, GLenum internal_format = GL_NONE, int mipmap_levels = -1){
 			if(internal_format != GL_NONE)
@@ -405,8 +431,7 @@ namespace gl_wrapper {
 			if(glm::length(dim) < 0.01)
 				dim = size;
 
-			
-
+		
 			Type::fill_data(format, type, pixels, offset, dim, level);
 			GLenum error = glGetError();
 			if(error != GL_NONE){
@@ -458,7 +483,18 @@ namespace gl_wrapper {
 
 		inline void bind_unit(unsigned int unit){
 			glActiveTexture(GL_TEXTURE0 + unit);
+			
+			GLenum gl_error = glGetError();
+			if(gl_error != GL_ZERO){
+				printf("gl active texture error = %X -> [%s]\n", gl_error, gl_wrapper::get_enum_string(gl_error).c_str());
+			}
+
 			glBindTexture(binding_target, name);
+
+			gl_error = glGetError();
+			if(gl_error != GL_ZERO){
+				printf("gl bind texture error = %X -> [%s]\n", gl_error, gl_wrapper::get_enum_string(gl_error).c_str());
+			}
 		}
 private:
 

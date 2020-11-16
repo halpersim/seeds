@@ -117,13 +117,13 @@ int main() {
 	Control::scene scene(width, height);
 	Control::timer timer;
 
-	printf("GL_VERSION = [%s]", glGetString(GL_VERSION));
+	printf("GL_VERSION = [%s]\n", glGetString(GL_VERSION));
 //	printf("thread id = %X\n", std::this_thread::get_id());
 
 	const float bg[] = { 0.2f, 0.2f, 0.2f, 1.f };
 	const float& one = 1.f;
 	GLenum error;
-	Rendering::_2D::font font(Rendering::_2D::font::CONSOLAS, 20.f, glm::vec3(1.f));
+	Rendering::_2D::font font(Rendering::_2D::font::CONSOLAS, glm::vec3(1.f), 20.f);
 	std::string diff = "";
 	std::stringstream ss;
 	double d = 0.01;
@@ -141,11 +141,12 @@ int main() {
 		scene.update(timer.diff);
 		scene.render(cam);
 
-		font.render_string(diff, glm::vec2(0.f, 0.f));
+	//	font.render_string_new(diff, glm::vec2(0.f, 0.f));
 
 		ss.str("");
-		ss << "Advance vam owarn string = " << font.string_advance(diff);
-		font.render_string(ss.str(), glm::vec2(0.f, font.vertical_advance()));
+		ss << diff << "\nAdvance vam owarn string = " << font.string_advance(diff) << " '\nlol";
+		std::string s = ss.str();
+		font.render_string_new(s, glm::vec2(0.f, 0.f));
 		
 
 		error = glGetError();

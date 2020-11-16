@@ -1,6 +1,6 @@
 #version 440 core
 
-#define R3
+#define R2
 
 #ifdef R1
 layout(local_size_x = 4, local_size_y = 2) in;

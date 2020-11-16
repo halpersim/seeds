@@ -1,15 +1,17 @@
 #version 440 core
 
-in vec2 tc;
+in vec3 tc;
 
-uniform sampler2D bitmap;
+uniform sampler2DArray bitmap;
 uniform vec3 color;
 
 out vec4 color_out;
 
 void main(){
 
-  color_out = vec4(color, texelFetch(bitmap, ivec2(tc), 0));
-  //  color_out =  vec4(vec3(texelFetch(bitmap, ivec2(tc), 0).x), 1);
-  //  color = vec4(vec3(texture(bitmap,vec2(tc.x, tc.y)).x), 1);
+  color_out = vec4(color, texelFetch(bitmap, ivec3(tc), 0));
+  //color_out = vec4(vec2(texelFetch(bitmap, ivec3(tc), 0)), 1, 1);
+ // color_out = vec4(texelFetch(bitmap, ivec3(tc), 0), 1);
+
+//  color_out = vec4(1);
 }

@@ -97,7 +97,7 @@ namespace Rendering{
 				std::list<glm::mat4> att_pallet = Rendering::MatrixGenerator::generate_matrix_pallet(att_list);
 				std::array<std::list<glm::mat4>, 2> att_tree_pallet = Rendering::MatrixGenerator::generate_matrix_pallet_tree(tree_att_list);
 				std::array<std::list<glm::mat4>, 2> def_tree_pallet = Rendering::MatrixGenerator::generate_matrix_pallet_tree(tree_def_list);
-			
+		
 				fbo.bind();
 				glClearBufferfv(GL_COLOR, 0, Constants::Rendering::BACKGROUND);
 				int zero = 0;
@@ -129,7 +129,6 @@ namespace Rendering{
 				final_render_program.Uniform<color>() = glm::vec3(0.f, 0.f, 0.8f);
 				final_render_program.use();
 				glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
 			}
 
 	private:
