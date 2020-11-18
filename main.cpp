@@ -17,18 +17,18 @@
 #include <time.h>
 #include <thread>
 #include <chrono>
+#include <functional>
 
-#include "scene.h"
+#include "game.h"
 #include "timer.h"
 
-#include "input_state.h"
+#include "user_input.h"
 #include "camera.h"
 #include "font.h"
 #include <chrono>
 
 
-HI::input_state input_state;
-Rendering::_3D::free_cam cam;
+HI::user_input user_input;
 
 void window_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void window_mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
@@ -107,19 +107,17 @@ int main() {
 	glDisable(GL_CULL_FACE);
 
 	glViewport(0, 0, 500, 500);
-
-	
-	glm::mat4 mvp = glm::perspective<float>(90, 1, 0.1, 100) *
-		glm::lookAt(glm::vec3(0, -10, 0), glm::vec3(0, 0, 0), glm::vec3(1, 0, 0));
 	
 	int height, width;
 	glfwGetWindowSize(window, &width, &height);
-	Control::scene scene(width, height);
+	Control::game game(width, height);
 	Control::timer timer;
-
-	printf("GL_VERSION = [%s]\n", glGetString(GL_VERSION));
-//	printf("thread id = %X\n", std::this_thread::get_id());
-
+	
+	{
+		using std::placeholders::_1;
+		user_input.add_listener(std::bind(&Control::game::process_user_input, &game, _1));
+	}
+	
 	const float bg[] = { 0.2f, 0.2f, 0.2f, 1.f };
 	const float& one = 1.f;
 	GLenum error;
@@ -128,6 +126,8 @@ int main() {
 	std::stringstream ss;
 	double d = 0.01;
 	int cnt = 1;
+
+	printf("GL_VERSION = [%s]\n", glGetString(GL_VERSION));
 	while (!glfwWindowShouldClose(window)) {
 		timer.start(glfwGetTime());
 //		printf("start rendering loop = %d\n", glGetError());
@@ -135,26 +135,28 @@ int main() {
 		glfwPollEvents();
 		glClearBufferfv(GL_COLOR, 0, bg);
 		glClearBufferfv(GL_DEPTH, 0, &one);
-		
-		cam.update(input_state, timer.diff);
 
-		scene.update(timer.diff);
-		scene.render(cam);
+		Rendering::frame_data::delta_time = timer.diff;
+		user_input.fire_events();
+
+		game.update();
+		game.render();
 
 	//	font.render_string_new(diff, glm::vec2(0.f, 0.f));
 
 		ss.str("");
-		ss << diff << "\nAdvance vam owarn string = " << font.string_advance(diff) << " '\nlol";
+		ss << diff;
 		std::string s = ss.str();
 		font.render_string_new(s, glm::vec2(0.f, 0.f));
 		
+	//	printf("%s\n", s.c_str());
 
 		error = glGetError();
 		if (error != GL_NO_ERROR) {
 			printf("error = 0x%X\n", error);
 		}
 
-		input_state.clear();
+
 		glfwSwapBuffers(window);
 		timer.end(glfwGetTime());
 
@@ -173,15 +175,15 @@ int main() {
 
 
 void window_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
-	input_state.key_event(key, action);
+	user_input.key_event(key, action);
 }
 
 void window_mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
-	input_state.mouse_button_event(window, button, action);
+	user_input.mouse_button_event(window, button, action);
 }
 
 void window_cursor_pos_callback(GLFWwindow* window, double x, double y){
-	input_state.mouse_move(x, y);
+	user_input.mouse_move(x, y);
 }
 
 

@@ -1,6 +1,14 @@
 #version 440 core
 
-#define R2
+//wecha algorythmus gnomman wird
+//R1 ... 8 threads oarweitn des holbwegs kompliziert o (geht owa mit da intel irgendwie net)
+//R2 ... 1 thread moch olls alluar
+//R3 ... SIZE * SIZE threads werkln zwi 
+#define R3
+
+//folls om R3
+//size vam Rond
+#define SIZE 7
 
 #ifdef R1
 layout(local_size_x = 4, local_size_y = 2) in;
@@ -9,7 +17,7 @@ layout(local_size_x = 4, local_size_y = 2) in;
 layout(local_size_x = 1) in;
 #endif
 #ifdef R3
-layout(local_size_x = 11, local_size_y = 11) in;
+layout(local_size_x = SIZE, local_size_y = SIZE) in; 
 #endif
 
 layout(binding = 0, r32f) uniform readonly image2D id_texture;
@@ -62,7 +70,6 @@ void routine(){
             idx += diagonal ? -1 : 1;
             v += dir_around;
         }
-        memoryBarrierShared();
         barrier();
         for(int j=0; j<hit.length; j++){    
             if(hit[j]){
@@ -83,7 +90,7 @@ void routine(){
 
 #ifdef R2
 void routine(){
- ivec2 my_point = ivec2(gl_WorkGroupID.xy);
+    ivec2 my_point = ivec2(gl_WorkGroupID.xy);
     uint my_id = uint(imageLoad(id_texture, my_point).x);
 
     if(my_id == selected_id){
@@ -124,7 +131,7 @@ void routine(){
     }
 
     if(gl_LocalInvocationIndex == 0)
-        closest = gl_WorkGroupSize.x * gl_WorkGroupSize.x;
+        closest = 1 << 16;
 
     ivec2 my_point = ivec2(gl_LocalInvocationID.xy) - (ivec2(gl_WorkGroupSize.xy)-1)/2;
     uint my_id = uint(imageLoad(id_texture, common_point + my_point).x);
@@ -135,12 +142,9 @@ void routine(){
     barrier();
 
     if(gl_LocalInvocationIndex == 0){
-        float max_range = (gl_WorkGroupSize.x-1)*1.414213f/2;
-        if(!(closest <= 2 * (gl_WorkGroupSize.x-1)/2 * (gl_WorkGroupSize.x-1)/2)){
-            store(common_point, 1 - sqrt(closest)/max_range);
-        }else{
-            store(common_point, 0.0);
-        }
+        //dat oarsch geil ausschaun, wenn da rond a weng gressa war -> is owa zteia
+        //store(common_point, smoothstep(0, 1, (closest < (1 << 16)) ? 1 - sqrt(closest)/((gl_WorkGroupSize.x-1)*1.414213f/2) : 0.0));
+        store(common_point, closest < (1 << 16) ? 1 : 0);
     }
 
 }

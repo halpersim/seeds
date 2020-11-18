@@ -2,13 +2,14 @@
 #include "planet.h"
 #include "camera.h"
 #include "scene_renderer.h"
+#include "frame_data.h"
 
 #include <list>
 #include <loki/Typelist.h>
 
 
 namespace Control{
-	class scene{
+	class game{
 	private:
 
 		std::list<DTO::defender> def_list;
@@ -19,11 +20,14 @@ namespace Control{
 		std::list<DTO::planet<DTO::sphere>> planet_sphere_list;
 		std::list<DTO::planet<DTO::torus>> planet_torus_list;
 
-		Rendering::scene_renderer renderer;
+		Rendering::_3D::scene_renderer renderer;
+
+		int selected_id;
 	public:
 
-		inline scene(float window_width, float window_height):
-			renderer(glm::vec2(window_width, window_height))
+		inline game(float window_width, float window_height):
+			renderer(glm::vec2(window_width, window_height)),
+			selected_id(0)
 		{
 			DTO::player player = DTO::player();
 
@@ -45,10 +49,19 @@ namespace Control{
 
 			planet.attacker_tree_list = &tree_att_list;
 			planet.defender_tree_list = &tree_def_list;
-
 		}
 
-		inline void update(double time_elapsed){
+		inline void process_user_input(const HI::input_state& state){
+
+			if(state.clicked.x >= 0)
+				selected_id = renderer.get_clicked_id(state.clicked);
+
+			renderer.update_cam(state);
+		}
+
+		inline void update(){
+			double time_elapsed = Rendering::frame_data::delta_time;
+
 			update_tree_list(tree_att_list, att_list, time_elapsed);
 			update_tree_list(tree_def_list, def_list, time_elapsed);
 			 
@@ -77,8 +90,8 @@ namespace Control{
 		}
 
 
-		inline void render(const Rendering::_3D::free_cam& cam){
-			renderer.render(cam, def_list, att_list, tree_def_list, tree_att_list, planet_sphere_list, planet_torus_list);
+		inline void render(){
+			renderer.render(selected_id, def_list, att_list, tree_def_list, tree_att_list, planet_sphere_list, planet_torus_list);
 		}
 	};
 }

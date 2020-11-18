@@ -16,5 +16,7 @@ namespace Constants {
 		static const float TREE_FIRST_TRUNK_SCALE = 1.75f;
 		
 		static const float BACKGROUND[] = {0.1f, 0.1f, 0.1f, 1.f};
+
+		static const float BOARDER_THICKNESS = 7.f; //kinnt a sei das me im schader extra a noamol verstölln muars
 	}
 };

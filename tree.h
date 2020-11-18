@@ -63,6 +63,8 @@ namespace DTO {
 			time_since_last_spawn += time_diff;
 			spawn_rate -= (Constants::DTO::INIT_SPAWN_RATE - Constants::DTO::FINAL_SPAWN_RATE) * time_diff / Constants::DTO::TREE_CAP;
 
+			spawn_rate = std::max<float>(spawn_rate, Constants::DTO::FINAL_SPAWN_RATE);
+
 			if(time_since_last_spawn < spawn_rate)
 				return false;
 			time_since_last_spawn = 0;
@@ -113,7 +115,7 @@ namespace DTO {
 						break;
 
 					int ran = rand() % roots_possible.size() * (roots_possible.size()+1)/2;
-					int idx;
+					int idx = 0;
 
 					for(int i = roots_possible.size(); i>=0; i--)
 						if((ran -= i) < 0){

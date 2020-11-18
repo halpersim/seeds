@@ -55,7 +55,9 @@ namespace Rendering{
 				std::map<unsigned char, character_metrics> metrics;
 
 				font_size_data():
-					texture(GL_R8)
+					texture(GL_R8),
+					width(0),
+					height(0)
 				{}
 			};
 
@@ -65,8 +67,8 @@ namespace Rendering{
 			gl_wrapper::program<LOKI_TYPELIST_2(w2NDS, color)> program;
 
 			gl_wrapper::texture<gl_wrapper::Texture_2D> bitmap_texture;
-			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 0> array_buffer;
 
+			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 0> array_buffer;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 0> matrix_buffer;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 0> texture_index_buffer;
 
@@ -280,7 +282,7 @@ namespace Rendering{
 				glEnable(GL_BLEND);
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-				for(int block_begin = 0; block_begin < str.size(); block_begin += GLYPHS_PER_RENDER_CALL){
+				for(unsigned int block_begin = 0; block_begin < str.size(); block_begin += GLYPHS_PER_RENDER_CALL){
 					auto texture_index_iterator = texture_indices.begin();
 					auto matrices_iterator = matrices.begin();
 
@@ -300,7 +302,8 @@ namespace Rendering{
 						if(data.metrics.count(ch)){
 							character_metrics& char_metric = data.metrics.at(ch);
 
-							mat[2][0] = (2.0f * (offset.x + char_metric.bearing_x))/viewport[2] - 1;
+							//mat[2][0] = (2.0f * (offset.x + char_metric.bearing_x))/viewport[2] - 1;
+							mat[2][0] = (2.0f * (offset.x))/viewport[2] - 1;
 							mat[2][1] = 1 - (2.0f * (offset.y))/viewport[3];
 
 							*texture_index_iterator = char_metric.texture_index;

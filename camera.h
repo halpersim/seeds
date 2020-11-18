@@ -1,8 +1,9 @@
 #pragma once
 #include <GLM/gtc/matrix_transform.hpp>
+
 #include "input_state.h"
 #include "constants.h"
-#include <stdio.h>
+#include "frame_data.h"
 
 namespace Rendering{
 	namespace _3D{
@@ -23,7 +24,9 @@ namespace Rendering{
 				forward(glm::vec3(0, 0, -1)),
 				pos(glm::vec3(0)){}
 
-			inline void update(const HI::input_state& state, double d_time){
+			inline void update(const HI::input_state& state){
+				double d_time = Rendering::frame_data::delta_time;
+
 				glm::mat3 rot_right = glm::rotate(glm::mat4(1.f), -state.mouse_dragged.x * Constants::Rendering::CAM_DRAG_SENSITIVITY, up);
 				right = rot_right * right;
 				forward = rot_right * forward;

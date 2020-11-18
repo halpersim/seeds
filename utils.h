@@ -131,7 +131,7 @@ namespace gl_wrapper {
 
 			GLenum gl_error = glGetError();
 			if(gl_error != GL_NONE || !error_str.empty()){
-				logger.warn("GL_ERROR [%s] when linking program '%s':\n%s", get_enum_string(gl_error).c_str(), program_name, error_str.c_str());
+				logger.warn("GL_ERROR [%s] when linking program (user defined name = '%s'):\n%s\n", get_enum_string(gl_error).c_str(), program_name, error_str.c_str());
 				name = -1;
 			} else{
 				set_uniform_locations(Loki::Int2Type<Loki::TL::Length<TL>::value - 1>());
@@ -397,7 +397,7 @@ namespace gl_wrapper {
 			gen_texture();
 		}
 
-		inline texture(texture<Type>&& rhs) :
+		inline texture(texture<Type>&& rhs) : 
 			name(rhs.name),
 			binding_target(rhs.binding_target),
 			size(rhs.size),
@@ -569,7 +569,7 @@ private:
 		template<class T>
 		inline void add_color_texture(const texture<T>& tex, int attachment = 0, int level = 0){
 			if(attachment >= MAX_DRAW_BUFFERS){
-				logger.warn("framebuffer: color_attachment [%d] >= MAX_DRAW_BUFFERS [%d]", attachment, MAX_DRAW_BUFFERS);
+				logger.warn("GL_ERROR -> framebuffer: color_attachment [%d] >= MAX_DRAW_BUFFERS [%d]", attachment, MAX_DRAW_BUFFERS);
 				return;
 			}
 			

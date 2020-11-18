@@ -143,13 +143,14 @@
     <ClInclude Include="data_supplier.h" />
     <ClInclude Include="font.h" />
     <ClInclude Include="frame_data.h" />
-    <ClInclude Include="human_input.h" />
+    <ClInclude Include="render_manager.h" />
+    <ClInclude Include="user_input.h" />
     <ClInclude Include="id_generator.h" />
     <ClInclude Include="input_state.h" />
     <ClInclude Include="planet_entry.h" />
     <ClInclude Include="model_renderer.h" />
     <ClInclude Include="rendering_structs.h" />
-    <ClInclude Include="scene.h" />
+    <ClInclude Include="game.h" />
     <ClInclude Include="scene_renderer.h" />
     <ClInclude Include="timer.h" />
     <ClInclude Include="type_traits.h" />

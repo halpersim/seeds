@@ -10,7 +10,7 @@ out vec4 color_out;
 uniform vec3 color;
 
 void main(){
-
+ 
   float t = texture(border_tex, tc).x;
   vec4 col = texture(color_tex, tc);
   
@@ -18,9 +18,8 @@ void main(){
   color_out = mix(col, vec4(color, 1), t);
 
 
-
 /*
-  vec4 t = texture(tex, tc);
+  vec4 t = texture(id_texture, tc);
 
   switch(int(t.x)){
     case 1: color_out =  vec4(0.1, 0.1, 0.9, 1); break;
@@ -36,8 +35,7 @@ void main(){
     case 11: color_out = vec4(0.4, 0.0, 0.4, 1); break;
     default: color_out = vec4(0.6, 0.1, 0.9, 1); break;
   } */
-
 //  color_out = vec4(texture(color_tex, tc).xyz, 1);
 
-  color_out = vec4(vec3(texture(border_tex, tc).x), 1);
+ // color_out = vec4(vec3(texture(border_tex, tc).x), 1);
 }
