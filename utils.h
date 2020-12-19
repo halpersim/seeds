@@ -251,9 +251,9 @@ namespace gl_wrapper {
 	};
 
 	template<
-		class MemoryAllocationPolicy,
-		template <class, int> class NewStoragePolicy,
-		int StoragePolicyParameter
+		class MemoryAllocationPolicy = DeleteOldData,
+		template <class, int> class NewStoragePolicy = MemoryTightlyPacked,
+		int StoragePolicyParameter = 0
 	>
 	class buffer {
 	private:
@@ -290,6 +290,13 @@ namespace gl_wrapper {
 			}
 		}
 
+
+		//fills the data with the given data, the buffer has the given size afterwards
+		void fill_data(void* data, unsigned int size){
+			glBindBuffer(target, name);
+			glBufferData(target, size, data, usage);
+		}
+
 		void clear(){
 			void* ptr = map(GL_WRITE_ONLY);
 			memset(ptr, 0, size);
@@ -309,7 +316,6 @@ namespace gl_wrapper {
 			StoragePolicy::ManageMemory(target, usage, size, new_size, set_up);
 			set_up = true;
 			size = new_size;
-			////check_error();
 		}
 
 		void* map(GLenum access) {
@@ -567,7 +573,7 @@ private:
 		}
 
 		template<class T>
-		inline void add_color_texture(const texture<T>& tex, int attachment = 0, int level = 0){
+		inline void set_color_texture(const texture<T>& tex, int attachment = 0, int level = 0){
 			if(attachment >= MAX_DRAW_BUFFERS){
 				logger.warn("GL_ERROR -> framebuffer: color_attachment [%d] >= MAX_DRAW_BUFFERS [%d]", attachment, MAX_DRAW_BUFFERS);
 				return;

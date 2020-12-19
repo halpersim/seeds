@@ -131,5 +131,11 @@
     <ClInclude Include="game.h">
       <Filter>Source Files\Control</Filter>
     </ClInclude>
+    <ClInclude Include="hud.h">
+      <Filter>Source Files\Rendering\2D</Filter>
+    </ClInclude>
+    <ClInclude Include="icons.h">
+      <Filter>Source Files\Rendering\2D</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

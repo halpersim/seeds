@@ -72,8 +72,6 @@ namespace Rendering{
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 0> matrix_buffer;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 0> texture_index_buffer;
 
-			//std::map<int, std::array<std::pair<gl_wrapper::texture<gl_wrapper::Texture_2D>, std::array<float, 8>>, AVAILABLE_GLYPHS>> loaded_sizes;
-
 			std::map<int, font_size_data> loaded_sizes;
 			
 
@@ -246,7 +244,7 @@ namespace Rendering{
 				return advance;
 			}
 
-			inline void render_string_new(const std::string& str, glm::vec2 offset_begin, glm::vec3 font_color = glm::vec3(-1.f), float size = -1){
+			inline void render_string(const std::string& str, glm::vec2 offset_begin, glm::vec3 font_color = glm::vec3(-1.f), float size = -1){
 				if(size == -1)
 					size = this->size;
 				if(font_color.x < -0.9)
@@ -274,6 +272,28 @@ namespace Rendering{
 				last_glyph_idx = 0;
 
 				font_size_data& data = loaded_sizes.at(size_i);
+				float* ptr = reinterpret_cast<float*>(array_buffer.map(GL_WRITE_ONLY));
+
+				//0
+				*ptr++ = 0;
+				*ptr++ = 0;
+
+				//1
+				*ptr++ = float(data.width);
+				*ptr++ = 0;
+
+				//2
+				*ptr++ = 0;
+				*ptr++ = -float(data.height);
+
+				//3
+				*ptr++ = float(data.width);
+				*ptr++ = -float(data.height);
+
+				array_buffer.unmap();
+				array_buffer.bind();
+				glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+				glEnableVertexAttribArray(0);
 				
 				int i = 0;
 				std::array<int, GLYPHS_PER_RENDER_CALL> texture_indices;
@@ -324,29 +344,6 @@ namespace Rendering{
 						last_glyph_idx = glyph_idx;
 					}
 
-					float* ptr = reinterpret_cast<float*>(array_buffer.map(GL_WRITE_ONLY));
-
-					//0
-					*ptr++ = 0;
-					*ptr++ = 0;
-
-					//1
-					*ptr++ = float(data.width);
-					*ptr++ = 0;
-
-					//2
-					*ptr++ = 0;
-					*ptr++ = -float(data.height);
-
-					//3
-					*ptr++ = float(data.width);
-					*ptr++ = -float(data.height);
-
-					array_buffer.unmap();
-					array_buffer.bind();
-					glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-					glEnableVertexAttribArray(0);
-
 					int glyphs_in_this_call = std::min<int>(GLYPHS_PER_RENDER_CALL, str.size() - block_begin);
 
 					memcpy(texture_index_buffer.map(GL_WRITE_ONLY), texture_indices.data(), sizeof(int) * glyphs_in_this_call);
@@ -365,101 +362,6 @@ namespace Rendering{
 					glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, glyphs_in_this_call);
 				}
 
-				glDisable(GL_BLEND);
-			}
-
-			inline void render_string(const std::string& str, glm::vec2 offset, glm::vec3 font_color = glm::vec3(-1.f), float size = -1){
-				if(size == -1)
-					size = this->size;
-				if(font_color.x < -0.9)
-					font_color = this->font_color;
-
-				load_size(size);
-
-				int viewport[4];
-				glGetIntegerv(GL_VIEWPORT, viewport);
-
-				glm::mat3 mat = glm::mat3(1.f);
-				mat[0][0] = 2.0 / viewport[2];
-				mat[1][1] = 2.0 / viewport[3];
-				mat[2][2] = 1;
-
-				FT_UInt glyph_idx, last_glyph_idx;
-				FT_Bool use_kerning;
-				FT_Error error;
-
-				FT_Set_Char_Size(face, int(64*size), 0, 0, 0);
-				
-				use_kerning = FT_HAS_KERNING(face);
-				last_glyph_idx = 0;
-
-				glEnable(GL_BLEND);
-				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-				for(char ch : str){
-					glyph_idx = FT_Get_Char_Index(face, ch);
-
-					if(use_kerning && last_glyph_idx && glyph_idx){
-						FT_Vector delta;
-						error = FT_Get_Kerning(face, last_glyph_idx, glyph_idx, FT_KERNING_DEFAULT, &delta);
-						CHECK_ERROR(error, notice, "FT_Get_Kerning");
-
-						offset.x += delta.x >> 6;
-					}
-
-					/*error = FT_Load_Glyph(face, glyph_idx, FT_LOAD_DEFAULT);
-					CHECK_ERROR(error, notice, "FT_Load_Glyph");
-					error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
-					CHECK_ERROR(error, notice, "FT_Render_Glyph");*/
-
-					FT_Bitmap* bitmap = &face->glyph->bitmap;
-					FT_GlyphSlot glyph = face->glyph;
-
-					//---------------------rendering-------------------------
-					if(bitmap->width != 0 && bitmap->rows != 0){
-						float* ptr = reinterpret_cast<float*>(array_buffer.map(GL_WRITE_ONLY));
-
-						//0
-						*ptr++ = 0;
-						*ptr++ = 0;
-
-						//1
-						*ptr++ = float(bitmap->width);
-						*ptr++ = 0;
-
-						//2
-						*ptr++ = 0;
-						*ptr++ = -float(bitmap->rows);
-
-						//3
-						*ptr++ = float(bitmap->width);
-						*ptr++ = -float(bitmap->rows);
-
-						array_buffer.unmap();
-						array_buffer.bind();
-						glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-						glEnableVertexAttribArray(0);
-
-						glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-						bitmap_texture.recreate(glm::vec2(bitmap->width, bitmap->rows), GL_RED, GL_UNSIGNED_BYTE, bitmap->buffer);
-						bitmap_texture.bind_unit(0);
-						glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-
-						mat[2][0] = (2.0f * (offset.x + (glyph->metrics.horiBearingX >> 6)))/viewport[2] - 1;
-						mat[2][1] = 1 - (2.0f * (offset.y + vertical_advance(size) - (glyph->metrics.horiBearingY >> 6)))/viewport[3];
-
-
-						program.Uniform<w2NDS>() = mat;
-						program.Uniform<color>() = font_color;
-						program.use();
-
-					//	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-					}
-					//---------------------rendering-------------------------
-
-					offset.x += face->glyph->advance.x >> 6;
-					last_glyph_idx = glyph_idx;
-				}
 				glDisable(GL_BLEND);
 			}
 		};

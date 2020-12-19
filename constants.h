@@ -18,5 +18,7 @@ namespace Constants {
 		static const float BACKGROUND[] = {0.1f, 0.1f, 0.1f, 1.f};
 
 		static const float BOARDER_THICKNESS = 7.f; //kinnt a sei das me im schader extra a noamol verstölln muars
+
+		static const glm::vec3 HUD_COLOR = glm::vec3(1.f, 1.f, 0.f);
 	}
 };

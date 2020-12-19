@@ -3,7 +3,7 @@
 //wecha algorythmus gnomman wird
 //R1 ... 8 threads oarweitn des holbwegs kompliziert o (geht owa mit da intel irgendwie net)
 //R2 ... 1 thread moch olls alluar
-//R3 ... SIZE * SIZE threads werkln zwi 
+//R3 ... SIZE * SIZE threads werkln zwi  
 #define R3
 
 //folls om R3

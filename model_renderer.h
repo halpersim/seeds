@@ -91,6 +91,10 @@ namespace Rendering {
 				Model::Instance().load();
 			}
 
+			void render(std::list<glm::mat4>& pallet){
+				render(pallet, std::list<int>());
+			}
+
 			void render(std::list<glm::mat4>& pallet, const std::list<int>& id_list){
 
 				//set unifroms
@@ -100,10 +104,12 @@ namespace Rendering {
 				program.use();
 				//set buffer
 				copy_list_in_buffer(pallet, matrix_buffer);
-				copy_list_in_buffer(id_list, id_buffer);
-
 				matrix_buffer.bind_base(0);
-				id_buffer.bind_base(1);
+
+				if(!id_list.empty()){
+					copy_list_in_buffer(id_list, id_buffer);
+					id_buffer.bind_base(1);
+				}
 				//[CPU culling]
 				//draw logic
 				Model::Instance().render(0, 1, pallet.size());

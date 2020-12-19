@@ -3,6 +3,7 @@
 #include "camera.h"
 #include "scene_renderer.h"
 #include "frame_data.h"
+#include "hud.h"
 
 #include <list>
 #include <loki/Typelist.h>
@@ -13,7 +14,7 @@ namespace Control{
 	private:
 
 		std::list<DTO::defender> def_list;
-		std::list<DTO::attacker> att_list;
+		std::list<DTO::sworm> sworm_list;
 		std::list<DTO::tree<DTO::defender>> tree_def_list;
 		std::list<DTO::tree<DTO::attacker>> tree_att_list;
 
@@ -21,13 +22,15 @@ namespace Control{
 		std::list<DTO::planet<DTO::torus>> planet_torus_list;
 
 		Rendering::_3D::scene_renderer renderer;
+		Rendering::_2D::hud hud;
 
 		int selected_id;
 	public:
 
 		inline game(float window_width, float window_height):
 			renderer(glm::vec2(window_width, window_height)),
-			selected_id(0)
+			selected_id(0),
+			hud(glm::vec2(window_width, window_height))
 		{
 			DTO::player player = DTO::player();
 
@@ -52,22 +55,53 @@ namespace Control{
 		}
 
 		inline void process_user_input(const HI::input_state& state){
-
-			if(state.clicked.x >= 0)
+		
+			if(state.clicked.x >= 0){
 				selected_id = renderer.get_clicked_id(state.clicked);
+				printf("selected_id = [%d]\n", selected_id);
+			}
 
 			renderer.update_cam(state);
 		}
 
 		inline void update(){
-			double time_elapsed = Rendering::frame_data::delta_time;
+			float time_elapsed = Rendering::frame_data::delta_time;
 
-			update_tree_list(tree_att_list, att_list, time_elapsed);
-			update_tree_list(tree_def_list, def_list, time_elapsed);
-			 
-			update_soldier_list(att_list, time_elapsed);
-			update_soldier_list(def_list, time_elapsed);
+			//defender
+			std::for_each(def_list.begin(), def_list.end(), [time_elapsed](DTO::defender& def) {def.coord += def.direction * time_elapsed; });
+			std::for_each(tree_def_list.begin(), tree_def_list.end(), [time_elapsed, this](DTO::tree<DTO::defender>& def_tree) {
+				if(def_tree.evolve(time_elapsed))
+					def_list.push_back(def_tree.produce_soldier());
+			});
 
+			//attacker
+			std::for_each(sworm_list.begin(), sworm_list.end(), [time_elapsed](DTO::sworm& sworm){
+				for(DTO::attacker* att : sworm.get_units()){
+					if(att == NULL)
+						break;
+
+					att->coord += att->direction * time_elapsed;
+				}
+			});
+
+			std::for_each(tree_att_list.begin(), tree_att_list.end(), [this, time_elapsed](DTO::tree<DTO::attacker>& att_tree){
+				if(att_tree.evolve(time_elapsed)){
+					auto predicate = [&att_tree](DTO::sworm& sworm){
+						return !sworm.is_full() && &att_tree.host_planet == sworm.get_host_planet();
+					};
+					auto available_sworm = std::find_if(sworm_list.begin(), sworm_list.end(), predicate);
+
+					if(available_sworm != sworm_list.end()){
+						available_sworm->add_unit(att_tree.produce_soldier());
+					} else { //create new sworm 
+						printf("create new sworm");
+						DTO::sworm sworm;
+						sworm.add_unit(att_tree.produce_soldier());
+						sworm_list.push_back(sworm);
+					}
+				}
+			});
+			
 
 		//	std::for_each(tree_att_list.begin(), tree_att_list.end(), [list = &att_list, &time_elapsed](DTO::tree<DTO::attacker>& tree) {if(tree.evolve(time_elapsed)) list->push_back(tree.produce_soldier()); });
 	//		std::for_each(tree_def_list.begin(), tree_def_list.end(), [list = &def_list, &time_elapsed](DTO::tree<DTO::defender>& tree) {if(tree.evolve(time_elapsed)) list->push_back(tree.produce_soldier()); });
@@ -77,21 +111,28 @@ namespace Control{
 			//update soldiers -> AI system 
 		}
 
-		template<class T>
-		inline void update_soldier_list(std::list<T>& list, float time){
-			for(T& soldier : list){
-				soldier.coord += soldier.direction * time;
-			}
-		}
+		inline void render(){			
+			std::list<DTO::attacker> att_list;
 
-		template<class T>
-		inline void update_tree_list(std::list<DTO::tree<T>>& list, std::list<T>& other_list, double time){
-			std::for_each(list.begin(), list.end(), [list = &other_list, &time](DTO::tree<T>& tree) {if(tree.evolve(time)) list->push_back(tree.produce_soldier()); });
-		}
-
-
-		inline void render(){
+			std::for_each(sworm_list.begin(), sworm_list.end(), [&att_list] (DTO::sworm& sworm){
+				for(DTO::attacker* att : sworm.get_units()){
+					if(att == NULL)
+						break;
+					att_list.push_back(*att);
+				}
+			});
+		
 			renderer.render(selected_id, def_list, att_list, tree_def_list, tree_att_list, planet_sphere_list, planet_torus_list);
+
+			auto found = std::find_if(planet_torus_list.begin(), planet_torus_list.end(), [this](DTO::planet<DTO::torus>& planet) {return planet.id == selected_id; });
+			if(found != planet_torus_list.end()){
+				hud.render(*found);
+			}
+
+			auto found_swoarm = std::find_if(sworm_list.begin(), sworm_list.end(), [this](DTO::sworm& swoarm) {return swoarm.id == selected_id; });
+			if(found_swoarm != sworm_list.end()){
+				hud.render(*found_swoarm);
+			}
 		}
 	};
 }

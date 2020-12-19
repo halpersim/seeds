@@ -143,6 +143,8 @@
     <ClInclude Include="data_supplier.h" />
     <ClInclude Include="font.h" />
     <ClInclude Include="frame_data.h" />
+    <ClInclude Include="hud.h" />
+    <ClInclude Include="icons.h" />
     <ClInclude Include="render_manager.h" />
     <ClInclude Include="user_input.h" />
     <ClInclude Include="id_generator.h" />

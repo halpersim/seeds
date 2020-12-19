@@ -25,7 +25,8 @@
 #include "user_input.h"
 #include "camera.h"
 #include "font.h"
-#include <chrono>
+#include "icons.h"
+#include "hud.h"
 
 
 HI::user_input user_input;
@@ -127,6 +128,22 @@ int main() {
 	double d = 0.01;
 	int cnt = 1;
 
+	std::vector<int> icon_indices;
+	icon_indices.push_back(Rendering::_2D::icons::ATTACKER);
+	icon_indices.push_back(Rendering::_2D::icons::DAMAGE);
+	icon_indices.push_back(Rendering::_2D::icons::HEALTH);
+	icon_indices.push_back(Rendering::_2D::icons::SPEED);
+	icon_indices.push_back(Rendering::_2D::icons::PLANET);
+	icon_indices.push_back(Rendering::_2D::icons::SWOARM);
+
+	std::vector<glm::vec2> icon_positions;
+	icon_positions.push_back(glm::vec2(100, 100));
+	icon_positions.push_back(glm::vec2(100, 150));
+	icon_positions.push_back(glm::vec2(100, 200));
+	icon_positions.push_back(glm::vec2(100, 250));
+	icon_positions.push_back(glm::vec2(100, 300));
+	icon_positions.push_back(glm::vec2(100, 350));
+
 	printf("GL_VERSION = [%s]\n", glGetString(GL_VERSION));
 	while (!glfwWindowShouldClose(window)) {
 		timer.start(glfwGetTime());
@@ -141,13 +158,14 @@ int main() {
 
 		game.update();
 		game.render();
-
 	//	font.render_string_new(diff, glm::vec2(0.f, 0.f));
+
+	//	Rendering::_2D::icon_singleton::Instance().render_icons(icon_indices, icon_positions);
 
 		ss.str("");
 		ss << diff;
 		std::string s = ss.str();
-		font.render_string_new(s, glm::vec2(0.f, 0.f));
+		font.render_string(s, glm::vec2(0.f, 0.f));
 		
 	//	printf("%s\n", s.c_str());
 

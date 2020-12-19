@@ -28,13 +28,16 @@ namespace Rendering{
 
 			gl_wrapper::framebuffer fbo;
 			gl_wrapper::texture<gl_wrapper::Texture_2D> color_texture;
-			gl_wrapper::texture<gl_wrapper::Texture_2D> id_texture;
-			gl_wrapper::texture<gl_wrapper::Texture_2D> border_texture;
+			gl_wrapper::texture<gl_wrapper::Texture_2D> id_texture_0;
+			gl_wrapper::texture<gl_wrapper::Texture_2D> id_texture_1;
+			gl_wrapper::texture<gl_wrapper::Texture_2D> border_texture_0;
+			gl_wrapper::texture<gl_wrapper::Texture_2D> border_texture_1;
 
 			gl_wrapper::program<LOKI_TYPELIST_1(color)> final_render_program;
 			gl_wrapper::program<LOKI_TYPELIST_2(border_size, selected_id)> compute_program;
 
-
+			bool odd_frame;
+			
 			static log4cpp::Category& logger;
 
 
@@ -44,16 +47,19 @@ namespace Rendering{
 				window_size(window_size),
 				projection_matrix(glm::perspective<float>(90, window_size.x/window_size.y, 0.1, 100)),
 				color_texture(window_size, GL_RGBA8),
-				id_texture(window_size, GL_R32F),
-				border_texture(window_size, GL_R32F),
+				id_texture_0(window_size, GL_R32F),
+				id_texture_1(window_size, GL_R32F),
+				border_texture_0(window_size, GL_R32F),
+				border_texture_1(window_size, GL_R32F),
 				final_render_program(),	
-				compute_program(false)
+				compute_program(false),
+				odd_frame(true)
 			{
 				GLenum error;
 
-				fbo.add_color_texture(color_texture, COLOR_TEXTURE);
-				fbo.add_color_texture(id_texture, ID_TEXTURE);
-				fbo.add_color_texture(border_texture, BORDER_TEXTURE);
+				fbo.set_color_texture(color_texture, COLOR_TEXTURE);
+				fbo.set_color_texture(id_texture_0, ID_TEXTURE);
+				fbo.set_color_texture(border_texture_0, BORDER_TEXTURE);
 
 				fbo.add_depth_component(window_size);
 
@@ -107,8 +113,6 @@ namespace Rendering{
 				glReadPixels(int(clicked.x), int(window_size.y - clicked.y), 1, 1, GL_RED, GL_FLOAT, &id);
 				fbo.unbind();
 
-				printf("clicked: %d\n", int(id));
-
 				return int(id);
 			}
 
@@ -125,6 +129,21 @@ namespace Rendering{
 				Rendering::frame_data::eye = cam.pos;
 				Rendering::frame_data::light = glm::vec3(0);
 
+				/*
+				gl_wrapper::texture<gl_wrapper::Texture_2D>& cur_id_texture = odd_frame ? id_texture_0 : id_texture_1;
+				gl_wrapper::texture<gl_wrapper::Texture_2D>& priv_id_texture = !odd_frame ? id_texture_0 : id_texture_1;
+				gl_wrapper::texture<gl_wrapper::Texture_2D>& cur_border_texture = odd_frame ? border_texture_0 : border_texture_1;
+				gl_wrapper::texture<gl_wrapper::Texture_2D>& next_border_texture = !odd_frame ? border_texture_0 : border_texture_1;
+				odd_frame = !odd_frame;
+				fbo.set_color_texture(cur_id_texture, ID_TEXTURE);
+				fbo.set_color_texture(cur_border_texture, BORDER_TEXTURE);
+				*/
+
+				gl_wrapper::texture<gl_wrapper::Texture_2D>& cur_id_texture = id_texture_0;
+				gl_wrapper::texture<gl_wrapper::Texture_2D>& priv_id_texture = id_texture_0;
+				gl_wrapper::texture<gl_wrapper::Texture_2D>& cur_border_texture = border_texture_0;
+				gl_wrapper::texture<gl_wrapper::Texture_2D>& next_border_texture = border_texture_0;
+
 				//generate matrices
 				std::list<glm::mat4> def_pallet = Rendering::MatrixGenerator::generate_matrix_pallet(def_list);
 				std::list<glm::mat4> att_pallet = Rendering::MatrixGenerator::generate_matrix_pallet(att_list);
@@ -132,15 +151,19 @@ namespace Rendering{
 				std::array<std::list<glm::mat4>, 2> def_tree_pallet = Rendering::MatrixGenerator::generate_matrix_pallet_tree(tree_def_list);
 
 				fbo.bind();
+				
 				glClearBufferfv(GL_COLOR, COLOR_TEXTURE, Constants::Rendering::BACKGROUND);
 				int zero = 0;
 				glClearBufferiv(GL_COLOR, ID_TEXTURE, &zero);
 				float one = 1.f;
 				glClearBufferfv(GL_DEPTH, 0, &one);
 
+				std::list<int> att_id_list;
+				std::for_each(att_list.begin(), att_list.end(), [&att_id_list](const DTO::attacker& att){ att_id_list.push_back(att.sworm_id); });
+				
 				//render 
-				def_renderer.render(def_pallet, get_id_list(def_list));
-				att_renderer.render(att_pallet, get_id_list(att_list));
+				def_renderer.render(def_pallet);
+				att_renderer.render(att_pallet, att_id_list);
 				tree_att_renderer.render(att_tree_pallet, get_id_list(tree_att_list));
 				tree_def_renderer.render(def_tree_pallet, get_id_list(tree_def_list));
 
@@ -149,8 +172,8 @@ namespace Rendering{
 
 
 				if(highlighted_id != 0){
-					id_texture.bind_img(0, GL_READ_ONLY);
-					border_texture.bind_img(1, GL_WRITE_ONLY);
+					priv_id_texture.bind_img(0, GL_READ_ONLY);
+					next_border_texture.bind_img(1, GL_WRITE_ONLY);
 					compute_program.Uniform<border_size>() = Constants::Rendering::BOARDER_THICKNESS;
 					compute_program.Uniform<selected_id>() = highlighted_id;
 					compute_program.use();
@@ -162,11 +185,12 @@ namespace Rendering{
 				fbo.unbind();
 
 				color_texture.bind_unit(0);
-				border_texture.bind_unit(1);
-				id_texture.bind_unit(2);
+				cur_border_texture.bind_unit(1);
+				cur_id_texture.bind_unit(2);
 				final_render_program.Uniform<color>() = glm::vec3(1.f, 1.f, 0.f);
 				final_render_program.use();
 				glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+				printf("");
 			}
 
 		private:
@@ -183,13 +207,6 @@ namespace Rendering{
 				planet_renderer.render(Loki::Type2Type<DTO::planet<T>>(), planet_pallet, renderer_data_list, hole_list, id_list);
 			}
 
-			template<class T>
-			inline std::list<int> get_id_list(const std::list<T>& list){
-				std::list<int> id_list;
-
-				std::for_each(list.begin(), list.end(), [&id_list](const T& o){id_list.push_back(o.id); });
-				return id_list;
-			}
 
 			template<class T>
 			inline std::list<int> get_id_list(const std::list<DTO::tree<T>>& list){
