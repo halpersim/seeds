@@ -18,7 +18,7 @@ namespace Rendering {
 
 		//0 = trunk pallet; 1 = branch pallet
 		template<class T>
-		std::array<std::list<glm::mat4>, 2> generate_matrix_pallet_tree(const std::list<DTO::tree<T>>& in);
+		std::array<std::list<glm::mat4>, 2> generate_matrix_pallet_tree(const std::list<DTO::tree<T>*>& in);
 
 		template<class T>
 		void generate_planet_render_data(const std::list<DTO::planet<T>>& in, std::list<Rendering::_3D::planet_renderer_data>& data_list, std::list<Rendering::_3D::hole>& hole_list);
@@ -76,20 +76,21 @@ namespace Rendering {
 
 
 		static glm::mat4 generate_matrix(float* ptr, const DTO::attacker* att){
-			glm::vec3 pos, next, normal;
+			glm::vec3 pos, dir, normal;
 
 			if(att->host_planet) {
 				pos = att->host_planet->get_pos(att->coord, att->coord.z);
 				glm::vec3 next_vector = glm::normalize(att->direction) * 0.001f;
-				next = att->host_planet->get_pos(att->coord + next_vector, att->coord.z + next_vector.z);
+				glm::vec3 next = att->host_planet->get_pos(att->coord + next_vector, att->coord.z + next_vector.z);
+				dir = next - pos;
 				normal = att->host_planet->get_normal(att->coord);
 			} else {
-				pos = att->pos;
-				next = att->pos + att->direction;
+				pos = glm::mix(att->start, att->target, att->distance);
+				dir = att->target - att->start;
 				normal = att->normal;
 			}
 
-			generate_lookat_matrix(ptr, pos, next - pos, normal);
+			generate_lookat_matrix(ptr, pos, dir, normal);
 
 			return glm::scale(glm::make_mat4(ptr), glm::vec3(att->health, att->damage, att->health) * Constants::Rendering::SOLDIER_SCALE);
 		}
@@ -193,11 +194,11 @@ namespace Rendering {
 		}
 
 		template<class T>
-		std::array<std::list<glm::mat4>, 2> generate_matrix_pallet_tree(const std::list<DTO::tree<T>>& in){
+		std::array<std::list<glm::mat4>, 2> generate_matrix_pallet_tree(const std::list<DTO::tree<T>*>& in){
 			std::array<std::list<glm::mat4>, 2> ret;
 
-			for(const DTO::tree<T>& tree : in) {
-				std::array<std::list<glm::mat4>, 2> tree_data = generate_matrix_tree(&tree);
+			for(const DTO::tree<T>* tree : in) {
+				std::array<std::list<glm::mat4>, 2> tree_data = generate_matrix_tree(tree);
 
 				for(unsigned int i = 0; i<tree_data.size(); i++)
 					std::copy(tree_data[i].begin(), tree_data[i].end(), std::back_inserter(ret[i]));
@@ -228,8 +229,8 @@ namespace Rendering {
 				data.start_idx = idx;
 
 				std::list<Rendering::_3D::hole> planet_holes;
-				std::for_each(planet.attacker_tree_list->begin(), planet.attacker_tree_list->end(), [&planet_holes](DTO::tree<DTO::attacker>& tree) { planet_holes.push_back(Rendering::_3D::hole(tree.host_planet, tree.ground)); });
-				std::for_each(planet.defender_tree_list->begin(), planet.defender_tree_list->end(), [&planet_holes](DTO::tree<DTO::defender>& tree) { planet_holes.push_back(Rendering::_3D::hole(tree.host_planet, tree.ground)); });
+				std::for_each(planet.attacker_tree_list.begin(), planet.attacker_tree_list.end(), [&planet_holes](const DTO::tree<DTO::attacker>& tree) { planet_holes.push_back(Rendering::_3D::hole(tree.host_planet, tree.ground)); });
+				std::for_each(planet.defender_tree_list.begin(), planet.defender_tree_list.end(), [&planet_holes](const DTO::tree<DTO::defender>& tree) { planet_holes.push_back(Rendering::_3D::hole(tree.host_planet, tree.ground)); });
 				std::for_each(planet.planet_entry_list.begin(), planet.planet_entry_list.end(), [&planet_holes, planet](const DTO::planet_entry& entry) { planet_holes.push_back(Rendering::_3D::hole(planet, entry.ground)); });
 
 				idx += planet_holes.size();

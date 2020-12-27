@@ -140,6 +140,7 @@
   <ItemGroup>
     <ClInclude Include="camera.h" />
     <ClInclude Include="constants.h" />
+    <ClInclude Include="cursor.h" />
     <ClInclude Include="data_supplier.h" />
     <ClInclude Include="font.h" />
     <ClInclude Include="frame_data.h" />

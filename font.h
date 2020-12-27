@@ -103,8 +103,8 @@ namespace Rendering{
 
 				std::string error_msg = "";
 				std::array<GLuint, 2> shader;
-				shader[0] = my_utils::shader::load("shader/font/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
-				shader[1] = my_utils::shader::load("shader/font/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
+				shader[0] = my_utils::shader::load("media/shader/font/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
+				shader[1] = my_utils::shader::load("media/shader/font/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
 
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR shader compilation error in class font: %s", error_msg.c_str());

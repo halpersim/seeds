@@ -1,13 +1,14 @@
 #pragma once
-#include"player.h"
-#include"soldier_data.h"
-#include"soldier.h"
-#include"planet_model.h"
-#include"tree.h"
-#include"planet_entry.h"
-#include"planet_model.h"
-#include"id_generator.h"
-#include<list>
+#include "player.h"
+#include "soldier_data.h"
+#include "soldier.h"
+#include "planet_model.h"
+#include "tree.h"
+#include "planet_entry.h"
+#include "planet_model.h"
+#include "id_generator.h"
+
+#include <list>
 
 namespace DTO {
 
@@ -35,20 +36,20 @@ namespace DTO {
 		soldier_data soldier_type;
 		glm::vec3 pos;
 
-		std::list<tree<attacker>>* attacker_tree_list;
-		std::list<tree<defender>>* defender_tree_list;
+		std::list<tree<attacker>> attacker_tree_list;
+		std::list<tree<defender>> defender_tree_list;
 		std::list<planet_entry> planet_entry_list;
-
+		
 		planet(player& owner, soldier_data soldier_type, glm::vec3 pos) :
-			id(id_generator::next_id()),
+			id(id_generator::next_planet()),
 			owner(owner),
 			soldier_type(soldier_type),
 			health(10),
 			max_sworms(2),
 			atmosphere_height(10),
 			pos(pos),
-			attacker_tree_list(NULL),
-			defender_tree_list(NULL),
+			attacker_tree_list(std::list<tree<attacker>>()),
+			defender_tree_list(std::list<tree<defender>>()),
 			planet_entry_list(std::list<planet_entry>())
 		{}
 		
@@ -61,6 +62,7 @@ namespace DTO {
 		virtual glm::vec3 get_normal(const glm::vec2& parameter)const = 0;
 		virtual glm::vec3 get_tangent_alpha(const glm::vec2& coords)const = 0;
 		virtual glm::vec3 get_tangent_theta(const glm::vec2& coords)const = 0;
+		virtual glm::vec2 get_nearest_coords(const glm::vec3& coords)const = 0;
 		virtual float get_radius()const = 0;
 		virtual int get_render_idx()const = 0;
 	};
@@ -76,15 +78,10 @@ namespace DTO {
 			thickness(thickness){}
 
 		glm::vec3 get_inner_mid(const glm::vec2& coords)const{
-			/*glm::vec3 torus_plane_normal = glm::vec3(0, 1.f, 0);
-
-			glm::vec3 hole_pos = get_local_pos(coords);
-			return glm::normalize(hole_pos - torus_plane_normal * glm::dot(hole_pos, torus_plane_normal)) * radius;*/
-
 			return glm::vec3(cos(coords.y), 0, sin(coords.y)) * radius;
 		}
 
-		float get_radius()const{
+		float get_radius()const override{
 			return thickness;
 		}
 
@@ -96,22 +93,56 @@ namespace DTO {
 			);
 		}
 
-		hole make_hole(const glm::vec2& parameter, float size)const{
+		glm::vec2 get_nearest_coords(const glm::vec3& point)const override{
+			glm::vec3 p = glm::normalize(point - pos);
+			glm::vec2 projected = glm::normalize(glm::vec2(p.x, p.z));
+
+			float min;
+			if(projected.x > 0){
+				if(projected.y > 0){
+					min = 0.f;
+				} else {
+					min = 1.5057963f;
+				}
+			} else {
+				if(projected.y > 0){
+					min = 3.1415926f;
+				} else {
+					min = 4.7123889f;
+				}
+			}
+			float theta = acos(projected.x);
+			while(theta < min)
+				theta += 1.5057963f;
+
+			glm::vec3 normal = glm::vec3(0.f, 1.f, 0.f);
+			float above = glm::dot(glm::normalize(get_local_pos(glm::vec2(1.5057963f, theta))), normal);
+			float below = glm::dot(glm::normalize(get_local_pos(glm::vec2(4.7123889f, theta))), normal);
+			float dot = glm::dot(normal, p);
+
+			if(dot > above)
+				return glm::vec2(1.5057963f, theta);
+			if(dot < below)
+				return glm::vec2(4.7123889f, theta);
+			return glm::vec2(0.f, theta);
+		}
+
+		hole make_hole(const glm::vec2& parameter, float size)const override{
 			hole c;
 			c.rad = size;
 			c.coords = parameter;
 			return c;
 		}
 
-		glm::vec3 get_normal(const glm::vec2& parameter)const{
+		glm::vec3 get_normal(const glm::vec2& parameter)const override{
 			return glm::normalize(get_local_pos(parameter) - get_inner_mid(parameter));
 		}
 
-		glm::vec3 get_tangent_alpha(const glm::vec2& parameter) const{
+		glm::vec3 get_tangent_alpha(const glm::vec2& parameter) const override{
 			return glm::normalize(get_local_pos(parameter + glm::vec2(1.5707f, 0)) - get_inner_mid(parameter));
 		}
 
-		glm::vec3 get_tangent_theta(const glm::vec2& coords) const{
+		glm::vec3 get_tangent_theta(const glm::vec2& coords) const override{
 			return glm::normalize(get_local_pos(coords + glm::vec2(0, 1.5707f)) - get_inner_mid(coords + glm::vec2(0, 1.5707f)));
 		}
 
@@ -142,7 +173,15 @@ namespace DTO {
 			);
 		}
 
-		glm::vec3 get_tangent_alpha(const glm::vec2& parameter) const{
+		glm::vec2 get_nearest_coords(const glm::vec3& point)const override{
+			glm::vec3 p = glm::normalize(point - pos);
+			float alpha = asin(p.z);
+			float theta = acos(p.y/cos(alpha));
+
+			return glm::vec2(alpha, theta);
+		}
+
+		glm::vec3 get_tangent_alpha(const glm::vec2& parameter) const override{
 			return glm::normalize(glm::vec3(
 				sin(parameter.y) * (-sin(parameter.x)),
 				cos(parameter.y) * (-sin(parameter.x)),
@@ -150,18 +189,18 @@ namespace DTO {
 			));
 		}
 
-		glm::vec3 get_tangent_theta(const glm::vec2& coords) const{
+		glm::vec3 get_tangent_theta(const glm::vec2& coords) const override{
 			return glm::normalize(glm::vec3(
 				cos(coords.y) * cos(coords.x),
 				(-sin(coords.y)) * cos(coords.x),
 				0
 			));
 		}
-		hole make_hole(const glm::vec2& parameter, float size)const{
+		hole make_hole(const glm::vec2& parameter, float size)const override{
 			return hole();
 		}
 
-		glm::vec3 get_normal(const glm::vec2& parameter)const{
+		glm::vec3 get_normal(const glm::vec2& parameter)const override{
 			return glm::normalize(get_local_pos(parameter));
 		}
 

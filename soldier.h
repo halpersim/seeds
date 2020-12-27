@@ -52,14 +52,16 @@ namespace DTO {
 	class attacker : public soldier {
 	public:
 		bool is_alive;
-		glm::vec3 pos;
 		glm::vec3 normal;
+		glm::vec3 target;
+		glm::vec3 start;
+		float speed_factor;
+		float distance;
 		int sworm_id;
 
 		attacker(soldier_data& data, planet<any_shape>* host_planet, glm::vec3 coord, glm::vec3 direction) :
 			soldier(data, host_planet, coord, direction),
 			is_alive(false),
-			pos(glm::vec3(0.f)),
 			normal(glm::vec3(0.f)),
 			sworm_id(0)
 		{}
@@ -67,7 +69,6 @@ namespace DTO {
 		attacker() :
 			soldier(),
 			is_alive(false),
-			pos(glm::vec3(0.f)),
 			normal(glm::vec3(0.f)),
 			sworm_id(0)
 		{}
@@ -88,13 +89,13 @@ namespace DTO {
 	class sworm {
 	private:
 		std::array<attacker, 15> units;
-		planet<any_shape>* target;
 
 	public:
+		planet<any_shape>* target;
 		const unsigned int id;
 
 		sworm() :
-			id(DTO::id_generator::next_id()),
+			id(DTO::id_generator::next_sworm()),
 			target(NULL)
 		{}
 

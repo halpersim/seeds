@@ -19,11 +19,14 @@ namespace Rendering {
 		static void copy_list_in_buffer(const std::list<T>& list, gl_wrapper::buffer<P1, P2, I>& buffer){
 			buffer.bind();
 			buffer.resize(list.size() * sizeof(T));
-			T* ptr = (T*)buffer.map(GL_WRITE_ONLY);
-			if(ptr){
-				std::for_each(list.begin(), list.end(), [&ptr](const T& value) {*ptr = value; ptr++; });
+			
+			if(!list.empty()){
+				T* ptr = (T*)buffer.map(GL_WRITE_ONLY);
+				if(ptr){
+					std::for_each(list.begin(), list.end(), [&ptr](const T& value) {*ptr = value; ptr++; });
+				}
+				buffer.unmap();
 			}
-			buffer.unmap();
 		}
 
 		/*	template<class T>
@@ -78,8 +81,8 @@ namespace Rendering {
 				//load shader 
 				std::string error_msg = "";
 				std::array<GLuint, 2> shader;
-				shader[0] = my_utils::shader::load("shader/model/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
-				shader[1] = my_utils::shader::load("shader/model/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
+				shader[0] = my_utils::shader::load("media/shader/model/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
+				shader[1] = my_utils::shader::load("media/shader/model/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
 
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR loading shaders: %s", error_msg.c_str());
@@ -149,8 +152,8 @@ namespace Rendering {
 				//load shader 
 				std::string error_msg = "";
 				std::array<GLuint, 2> shader;
-				shader[0] = my_utils::shader::load("shader/model/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
-				shader[1] = my_utils::shader::load("shader/model/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
+				shader[0] = my_utils::shader::load("media/shader/model/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
+				shader[1] = my_utils::shader::load("media/shader/model/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
 
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR shader compilation error: %s", error_msg.c_str());
@@ -216,11 +219,11 @@ namespace Rendering {
 			{
 				std::string error_msg = "";
 				std::array<GLuint, 5> shader;
-				shader[0] = my_utils::shader::load("shader/planet/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
-				shader[1] = my_utils::shader::load("shader/planet/tcs.glsl", GL_TESS_CONTROL_SHADER, true, &error_msg);
-				shader[2] = my_utils::shader::load("shader/planet/tes.glsl", GL_TESS_EVALUATION_SHADER, true, &error_msg);
-				shader[3] = my_utils::shader::load("shader/planet/gs.glsl", GL_GEOMETRY_SHADER, true, &error_msg);
-				shader[4] = my_utils::shader::load("shader/planet/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
+				shader[0] = my_utils::shader::load("media/shader/planet/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
+				shader[1] = my_utils::shader::load("media/shader/planet/tcs.glsl", GL_TESS_CONTROL_SHADER, true, &error_msg);
+				shader[2] = my_utils::shader::load("media/shader/planet/tes.glsl", GL_TESS_EVALUATION_SHADER, true, &error_msg);
+				shader[3] = my_utils::shader::load("media/shader/planet/gs.glsl", GL_GEOMETRY_SHADER, true, &error_msg);
+				shader[4] = my_utils::shader::load("media/shader/planet/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
 
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR shader compilation error: \n%s", error_msg.c_str());
@@ -235,12 +238,13 @@ namespace Rendering {
 				if(matrix_pallet.size() == 0)
 					return;
 
-				//set unifroms
+
+				//set uniforms
 				program.Uniform<vp>() = frame_data::view_projection_matrix;
 				program.Uniform<eye>() = frame_data::eye;
 				program.Uniform<light>() = frame_data::light;
 				program.use();
-
+				
 				copy_list_in_buffer(render_data, render_data_buffer);
 				copy_list_in_buffer(holes, hole_buffer);
 				copy_list_in_buffer(matrix_pallet, matrix_buffer);
@@ -250,7 +254,7 @@ namespace Rendering {
 				hole_buffer.bind_base(1);
 				matrix_buffer.bind_base(2);
 				id_buffer.bind_base(3);
-
+				
 				const GLuint subroutine_idx = Loki::TL::IndexOf<LOKI_TYPELIST_2(DTO::sphere, DTO::torus), T>::value;
 				glUniformSubroutinesuiv(GL_TESS_EVALUATION_SHADER, 1, &subroutine_idx);
 				GLenum error = glGetError();

@@ -12,6 +12,7 @@
 #include <freetype-2.10.1/include/ft2build.h>
 #include FT_FREETYPE_H
 
+
 #include <my_utils/my_utils.h>
 #include <iostream>
 #include <time.h>
@@ -27,6 +28,7 @@
 #include "font.h"
 #include "icons.h"
 #include "hud.h"
+#include "cursor.h"
 
 
 HI::user_input user_input;
@@ -48,11 +50,13 @@ int main() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-	GLFWwindow* window = glfwCreateWindow(500, 500, "goarm", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(500, 500, "Seeds", NULL, NULL);
 	glfwMakeContextCurrent(window);
 	glfwSetKeyCallback(window, window_key_callback);
 	glfwSetMouseButtonCallback(window, window_mouse_button_callback);
 	glfwSetCursorPosCallback(window, window_cursor_pos_callback);
+	Rendering::_2D::cursor_singleton::Instance().init(window);
+
 /*
 	FT_Library ft_library;
 	FT_Error ft_error;
@@ -118,39 +122,23 @@ int main() {
 		using std::placeholders::_1;
 		user_input.add_listener(std::bind(&Control::game::process_user_input, &game, _1));
 	}
-	
-	const float bg[] = { 0.2f, 0.2f, 0.2f, 1.f };
 	const float& one = 1.f;
 	GLenum error;
 	Rendering::_2D::font font(Rendering::_2D::font::CONSOLAS, glm::vec3(1.f), 20.f);
 	std::string diff = "";
 	std::stringstream ss;
 	double d = 0.01;
-	int cnt = 1;
-
-	std::vector<int> icon_indices;
-	icon_indices.push_back(Rendering::_2D::icons::ATTACKER);
-	icon_indices.push_back(Rendering::_2D::icons::DAMAGE);
-	icon_indices.push_back(Rendering::_2D::icons::HEALTH);
-	icon_indices.push_back(Rendering::_2D::icons::SPEED);
-	icon_indices.push_back(Rendering::_2D::icons::PLANET);
-	icon_indices.push_back(Rendering::_2D::icons::SWOARM);
-
-	std::vector<glm::vec2> icon_positions;
-	icon_positions.push_back(glm::vec2(100, 100));
-	icon_positions.push_back(glm::vec2(100, 150));
-	icon_positions.push_back(glm::vec2(100, 200));
-	icon_positions.push_back(glm::vec2(100, 250));
-	icon_positions.push_back(glm::vec2(100, 300));
-	icon_positions.push_back(glm::vec2(100, 350));
 
 	printf("GL_VERSION = [%s]\n", glGetString(GL_VERSION));
+
+	Rendering::_2D::cursor_singleton::Instance().set_cursor(Rendering::_2D::cursor::ATTACK);
 	while (!glfwWindowShouldClose(window)) {
 		timer.start(glfwGetTime());
-//		printf("start rendering loop = %d\n", glGetError());
+
 		
 		glfwPollEvents();
-		glClearBufferfv(GL_COLOR, 0, bg);
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_HAND_CURSOR);
+
 		glClearBufferfv(GL_DEPTH, 0, &one);
 
 		Rendering::frame_data::delta_time = timer.diff;
@@ -158,16 +146,12 @@ int main() {
 
 		game.update();
 		game.render();
-	//	font.render_string_new(diff, glm::vec2(0.f, 0.f));
 
-	//	Rendering::_2D::icon_singleton::Instance().render_icons(icon_indices, icon_positions);
 
 		ss.str("");
 		ss << diff;
 		std::string s = ss.str();
 		font.render_string(s, glm::vec2(0.f, 0.f));
-		
-	//	printf("%s\n", s.c_str());
 
 		error = glGetError();
 		if (error != GL_NO_ERROR) {
@@ -183,8 +167,6 @@ int main() {
 		ss << "do semma ba grob " << 1/timer.diff << " fps";
 		diff = ss.str();
 		d += timer.diff;
-		cnt++;
-//		std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
 	}
 
 	glfwDestroyWindow(window),
@@ -209,11 +191,11 @@ void window_cursor_pos_callback(GLFWwindow* window, double x, double y){
 	/*
 
 	GLuint shader[5];
-	shader[0] = my_utils::shader::load("shader/torus_vs.glsl", GL_VERTEX_SHADER, true);
-	shader[1] = my_utils::shader::load("shader/torus_tcs.glsl", GL_TESS_CONTROL_SHADER, true);
-  shader[2] = my_utils::shader::load("shader/torus_tes.glsl", GL_TESS_EVALUATION_SHADER, true);
-	shader[3] = my_utils::shader::load("shader/torus_gs.glsl", GL_GEOMETRY_SHADER, true);
-	shader[4] = my_utils::shader::load("shader/torus_fs.glsl", GL_FRAGMENT_SHADER, true);
+	shader[0] = my_utils::shader::load("media/shader/torus_vs.glsl", GL_VERTEX_SHADER, true);
+	shader[1] = my_utils::shader::load("media/shader/torus_tcs.glsl", GL_TESS_CONTROL_SHADER, true);
+  shader[2] = my_utils::shader::load("media/shader/torus_tes.glsl", GL_TESS_EVALUATION_SHADER, true);
+	shader[3] = my_utils::shader::load("media/shader/torus_gs.glsl", GL_GEOMETRY_SHADER, true);
+	shader[4] = my_utils::shader::load("media/shader/torus_fs.glsl", GL_FRAGMENT_SHADER, true);
 
 	GLuint torus_program;
 	torus_program = my_utils::program::link_from_shaders(shader, 5, true, true);

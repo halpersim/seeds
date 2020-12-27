@@ -16,26 +16,26 @@
     <Filter Include="Source Files\DTOs">
       <UniqueIdentifier>{42a04a97-be36-4ea6-a21b-08035e473f8f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Rendering">
-      <UniqueIdentifier>{5f819229-c3c9-440f-aa3c-2fc7b330dd4a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Rendering\Models">
-      <UniqueIdentifier>{ff311be2-ecd8-4b6f-aebc-99ccf0e102b8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Utils">
       <UniqueIdentifier>{f3e8ece2-e5b1-43e1-a9bb-a4d1f4b3a4a0}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Constants">
       <UniqueIdentifier>{e3ae95f2-cb79-42c4-98a3-068153d1f8a3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Rendering\Utils">
-      <UniqueIdentifier>{ab82f5f7-7adf-4c7a-8ccd-0137a0d3a4a5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\HI">
       <UniqueIdentifier>{229421fa-e782-441d-968e-e833dec9c37b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Control">
       <UniqueIdentifier>{81a18a8d-55c1-4e60-9d25-656ad4f109a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Rendering">
+      <UniqueIdentifier>{5f819229-c3c9-440f-aa3c-2fc7b330dd4a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Rendering\Models">
+      <UniqueIdentifier>{ff311be2-ecd8-4b6f-aebc-99ccf0e102b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Rendering\Utils">
+      <UniqueIdentifier>{ab82f5f7-7adf-4c7a-8ccd-0137a0d3a4a5}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Rendering\2D">
       <UniqueIdentifier>{071c63ec-b48e-4b46-8e21-ade9bb1cbaa5}</UniqueIdentifier>
@@ -135,6 +135,9 @@
       <Filter>Source Files\Rendering\2D</Filter>
     </ClInclude>
     <ClInclude Include="icons.h">
+      <Filter>Source Files\Rendering\2D</Filter>
+    </ClInclude>
+    <ClInclude Include="cursor.h">
       <Filter>Source Files\Rendering\2D</Filter>
     </ClInclude>
   </ItemGroup>

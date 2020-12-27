@@ -1,11 +1,7 @@
 #pragma once
 #include "utils.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb\stb_image.h>
-
 #include <loki/Singleton.h>
-
 #include <log4cpp/Category.hh>
 
 
@@ -15,8 +11,8 @@ namespace Rendering{
 		private:
 			static log4cpp::Category& logger;
 		
-			static std::string ICON_PATH;
-			static std::string ICON_NAMES[];
+			static const std::string ICON_PATH;
+			static const std::string ICON_NAMES[];
 			
 			gl_wrapper::texture<gl_wrapper::Texture_Array_2D> icons_texture;
 
@@ -49,11 +45,11 @@ namespace Rendering{
 			{
 				unsigned char* tex_data = new unsigned char[4 * ICON_SIZE * ICON_SIZE * NUM_ICONS];
 				unsigned char* icon_data = NULL;
-				stbi_set_flip_vertically_on_load(1);
 				int x, y, dummy;
-
+				
+				my_utils::set_flip_vertically_on_load(true);
 				for(int i = 0; i<NUM_ICONS; i++){
-					icon_data = stbi_load((ICON_PATH + ICON_NAMES[i]).c_str(), &x, &y, &dummy, 4);
+					icon_data = my_utils::load_img((ICON_PATH + ICON_NAMES[i]).c_str(), &x, &y, &dummy, 4);
 					memcpy(tex_data + 4 * ICON_SIZE * ICON_SIZE * i, icon_data, sizeof(unsigned char) * 4 * ICON_SIZE * ICON_SIZE);
 					delete[] icon_data;
 				}
@@ -64,8 +60,8 @@ namespace Rendering{
 
 				std::string error_msg = "";
 				std::array<GLuint, 2> shader;
-				shader[0] = my_utils::shader::load("shader/icons/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
-				shader[1] = my_utils::shader::load("shader/icons/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
+				shader[0] = my_utils::shader::load("media/shader/icons/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
+				shader[1] = my_utils::shader::load("media/shader/icons/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
 
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR shader compilation error; class icons, constructor: %s", error_msg.c_str());
@@ -107,7 +103,7 @@ namespace Rendering{
 				glm::mat4* mat_ptr = reinterpret_cast<glm::mat4*>(matrix_buffer.map(GL_WRITE_ONLY));
 				ZeroMemory(mat_ptr, sizeof(glm::mat4) * size);
 
-				for(int i = 0; i < size; i++){
+				for(unsigned int i = 0; i < size; i++){
 					mat_ptr[i][0][0] = scale_x;
 					mat_ptr[i][1][1] = scale_y;
 					mat_ptr[i][2][2] = 1;
@@ -134,9 +130,9 @@ namespace Rendering{
 			}
 		};
 
-		std::string icons::ICON_PATH = "icons/";
+		const std::string icons::ICON_PATH = "media/textures/icons/";
 
-		std::string icons::ICON_NAMES[] = {
+		const std::string icons::ICON_NAMES[] = {
 			"attacker.png",
 			"damage.png",
 			"health.png",

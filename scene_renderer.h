@@ -69,8 +69,8 @@ namespace Rendering{
 
 				std::string error_msg = "";
 				std::array<GLuint, 2> shader;
-				shader[0] = my_utils::shader::load("shader/scene_renderer/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
-				shader[1] = my_utils::shader::load("shader/scene_renderer/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
+				shader[0] = my_utils::shader::load("media/shader/scene_renderer/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
+				shader[1] = my_utils::shader::load("media/shader/scene_renderer/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
 
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR shader compilation error -> scene_renderer constructor:\n%s", error_msg.c_str());
@@ -84,7 +84,7 @@ namespace Rendering{
 
 				error_msg = "";
 				std::array<GLuint, 1> compute_shader;
-				compute_shader[0] = my_utils::shader::load("shader/scene_renderer/cs.glsl", GL_COMPUTE_SHADER, true, &error_msg);
+				compute_shader[0] = my_utils::shader::load("media/shader/scene_renderer/cs.glsl", GL_COMPUTE_SHADER, true, &error_msg);
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR shader compilation error -> scene_renderer constructor:\n%s", error_msg.c_str());
 				}
@@ -120,8 +120,8 @@ namespace Rendering{
 				int highlighted_id,
 				const std::list<DTO::defender>& def_list,
 				const std::list<DTO::attacker>& att_list,
-				const std::list<DTO::tree<DTO::defender>>& tree_def_list,
-				const std::list<DTO::tree<DTO::attacker>>& tree_att_list,
+				const std::list<DTO::tree<DTO::defender>*>& tree_def_list,
+				const std::list<DTO::tree<DTO::attacker>*>& tree_att_list,
 				const std::list<DTO::planet<DTO::sphere>>& planet_sphere_list,
 				const std::list<DTO::planet<DTO::torus>>& planet_torus_list)
 			{
@@ -209,14 +209,13 @@ namespace Rendering{
 
 
 			template<class T>
-			inline std::list<int> get_id_list(const std::list<DTO::tree<T>>& list){
+			inline std::list<int> get_id_list(const std::list<DTO::tree<T>*>& list){
 				std::list<int> id_list;
 
-				std::for_each(list.begin(), list.end(), [&id_list](const DTO::tree<T>& t){
-					for(unsigned int i = 0; i< t.nodes.size(); i++)
-						//		if(t.nodes.elementAt(i).)
-						id_list.push_back(t.id);
-											});
+				std::for_each(list.begin(), list.end(), [&id_list](const DTO::tree<T>* t){
+					for(unsigned int i = 0; i< t->nodes.size(); i++)
+						id_list.push_back(t->id);
+				});
 				return id_list;
 			}
 		};

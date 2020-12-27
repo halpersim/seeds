@@ -13,8 +13,10 @@
 #include <functional>
 #include "uniform_naming.h"
 
-namespace my_math {
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb\stb_image.h>
 
+namespace my_math {
 	int int_log(int base, int x){
 		int ret;
 		for(ret = 0; x != 0; x /= base, ret++);
@@ -33,6 +35,14 @@ namespace my_utils {
 	template<class T>
 	bool float_equal(T lhs, T rhs, double epsilon = 0.0001){
 		return fabs(lhs - rhs) < epsilon;
+	}
+
+	void set_flip_vertically_on_load(bool flip){
+		stbi_set_flip_vertically_on_load(flip);
+	}
+
+	unsigned char* load_img(const char* filename, int* x, int* y, int* comp, int req_comp){
+		return stbi_load(filename, x, y, comp, req_comp);
 	}
 }
 
@@ -153,7 +163,7 @@ namespace gl_wrapper {
 			}
 
 			glUseProgram(name);
-			set_uniforms(Loki::Int2Type<Loki::TL::Length<TL>::value - 1 >());
+			set_uniforms(Loki::Int2Type<Loki::TL::Length<TL>::value - 1>());
 		}
 
 		template<typename T>
@@ -196,6 +206,8 @@ namespace gl_wrapper {
 	public:
 		static void Reallocate(GLenum target, GLenum usage, unsigned int old_space, unsigned int new_space) {
 			glBufferData(target, new_space, NULL, usage);
+			GLenum error = glGetError();
+			if(error != GL_NONE) printf("GL_ERROR [%s] reallocating [%d] data", get_enum_string(error).c_str(), new_space);
 		}
 	};
 
@@ -327,10 +339,14 @@ namespace gl_wrapper {
 				logger.debug("buffer already mapped!");
 				return NULL;
 			}
+			GLenum error = glGetError();
 
+			if(error != GL_NONE){
+				logger.warn("GL_ERROR [%s] -> before mapping buffer!", gl_wrapper::get_enum_string(error).c_str());
+			}
 			void* ptr = glMapBuffer(target, access);
 			if(ptr == NULL)
-				logger.warn("GL_ERROR [%s] -> failed to map buffer [%d], access [%s]", gl_wrapper::get_enum_string(glGetError()).c_str(), name, gl_wrapper::get_enum_string(access).c_str());
+				logger.warn("GL_ERROR [%s] -> failed to map buffer - name = [%d], access [%s]", gl_wrapper::get_enum_string(glGetError()).c_str(), name, gl_wrapper::get_enum_string(access).c_str());
 		
 			return ptr;
 		}
@@ -1201,7 +1217,10 @@ private:
 			CASE(GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE);
 			CASE(GL_MAX_SAMPLES);
 #undef CASE
-		default: ret_string = std::to_string(error_value).c_str(); break;
+		default:
+			std::stringstream ss;
+			ss << "0x" << std::hex << error_value;
+			ret_string = ss.str(); break;
 		}
 		return ret_string;
 	}

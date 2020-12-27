@@ -84,8 +84,8 @@ namespace Rendering{
 
 				std::string error_msg = "";
 				std::array<GLuint, 2> shader;
-				shader[0] = my_utils::shader::load("shader/hud/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
-				shader[1] = my_utils::shader::load("shader/hud/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
+				shader[0] = my_utils::shader::load("media/shader/hud/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
+				shader[1] = my_utils::shader::load("media/shader/hud/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
 
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR shader compilation error in class hud: %s", error_msg.c_str());
@@ -112,7 +112,7 @@ namespace Rendering{
 			inline void render(const DTO::planet<DTO::any_shape>& planet){
 				static const std::array<int, 5> icons = {icons::PLANET, icons::DAMAGE, icons::HEALTH, icons::SPEED, icons::SWOARM};
 
-				std::array<std::string, 5> strings = {std::string("Planet #") + std::to_string(planet.id),
+				std::array<std::string, 5> strings = {std::string("Planet #") + std::to_string(planet.id & (~DTO::id_generator::PLANET_BIT)),
 					std::to_string(int(planet.soldier_type.damage)),
 					std::to_string(int(planet.soldier_type.health)),
 					std::to_string(int(planet.soldier_type.speed)),
@@ -125,7 +125,7 @@ namespace Rendering{
 			inline void render(const DTO::sworm& sworm){
 				static const std::array<int, 5> icons = {icons::SWOARM, icons::DAMAGE, icons::HEALTH, icons::SPEED, icons::ATTACKER};
 
-				std::array<std::string, 5> strings = {std::string("Sworm #") + std::to_string(sworm.id),
+				std::array<std::string, 5> strings = {std::string("Sworm #") + std::to_string(sworm.id & (~DTO::id_generator::SWORM_BIT)),
 					std::to_string(int(sworm.get_first()->damage)),
 					std::to_string(int(sworm.get_first()->health)),
 					std::to_string(int(sworm.get_first()->speed)),
