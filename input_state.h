@@ -32,6 +32,7 @@ namespace HI{
 		int key_down;
 		glm::vec2 mouse_dragged;
 		glm::vec2 clicked;
+		int key_event;
 	};
 
 }

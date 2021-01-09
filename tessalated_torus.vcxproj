@@ -138,14 +138,19 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="button.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="constants.h" />
     <ClInclude Include="cursor.h" />
     <ClInclude Include="data_supplier.h" />
     <ClInclude Include="font.h" />
     <ClInclude Include="frame_data.h" />
+    <ClInclude Include="general_utils.h" />
+    <ClInclude Include="gl_wrapper.h" />
     <ClInclude Include="hud.h" />
+    <ClInclude Include="hud_manager.h" />
     <ClInclude Include="icons.h" />
+    <ClInclude Include="object_manager.h" />
     <ClInclude Include="render_manager.h" />
     <ClInclude Include="user_input.h" />
     <ClInclude Include="id_generator.h" />
@@ -158,7 +163,7 @@
     <ClInclude Include="timer.h" />
     <ClInclude Include="type_traits.h" />
     <ClInclude Include="uniform_naming.h" />
-    <ClInclude Include="utils.h" />
+    <ClInclude Include="render_utils.h" />
     <ClInclude Include="matrix_generator.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="player.h" />

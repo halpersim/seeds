@@ -1,5 +1,6 @@
 #pragma once
-#include "utils.h"
+#include "render_utils.h"
+#include "gl_wrapper.h"
 #include "uniform_naming.h"
 #include "soldier.h"
 #include "model.h"

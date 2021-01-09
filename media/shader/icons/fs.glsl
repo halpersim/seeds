@@ -7,5 +7,5 @@ layout(location = 0) uniform sampler2DArray bitmap;
 out vec4 color_out;
 
 void main(){
-  color_out = texelFetch(bitmap, ivec3(tc), 0);
+  color_out = texture(bitmap, vec3(tc), 0);
 }

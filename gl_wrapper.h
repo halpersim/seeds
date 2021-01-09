@@ -4,60 +4,32 @@
 #include <loki/HierarchyGenerators.h>
 #include <loki/Typelist.h>
 
-#include<array>
 #define GLEW_STATIC
 #include <GL/glew.h>
-#include<my_utils/my_utils.h>
+
 #include <GLM/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp>
+
+#include <my_utils/my_utils.h>
+
 #include <functional>
+#include <algorithm>
+#include <array>
+
 #include "uniform_naming.h"
-
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb\stb_image.h>
-
-namespace my_math {
-	int int_log(int base, int x){
-		int ret;
-		for(ret = 0; x != 0; x /= base, ret++);
-		return ret;
-	}
-
-	int int_pow(int exp, int x){
-		int ret;
-		for(ret = 1; x != 0; ret *= exp, x--);
-		return ret;
-	}
-}
-
-namespace my_utils {
-
-	template<class T>
-	bool float_equal(T lhs, T rhs, double epsilon = 0.0001){
-		return fabs(lhs - rhs) < epsilon;
-	}
-
-	void set_flip_vertically_on_load(bool flip){
-		stbi_set_flip_vertically_on_load(flip);
-	}
-
-	unsigned char* load_img(const char* filename, int* x, int* y, int* comp, int req_comp){
-		return stbi_load(filename, x, y, comp, req_comp);
-	}
-}
-
 
 namespace gl_wrapper {
 
 	static log4cpp::Category& logger = log4cpp::Category::getInstance("gl_wrapper");
-	
+
 	std::string get_enum_string(GLenum value);
 
 	void uniform_setter(int loc, const Void& value){}
 
 	void uniform_setter(int loc, const glm::mat4& value){
 		glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(value));
-		
+
 		GLenum gl_error = glGetError();
 		if(gl_error != GL_NONE){
 			logger.warn("GL_ERROR [%s] -> glUniformMatrix4fv - loc = %d", get_enum_string(gl_error).c_str(), loc);
@@ -75,7 +47,7 @@ namespace gl_wrapper {
 
 	void uniform_setter(int loc, const glm::vec3& value){
 		glUniform3fv(loc, 1, glm::value_ptr(value));
-		
+
 		GLenum gl_error = glGetError();
 		if(gl_error != GL_NONE){
 			logger.warn("GL_ERROR [%s] -> glUniform3fv - loc = %d, vec3 = [%.3lf | %.3lf | %.3lf]", get_enum_string(gl_error).c_str(), loc, value.x, value.y, value.z);
@@ -128,14 +100,13 @@ namespace gl_wrapper {
 		GLuint name;
 		const bool is_graphics_program;
 
-		inline program(bool graphics_program = true):
+		inline program(bool graphics_program = true) :
 			set_up(false),
 			name(-1),
-			is_graphics_program(graphics_program)
-		{}
+			is_graphics_program(graphics_program){}
 
 		template<int N>
-		inline void create(const std::array<GLuint, N> shader, const char* program_name = NULL) {
+		inline void create(const std::array<GLuint, N> shader, const char* program_name = NULL){
 			std::string error_str;
 			name = my_utils::program::link_from_shaders(shader.data(), N, true, true, &error_str);
 
@@ -156,7 +127,7 @@ namespace gl_wrapper {
 		}
 
 		//calls glUseProgram() and sets all uniforms 
-		inline void use() {
+		inline void use(){
 			if(!set_up){
 				logger.warn("trying to use not set up program");
 				return;
@@ -167,26 +138,26 @@ namespace gl_wrapper {
 		}
 
 		template<typename T>
-		inline Uniform<T>& Uniform() {
+		inline Uniform<T>& Uniform(){
 			return Loki::Field<T>(uniforms);
 		}
 
 	private:
 
 		template<int i>
-		inline void set_uniforms(Loki::Int2Type<i> t) {
+		inline void set_uniforms(Loki::Int2Type<i> t){
 			Loki::Field<i>(uniforms).set();
 			set_uniforms(Loki::Int2Type<i - 1>());
 		}
 
 		template<>
-		inline void set_uniforms(Loki::Int2Type<0> t) {
+		inline void set_uniforms(Loki::Int2Type<0> t){
 			Loki::Field<0>(uniforms).set();
 		}
 
 
 		template<int i>
-		inline void set_uniform_locations(Loki::Int2Type<i> t) {
+		inline void set_uniform_locations(Loki::Int2Type<i> t){
 			typedef typename Loki::FieldHelper<Uniforms, i>::ResultType::UnderlyingType Name;
 
 			Loki::Field<i>(uniforms).loc = glGetUniformLocation(name, TypeName<Name>::get_name());
@@ -194,7 +165,7 @@ namespace gl_wrapper {
 		}
 
 		template<>
-		inline void set_uniform_locations(Loki::Int2Type<0> t) {
+		inline void set_uniform_locations(Loki::Int2Type<0> t){
 			typedef typename Loki::FieldHelper<Uniforms, 0>::ResultType::UnderlyingType Name;
 
 			Loki::Field<0>(uniforms).loc = glGetUniformLocation(name, TypeName<Name>::get_name());
@@ -204,7 +175,7 @@ namespace gl_wrapper {
 
 	struct DeleteOldData {
 	public:
-		static void Reallocate(GLenum target, GLenum usage, unsigned int old_space, unsigned int new_space) {
+		static void Reallocate(GLenum target, GLenum usage, unsigned int old_space, unsigned int new_space){
 			glBufferData(target, new_space, NULL, usage);
 			GLenum error = glGetError();
 			if(error != GL_NONE) printf("GL_ERROR [%s] reallocating [%d] data", get_enum_string(error).c_str(), new_space);
@@ -213,12 +184,12 @@ namespace gl_wrapper {
 
 	struct CopyOldData {
 	public:
-		static void Reallocate(GLenum target, GLenum usage, unsigned int old_space, unsigned int new_space) {
+		static void Reallocate(GLenum target, GLenum usage, unsigned int old_space, unsigned int new_space){
 			void* memory_ptr = new char[new_space];
 			void* buffer_ptr = glMapBuffer(target, GL_READ_ONLY);
 			std::memcpy(memory_ptr, buffer_ptr, old_space < new_space ? old_space : new_space);
 			glUnmapBuffer(target);
-			
+
 			glBufferData(target, new_space, memory_ptr, usage);
 			delete[] memory_ptr;
 		}
@@ -228,35 +199,35 @@ namespace gl_wrapper {
 		class NewStoragePolicy,
 		int n = 0
 	>
-	struct MemoryTightlyPacked{
-	public: 
-		static void ManageMemory(GLenum target, GLenum usage, unsigned int old_space, unsigned int new_space, bool set_up) {
-			if (!set_up || old_space != new_space) {
-				NewStoragePolicy::Reallocate(target, usage, old_space, new_space);
+		struct MemoryTightlyPacked{
+		public:
+			static void ManageMemory(GLenum target, GLenum usage, unsigned int old_space, unsigned int new_space, bool set_up){
+				if(!set_up || old_space != new_space) {
+					NewStoragePolicy::Reallocate(target, usage, old_space, new_space);
+				}
 			}
-		}
 	};
 
 	template<
 		class NewStoragePolicy,
 		int n
 	>
-	struct MemoryLinearExpanding {
-	public:
-		static void ManageMemory(GLenum target, GLenum usage, unsigned int old_space, unsigned int new_space, bool set_up) {			
-			if (!set_up || (old_space / n != new_space / n)) {
-				NewStoragePolicy::Reallocate(target, usage, old_space, (new_space / n + 1) * n);
+		struct MemoryLinearExpanding {
+		public:
+			static void ManageMemory(GLenum target, GLenum usage, unsigned int old_space, unsigned int new_space, bool set_up){
+				if(!set_up || (old_space / n != new_space / n)) {
+					NewStoragePolicy::Reallocate(target, usage, old_space, (new_space / n + 1) * n);
+				}
 			}
-		}
 	};
 
 	template<
 		class NewStoragePolicy,
 		int n
 	>
-	struct MemoryExponentiallyExpanding {
-		static void ManageMemory(GLenum target, GLenum usage, unsigned int old_space, unsigned int new_space, bool set_up) {
-			if (!set_up || (my_math::int_log(n, old_space) != my_math::int_log(n, new_space))) {
+		struct MemoryExponentiallyExpanding {
+		static void ManageMemory(GLenum target, GLenum usage, unsigned int old_space, unsigned int new_space, bool set_up){
+			if(!set_up || (my_math::int_log(n, old_space) != my_math::int_log(n, new_space))) {
 				NewStoragePolicy::Reallocate(target, usage, old_space, my_math::int_pow(n, (my_math::int_log(n, new_space) + 1)));
 			}
 		}
@@ -267,122 +238,122 @@ namespace gl_wrapper {
 		template <class, int> class NewStoragePolicy = MemoryTightlyPacked,
 		int StoragePolicyParameter = 0
 	>
-	class buffer {
-	private:
-		GLuint name;
-		bool set_up;
-		unsigned int size;
-		const GLenum target;
-		const GLenum usage;
+		class buffer {
+		private:
+			GLuint name;
+			bool set_up;
+			unsigned int size;
+			const GLenum target;
+			const GLenum usage;
 
-		typedef NewStoragePolicy<MemoryAllocationPolicy, StoragePolicyParameter> StoragePolicy;
+			typedef NewStoragePolicy<MemoryAllocationPolicy, StoragePolicyParameter> StoragePolicy;
 
-	public:
-		
-		buffer(GLenum target, GLenum usage, unsigned int size = 0) :
-			target(target),
-			size(size),
-			set_up(false),
-			usage(usage),
-			name(-1)
-		{
-			GLenum error = glGetError();
-			if(error != GL_NO_ERROR)
-				printf("error before buffer [%s]\n", get_enum_string(error).c_str());
+		public:
 
-			glGenBuffers(1, &name);
-			glBindBuffer(target, name);
-			if(size != 0){
-				StoragePolicy::ManageMemory(target, usage, 0, size, set_up);
+			buffer(GLenum target, GLenum usage, unsigned int size = 0) :
+				target(target),
+				size(size),
+				set_up(false),
+				usage(usage),
+				name(-1){
+				GLenum error = glGetError();
+				if(error != GL_NO_ERROR)
+					printf("error before buffer [%s]\n", get_enum_string(error).c_str());
+
+				glGenBuffers(1, &name);
+				glBindBuffer(target, name);
+				if(size != 0){
+					StoragePolicy::ManageMemory(target, usage, 0, size, set_up);
+					set_up = true;
+				}
+				error = glGetError();
+				if(error != GL_NO_ERROR){
+					logger.warn("GL_ERROR [%s] -> Buffer Constructor; target = 0x%X, usage = 0x%X", get_enum_string(error).c_str(), target, usage);
+				}
+			}
+
+
+			//fills the data with the given data, the buffer has the given size afterwards
+			void fill_data(void* data, unsigned int size){
+				glBindBuffer(target, name);
+				glBufferData(target, size, data, usage);
+			}
+
+			void clear(){
+				void* ptr = map(GL_WRITE_ONLY);
+				memset(ptr, 0, size);
+				unmap();
+			}
+
+			void bind(){
+				glBindBuffer(target, name);
+			}
+
+			void bind_base(int idx){
+				glBindBufferBase(target, idx, name);
+			}
+
+			void resize(int new_size){
+				glBindBuffer(target, name);
+				StoragePolicy::ManageMemory(target, usage, size, new_size, set_up);
 				set_up = true;
+				size = new_size;
 			}
-			error = glGetError();
-			if(error != GL_NO_ERROR){
-				logger.warn("GL_ERROR [%s] -> Buffer Constructor; target = 0x%X, usage = 0x%X", get_enum_string(error).c_str(), target, usage);
+
+			//access qualifiers = {GL_READ_ONLY, GL_WRITE_ONLY, GL_READ_WRITE}
+			void* map(GLenum access){
+				glBindBuffer(target, name);
+
+				int mapped;
+				glGetBufferParameteriv(target, GL_BUFFER_MAPPED, &mapped);
+				if(mapped == GL_TRUE){
+					logger.debug("buffer already mapped!");
+					return NULL;
+				}
+				GLenum error = glGetError();
+
+				if(error != GL_NONE){
+					logger.warn("GL_ERROR [%s] -> before mapping buffer!", gl_wrapper::get_enum_string(error).c_str());
+				}
+				void* ptr = glMapBuffer(target, access);
+				if(ptr == NULL)
+					logger.warn("GL_ERROR [%s] -> failed to map buffer - name = [%d], access [%s]", gl_wrapper::get_enum_string(glGetError()).c_str(), name, gl_wrapper::get_enum_string(access).c_str());
+
+				return ptr;
 			}
-		}
 
+			void unmap(){
+				glBindBuffer(target, name);
+				glUnmapBuffer(target);
 
-		//fills the data with the given data, the buffer has the given size afterwards
-		void fill_data(void* data, unsigned int size){
-			glBindBuffer(target, name);
-			glBufferData(target, size, data, usage);
-		}
-
-		void clear(){
-			void* ptr = map(GL_WRITE_ONLY);
-			memset(ptr, 0, size);
-			unmap();
-		}
-
-		void bind() {
-			glBindBuffer(target, name);
-		}
-
-		void bind_base(int idx){
-			glBindBufferBase(target, idx, name);
-		}
-
-		void resize(int new_size) {
-			glBindBuffer(target, name);
-			StoragePolicy::ManageMemory(target, usage, size, new_size, set_up);
-			set_up = true;
-			size = new_size;
-		}
-
-		void* map(GLenum access) {
-			glBindBuffer(target, name);	
-
-			int mapped;
-			glGetBufferParameteriv(target, GL_BUFFER_MAPPED, &mapped);
-			if(mapped == GL_TRUE){
-				logger.debug("buffer already mapped!");
-				return NULL;
+				//check_error();
 			}
-			GLenum error = glGetError();
-
-			if(error != GL_NONE){
-				logger.warn("GL_ERROR [%s] -> before mapping buffer!", gl_wrapper::get_enum_string(error).c_str());
-			}
-			void* ptr = glMapBuffer(target, access);
-			if(ptr == NULL)
-				logger.warn("GL_ERROR [%s] -> failed to map buffer - name = [%d], access [%s]", gl_wrapper::get_enum_string(glGetError()).c_str(), name, gl_wrapper::get_enum_string(access).c_str());
-		
-			return ptr;
-		}
-
-		void unmap() {
-			glBindBuffer(target, name);
-			glUnmapBuffer(target);
-
-			//check_error();
-		}
 	};
 
 
 	struct Texture_2D{
-		typedef glm::vec2 Dimension;
+		typedef glm::ivec2 Dimension;
 		static const GLenum BINDING_TARGET = GL_TEXTURE_2D;
 
 		static void tex_storage(int level, GLenum internal_format, const Dimension& size){
-			glTexStorage2D(BINDING_TARGET, level, internal_format, int(size.x), int(size.y));
+			glTexStorage2D(BINDING_TARGET, level, internal_format, size.x, size.y);
 		}
 
 		static void fill_data(GLenum format, GLenum type, const GLvoid* pixels, const Dimension& offset, const Dimension& dim, GLint level){
-			glTexSubImage2D(BINDING_TARGET, level, int(offset.x), int(offset.y), int(dim.x), int(dim.y), format, type, pixels);
+			glTexSubImage2D(BINDING_TARGET, level, offset.x, offset.y, dim.x, dim.y, format, type, pixels);
 		}
 	};
-	
+
 	struct Texture_Array_2D{
-		typedef glm::vec3 Dimension;
+		typedef glm::ivec3 Dimension;
 		static const GLenum BINDING_TARGET = GL_TEXTURE_2D_ARRAY;
 
 		static void tex_storage(int level, GLenum internal_format, const Dimension& size){
-			glTexStorage3D(BINDING_TARGET, level, internal_format, int(size.x), int(size.y), int(size.z));
+			glTexStorage3D(BINDING_TARGET, level, internal_format, size.x, size.y, size.z);
 		}
 
 		static void fill_data(GLenum format, GLenum type, const GLvoid* pixels, const Dimension& offset, const Dimension& dim, GLint level){
-			glTexSubImage3D(BINDING_TARGET, level, int(offset.x), int(offset.y), int(offset.z), int(dim.x), int(dim.y), int(dim.z), format, type, pixels);
+			glTexSubImage3D(BINDING_TARGET, level, offset.x, offset.y, offset.z, dim.x, dim.y, dim.z, format, type, pixels);
 		}
 	};
 
@@ -392,45 +363,42 @@ namespace gl_wrapper {
 		typedef typename Type::Dimension Dimension;
 
 		GLenum binding_target;
-		Dimension size;
 
 		GLenum internal_format;
 		GLint levels;
-	
+
 	public:
 		GLuint name;
+		Dimension size;
 
-		inline texture(GLenum internal_format = GL_RGBA, int mipmap_levels = 1):
+		inline texture(GLenum internal_format = GL_RGBA, int mipmap_levels = 1) :
 			name(-1),
 			binding_target(Type::BINDING_TARGET),
 			size(Dimension(0.f)),
 			internal_format(internal_format),
-			levels(mipmap_levels)
-		{}
+			levels(mipmap_levels){}
 
 
-		inline texture(const Dimension& size, GLenum internal_format = GL_RGBA, int mipmap_levels = 1):
+		inline texture(const Dimension& size, GLenum internal_format = GL_RGBA, int mipmap_levels = 1) :
 			name(-1),
 			binding_target(Type::BINDING_TARGET),
 			size(size),
 			internal_format(internal_format),
-			levels(mipmap_levels)
-		{
+			levels(mipmap_levels){
 			gen_texture();
 		}
 
-		inline texture(texture<Type>&& rhs) : 
+		inline texture(texture<Type>&& rhs) :
 			name(rhs.name),
 			binding_target(rhs.binding_target),
 			size(rhs.size),
 			internal_format(rhs.internal_format),
-			levels(rhs.levels)
-		{
+			levels(rhs.levels){
 			rhs.name = -1;
 		}
 
 		inline ~texture(){
-			if (name != -1 && name)
+			if(name != -1 && name)
 				glDeleteTextures(1, &name);
 		}
 
@@ -447,13 +415,13 @@ namespace gl_wrapper {
 			gen_texture();
 		}
 
-		inline void fill_data(GLenum format, GLenum type, const GLvoid* pixels, const Dimension& offset = Dimension(0.f), Dimension dim = Dimension(0.f), GLint level = 0){
+		inline void fill_data(GLenum format, GLenum type, const GLvoid* pixels, const Dimension& offset = Dimension(0.f), Dimension dim = Dimension(0), GLint level = 0){
 			bind();
 
-			if(glm::length(dim) < 0.01)
+			if(dim == Dimension(0))
 				dim = size;
 
-		
+
 			Type::fill_data(format, type, pixels, offset, dim, level);
 			GLenum error = glGetError();
 			if(error != GL_NONE){
@@ -500,12 +468,12 @@ namespace gl_wrapper {
 		inline void set_parameter(GLenum p_name, const GLfloat* params){
 			bind();
 			glTexParameterfv(binding_target, p_name, params);
-		}		
+		}
 
 
-		inline void bind_unit(unsigned int unit){
+		inline void bind_unit(unsigned int unit) const{
 			glActiveTexture(GL_TEXTURE0 + unit);
-			
+
 			GLenum gl_error = glGetError();
 			if(gl_error != GL_ZERO){
 				printf("gl active texture error = %X -> [%s]\n", gl_error, gl_wrapper::get_enum_string(gl_error).c_str());
@@ -518,30 +486,31 @@ namespace gl_wrapper {
 				printf("gl bind texture error = %X -> [%s]\n", gl_error, gl_wrapper::get_enum_string(gl_error).c_str());
 			}
 		}
-private:
 
-	inline void bind(){
-		glBindTexture(binding_target, name);
-	}
+	private:
 
-
-	inline void gen_texture(){
-		glGenTextures(1, &name);
-		glBindTexture(binding_target, name);
-
-		glTexParameteri(binding_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(binding_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(binding_target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		glTexParameteri(binding_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(binding_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-		Type::tex_storage(levels, internal_format, size);
-
-		GLenum error = glGetError();
-		if(error != GL_NONE){
-			logger.warn("GL_ERROR [%s] -> glTexStorage* - binding_target = [%s], internal_format = [%s], levels = [%d], size = [%f | %f]", get_enum_string(error).c_str(), get_enum_string(binding_target).c_str(), get_enum_string(internal_format).c_str(), levels, size.x, size.y);
+		inline void bind(){
+			glBindTexture(binding_target, name);
 		}
-	}
+
+
+		inline void gen_texture(){
+			glGenTextures(1, &name);
+			glBindTexture(binding_target, name);
+
+			glTexParameteri(binding_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(binding_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(binding_target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+			glTexParameteri(binding_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(binding_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+			Type::tex_storage(levels, internal_format, size);
+
+			GLenum error = glGetError();
+			if(error != GL_NONE){
+				logger.warn("GL_ERROR [%s] -> glTexStorage* - binding_target = [%s], internal_format = [%s], levels = [%d], size = [%d | %d]", get_enum_string(error).c_str(), get_enum_string(binding_target).c_str(), get_enum_string(internal_format).c_str(), levels, size.x, size.y);
+			}
+		}
 	};
 
 	class framebuffer{
@@ -549,17 +518,16 @@ private:
 		std::array<GLenum, 16> attachments;
 
 		texture<Texture_2D> depth_component;
-	//	GLuint depth;
+		//	GLuint depth;
 		GLenum error;
 	public:
 		GLuint name;
 
 		static int MAX_DRAW_BUFFERS;
 
-		inline framebuffer():
+		inline framebuffer() :
 			error(GL_NONE),
-			depth_component(GL_DEPTH_COMPONENT32F)
-		{
+			depth_component(GL_DEPTH_COMPONENT32F){
 			if(MAX_DRAW_BUFFERS == -1)
 				glGetIntegerv(GL_MAX_DRAW_BUFFERS, &MAX_DRAW_BUFFERS);
 
@@ -570,7 +538,7 @@ private:
 		inline ~framebuffer(){
 			glDeleteFramebuffers(1, &name);
 		}
-		
+
 		inline static void unbind(){
 			glBindFramebuffer(GL_FRAMEBUFFER, NULL);
 		}
@@ -594,7 +562,7 @@ private:
 				logger.warn("GL_ERROR -> framebuffer: color_attachment [%d] >= MAX_DRAW_BUFFERS [%d]", attachment, MAX_DRAW_BUFFERS);
 				return;
 			}
-			
+
 			bind();
 			GLenum att = GL_COLOR_ATTACHMENT0 + attachment;
 			glFramebufferTexture(GL_FRAMEBUFFER, att, tex.name, level);
@@ -605,7 +573,7 @@ private:
 			attachments[attachment] = att;
 		}
 
-		inline void add_depth_component(const glm::vec2& size){		
+		inline void add_depth_component(const glm::vec2& size){
 			depth_component.create(size);
 			bind();
 			glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth_component.name, 0);
@@ -1217,10 +1185,10 @@ private:
 			CASE(GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE);
 			CASE(GL_MAX_SAMPLES);
 #undef CASE
-		default:
-			std::stringstream ss;
-			ss << "0x" << std::hex << error_value;
-			ret_string = ss.str(); break;
+			default:
+				std::stringstream ss;
+				ss << "0x" << std::hex << error_value;
+				ret_string = ss.str(); break;
 		}
 		return ret_string;
 	}

@@ -9,7 +9,7 @@
 #include <loki/Typelist.h>
 #include <GLM/glm.hpp>
 
-#include "utils.h"
+#include "gl_wrapper.h"
 
 
 #include FT_FREETYPE_H
@@ -52,12 +52,15 @@ namespace Rendering{
 				gl_wrapper::texture<gl_wrapper::Texture_Array_2D> texture;
 				int width;
 				int height;
+				int yMax;
+				int bearing_y_captial_A;
 				std::map<unsigned char, character_metrics> metrics;
 
 				font_size_data():
 					texture(GL_R8),
 					width(0),
-					height(0)
+					height(0),
+					yMax(0)
 				{}
 			};
 
@@ -68,7 +71,7 @@ namespace Rendering{
 
 			gl_wrapper::texture<gl_wrapper::Texture_2D> bitmap_texture;
 
-			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 0> array_buffer;
+			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 0> outline_ab;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 0> matrix_buffer;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 0> texture_index_buffer;
 
@@ -87,7 +90,7 @@ namespace Rendering{
 			
 			inline font(const char*const font_file, glm::vec3 font_color = glm::vec3(0.f), float size = 20.f):
 				bitmap_texture(GL_R8),
-				array_buffer(GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW, 2 * 4 * sizeof(float)),
+				outline_ab(GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW, 2 * 4 * sizeof(float)),
 				matrix_buffer(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, GLYPHS_PER_RENDER_CALL * sizeof(glm::mat4)),
 				texture_index_buffer(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, GLYPHS_PER_RENDER_CALL * sizeof(int)),
 				program(),
@@ -161,7 +164,7 @@ namespace Rendering{
 						metric.texture_index = texture_idx;
 
 						data.metrics.emplace(ch, metric);
-
+						
 						glyph_iterator->bearing_x = face->glyph->metrics.horiBearingX;
 						glyph_iterator->bearing_y = face->glyph->metrics.horiBearingY;
 						glyph_iterator->width = face->glyph->metrics.width;
@@ -175,12 +178,18 @@ namespace Rendering{
 						yMax = std::max(yMax, glyph_metrics.horiBearingY);
 						xMin = std::min(xMin, glyph_metrics.horiBearingX);
 						yMin = std::min(yMin, glyph_metrics.horiBearingY - glyph_metrics.height);
+
+						if(ch == 'A'){
+							data.bearing_y_captial_A = glyph_metrics.horiBearingY >> 6;
+						}
 					}
 				}
-
+								
 				data.width = (xMax - xMin) >> 6;
 				data.height = (yMax - yMin) >> 6;
 
+				data.yMax = yMax >> 6;
+				
 				unsigned char* texture_buffer = new unsigned char[data.width * data.height * AVAILABLE_GLYPHS];
 
 				ZeroMemory(texture_buffer, data.width * data.height * AVAILABLE_GLYPHS);
@@ -211,7 +220,33 @@ namespace Rendering{
 				return face->size->metrics.height >> 6;
 			}
 
-			inline int string_advance(const std::string& str, float size = -1){
+			inline int bearing_y_max(const std::string& str, float size = -1){
+				int bearing_y_max = 0;
+				for_each_glyph(str, [&bearing_y_max](FT_GlyphSlot glyph) {bearing_y_max = (std::max<int>)(bearing_y_max, glyph->metrics.height >> 6); }, size);
+				return bearing_y_max;
+			}
+
+			inline int bearing_y_capital_A(float size = -1){
+				if(size < 0)
+					size = this->size;
+				load_size(size);
+				int size_i = int(size * 64);
+				auto data = loaded_sizes.find(size_i);
+				if(data == loaded_sizes.end()){
+					logger.warn("font::bearing_y_capital_A() -> size was not loaded!");
+					return 0;
+				}
+
+				return data->second.bearing_y_captial_A;
+			}
+
+			inline int horizontal_advance(const std::string& str, float size = -1){
+				int advance = 0;
+				for_each_glyph(str, [&advance](FT_GlyphSlot glyph){advance += glyph->advance.x >> 6; }, size, [&advance](FT_Vector delta) { advance += delta.x >> 6; });
+				return advance;
+			}
+
+			inline void for_each_glyph(const std::string& str, const std::function<void(FT_GlyphSlot)>& apply_to_each_glyph, int size = -1, const std::function<void(FT_Vector)>& apply_kerning = [](FT_Vector v){}){
 				if(size < 0)
 					size = this->size;
 
@@ -222,9 +257,7 @@ namespace Rendering{
 				FT_Set_Char_Size(face, int(64*size), 0, 0, 0);
 				use_kerning = FT_HAS_KERNING(face);
 				last_glyph_idx = 0;
-
-				int advance = 0;
-
+			
 				for(char ch : str){
 					glyph_idx = FT_Get_Char_Index(face, ch);
 
@@ -232,16 +265,14 @@ namespace Rendering{
 						FT_Vector delta;
 						error = FT_Get_Kerning(face, last_glyph_idx, glyph_idx, FT_KERNING_DEFAULT, &delta);
 						CHECK_ERROR(error, notice, "FT_Get_Kerning");
-						advance += delta.x >> 6;
+						apply_kerning(delta);
 					}
 					error = FT_Load_Glyph(face, glyph_idx, FT_LOAD_DEFAULT);
 					CHECK_ERROR(error, notice, "FT_Load_Glyph");
 
 					last_glyph_idx = glyph_idx;
-					advance += face->glyph->advance.x >> 6;
+					apply_to_each_glyph(face->glyph);
 				}
-				
-				return advance;
 			}
 
 			inline void render_string(const std::string& str, glm::vec2 offset_begin, glm::vec3 font_color = glm::vec3(-1.f), float size = -1){
@@ -272,7 +303,7 @@ namespace Rendering{
 				last_glyph_idx = 0;
 
 				font_size_data& data = loaded_sizes.at(size_i);
-				float* ptr = reinterpret_cast<float*>(array_buffer.map(GL_WRITE_ONLY));
+				float* ptr = reinterpret_cast<float*>(outline_ab.map(GL_WRITE_ONLY));
 
 				//0
 				*ptr++ = 0;
@@ -290,8 +321,8 @@ namespace Rendering{
 				*ptr++ = float(data.width);
 				*ptr++ = -float(data.height);
 
-				array_buffer.unmap();
-				array_buffer.bind();
+				outline_ab.unmap();
+				outline_ab.bind();
 				glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 				glEnableVertexAttribArray(0);
 				
@@ -324,7 +355,7 @@ namespace Rendering{
 
 							//mat[2][0] = (2.0f * (offset.x + char_metric.bearing_x))/viewport[2] - 1;
 							mat[2][0] = (2.0f * (offset.x))/viewport[2] - 1;
-							mat[2][1] = 1 - (2.0f * (offset.y))/viewport[3];
+							mat[2][1] = 1 - (2.0f * (offset.y - data.yMax))/viewport[3];
 
 							*texture_index_iterator = char_metric.texture_index;
 							*matrices_iterator = glm::mat4(mat);

@@ -7,7 +7,7 @@
 #include <loki/Singleton.h>
 #include <log4cpp/Category.hh>
 
-#include "utils.h"
+#include "render_utils.h"
 
 
 namespace Rendering{
@@ -31,7 +31,8 @@ namespace Rendering{
 		public:
 			
 			inline cursor():
-				window(NULL)
+				window(NULL),
+				loaded_cursors(std::array<GLFWcursor*, NUM_CURSOR>())
 			{
 				unsigned char* icon_data = NULL;
 				int x, y, dummy;

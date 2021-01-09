@@ -49,6 +49,7 @@ namespace HI{
 
 			state.mouse_dragged = glm::vec2(0.f);
 			state.clicked = glm::vec2(-10000.f);
+			state.key_event = 0;
 		}
 
 		inline void key_event(int glfw_key, int glfw_action){
@@ -61,6 +62,10 @@ namespace HI{
 					case GLFW_RELEASE: state.key_down &= ~hi_key; break;
 				}
 				logger.debug("key input: 0x%X, state before: 0x%X, state after: 0x%X", hi_key, key_before, state.key_down);
+			} else {
+				if(glfw_action == GLFW_PRESS){
+					state.key_event = glfw_key;
+				}
 			}
 		}
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "utils.h"
+#include "gl_wrapper.h"
 
 #include <loki/Singleton.h>
 #include <log4cpp/Category.hh>
@@ -38,24 +38,13 @@ namespace Rendering{
 			};
 
 			inline icons() :
-				icons_texture(glm::vec3(ICON_SIZE, ICON_SIZE, NUM_ICONS), GL_RGBA8, 1),
+				icons_texture(glm::ivec3(ICON_SIZE, ICON_SIZE, NUM_ICONS), GL_RGBA8, 1),
 				array_buffer(GL_ARRAY_BUFFER, GL_STATIC_DRAW),
 				index_buffer(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, sizeof(int) * 12),
 				matrix_buffer(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, sizeof(glm::mat4) * 12)
 			{
-				unsigned char* tex_data = new unsigned char[4 * ICON_SIZE * ICON_SIZE * NUM_ICONS];
-				unsigned char* icon_data = NULL;
-				int x, y, dummy;
-				
-				my_utils::set_flip_vertically_on_load(true);
-				for(int i = 0; i<NUM_ICONS; i++){
-					icon_data = my_utils::load_img((ICON_PATH + ICON_NAMES[i]).c_str(), &x, &y, &dummy, 4);
-					memcpy(tex_data + 4 * ICON_SIZE * ICON_SIZE * i, icon_data, sizeof(unsigned char) * 4 * ICON_SIZE * ICON_SIZE);
-					delete[] icon_data;
-				}
-
+				unsigned char* tex_data = my_utils::load_2d_array_texture(ICON_PATH, ICON_NAMES, icons_texture.size);
 				icons_texture.fill_data(GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
-				//icons_texture.recreate(glm::vec3(18, 18, NUM_ICONS), GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
 				delete[] tex_data;
 
 				std::string error_msg = "";
@@ -69,7 +58,7 @@ namespace Rendering{
 
 				program.create(shader);
 
-				float pos[] = {0, 0, 18, 0, 0, 18, 18, 18};
+				float pos[] = {0, 0, 1, 0, 0, 1, 1, 1};
 				array_buffer.fill_data(pos, sizeof(pos));
 			}
 
@@ -85,6 +74,23 @@ namespace Rendering{
 
 				render_icons(indices.data(), positions.data(), indices.size());
 			}
+
+			template<unsigned int N>
+			inline void render_texture_array(const gl_wrapper::texture<gl_wrapper::Texture_Array_2D>& tex, const std::array<glm::vec2, N>& pos){
+				unsigned int size = N;
+				if(pos.size() != tex.size.z) {
+					logger.warn("render_texture_array: pos_array.size() [%d] != texture.size.z [%d] - rendering only [%d] instances", pos.size(), tex.size.z, (std::min<int>)(N, tex.size.z));
+					size = (std::min<int>)(N, tex.size.z);
+				}
+				
+				index_buffer.resize(sizeof(int) * size);
+				int* ptr = reinterpret_cast<int*>(index_buffer.map(GL_WRITE_ONLY));
+				for(unsigned int i = 0; i<size; i++, ptr++)
+					*ptr = i;
+				index_buffer.unmap();
+
+				render_internal(tex, pos.data(), size);				
+			}
 				
 			inline void render_icons(const int* indices, const glm::vec2* positions, unsigned int size){
 				index_buffer.resize(sizeof(int) * size);
@@ -93,7 +99,8 @@ namespace Rendering{
 				memcpy(index_buffer.map(GL_WRITE_ONLY), indices, sizeof(int) * size);
 				index_buffer.unmap();
 
-				int viewport[4];
+				render_internal(icons_texture, positions, size);
+				/*int viewport[4];
 				glGetIntegerv(GL_VIEWPORT, viewport);
 
 				glm::mat3 mat = glm::mat3(1.f);
@@ -126,9 +133,49 @@ namespace Rendering{
 
 				glDisable(GL_DEPTH_TEST);
 				glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, size);
+				glEnable(GL_DEPTH_TEST);*/
+			}
+		
+		private:
+			
+			inline void render_internal(const gl_wrapper::texture<gl_wrapper::Texture_Array_2D>& tex, const glm::vec2* positions, unsigned int size){
+				matrix_buffer.resize(sizeof(glm::mat4) * size);
+				int viewport[4];
+				glGetIntegerv(GL_VIEWPORT, viewport);
+
+				glm::mat3 mat = glm::mat3(1.f);
+				float scale_x = 2.0 / viewport[2];
+				float scale_y = 2.0 / viewport[3];
+
+				glm::mat4* mat_ptr = reinterpret_cast<glm::mat4*>(matrix_buffer.map(GL_WRITE_ONLY));
+				ZeroMemory(mat_ptr, sizeof(glm::mat4) * size);
+
+				for(unsigned int i = 0; i < size; i++){
+					mat_ptr[i][0][0] = scale_x * tex.size.x;
+					mat_ptr[i][1][1] = scale_y * tex.size.y;
+					mat_ptr[i][2][2] = 1;
+
+					mat_ptr[i][2][0] = (2 * positions[i].x)/viewport[2] - 1;
+					mat_ptr[i][2][1] = 1 - (2 * (positions[i].y + tex.size.y))/viewport[3];
+				}
+				matrix_buffer.unmap();
+
+				tex.bind_unit(0);
+
+				index_buffer.bind_base(0);
+				matrix_buffer.bind_base(1);
+
+				array_buffer.bind();
+				glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+				glEnableVertexAttribArray(0);
+
+				program.use();
+
+				glDisable(GL_DEPTH_TEST);
+				glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, size);
 				glEnable(GL_DEPTH_TEST);
 			}
-		};
+	};
 
 		const std::string icons::ICON_PATH = "media/textures/icons/";
 

@@ -19,6 +19,15 @@ namespace Constants {
 
 		static const float BOARDER_THICKNESS = 7.f; //kinnt a sei das me im schader extra a noamol verstölln muars
 
-		static const glm::vec3 HUD_COLOR = glm::vec3(1.f, 1.f, 0.f);
+		namespace HUD{
+			static const glm::vec3 COLOR = glm::vec3(0.f, 0.f, 0.f);
+			static const glm::vec3 FONT_COLOR = glm::vec3(0.9f, 0.9f, 0.9f);
+		}	
+	}
+
+	namespace Control{
+		static const float TURN_VELOCITY = 1/1.f; //radians per second
+		static const float VELOCITY_ON_PLANET = 1/5.f; //radians per second
+		static const float BEGIN_TURN_TO_PLANET = 5.f; //distance untis; when the attacker is within this distance of its target planet it will start turning towards its orientation on the planets
 	}
 };

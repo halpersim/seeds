@@ -151,8 +151,9 @@ int main() {
 		ss.str("");
 		ss << diff;
 		std::string s = ss.str();
-		font.render_string(s, glm::vec2(0.f, 0.f));
-
+		font.render_string(s, glm::vec2(0.f, font.vertical_advance()));
+		
+		
 		error = glGetError();
 		if (error != GL_NO_ERROR) {
 			printf("error = 0x%X\n", error);

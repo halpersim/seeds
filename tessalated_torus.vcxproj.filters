@@ -62,9 +62,6 @@
     <ClInclude Include="data_supplier.h">
       <Filter>Source Files\Rendering\Models</Filter>
     </ClInclude>
-    <ClInclude Include="soldier_data.h">
-      <Filter>Source Files\DTOs</Filter>
-    </ClInclude>
     <ClInclude Include="model.h">
       <Filter>Source Files\Rendering\Models</Filter>
     </ClInclude>
@@ -87,9 +84,6 @@
       <Filter>Source Files\DTOs</Filter>
     </ClInclude>
     <ClInclude Include="uniform_naming.h">
-      <Filter>Source Files\Rendering\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="utils.h">
       <Filter>Source Files\Rendering\Utils</Filter>
     </ClInclude>
     <ClInclude Include="input_state.h">
@@ -139,6 +133,27 @@
     </ClInclude>
     <ClInclude Include="cursor.h">
       <Filter>Source Files\Rendering\2D</Filter>
+    </ClInclude>
+    <ClInclude Include="soldier_data.h">
+      <Filter>Source Files\HI</Filter>
+    </ClInclude>
+    <ClInclude Include="gl_wrapper.h">
+      <Filter>Source Files\Rendering\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="button.h">
+      <Filter>Source Files\Rendering\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="render_utils.h">
+      <Filter>Source Files\Rendering\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="general_utils.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="hud_manager.h">
+      <Filter>Source Files\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="object_manager.h">
+      <Filter>Source Files\Control</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

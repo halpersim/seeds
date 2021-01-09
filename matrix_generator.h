@@ -1,7 +1,7 @@
 #pragma once
 #include <list>
 #include "tree.h"
-#include "utils.h"
+#include "general_utils.h"
 #include <GLM/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "soldier.h"
@@ -80,13 +80,18 @@ namespace Rendering {
 
 			if(att->host_planet) {
 				pos = att->host_planet->get_pos(att->coord, att->coord.z);
-				glm::vec3 next_vector = glm::normalize(att->direction) * 0.001f;
-				glm::vec3 next = att->host_planet->get_pos(att->coord + next_vector, att->coord.z + next_vector.z);
-				dir = next - pos;
 				normal = att->host_planet->get_normal(att->coord);
+
+				if(att->turn.done()) {
+					glm::vec3 next_vector = glm::normalize(att->direction) * 0.001f;
+					glm::vec3 next = att->host_planet->get_pos(att->coord + next_vector, att->coord.z + next_vector.z);
+					dir = next - pos;
+				} else {
+					dir = glm::normalize(my_utils::quat_to_vec3(att->turn.mix()));
+				}
 			} else {
-				pos = glm::mix(att->start, att->target, att->distance);
-				dir = att->target - att->start;
+				pos = att->path.mix();
+				dir = glm::normalize(my_utils::quat_to_vec3(att->turn.mix()));
 				normal = att->normal;
 			}
 

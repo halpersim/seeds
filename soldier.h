@@ -3,6 +3,8 @@
 #include "soldier_data.h"
 #include "planet.h"
 #include "id_generator.h"
+#include "general_utils.h"
+
 #include <array>
 
 namespace DTO {
@@ -26,7 +28,14 @@ namespace DTO {
 		glm::vec3 direction;
 			
 	protected:
-		soldier()
+		soldier():
+			damage(0),
+			health(0),
+			speed(0),
+			owner(NULL),
+			host_planet(NULL),
+			coord(glm::vec3()),
+			direction(glm::vec3())
 		{}
 
 		soldier(const soldier_data& data, planet<any_shape>* host_planet, glm::vec3 coord, glm::vec3 direction) :
@@ -36,7 +45,7 @@ namespace DTO {
 			owner(&data.owner),
 			host_planet(host_planet),
 			coord(coord),
-			direction(direction){}
+			direction(glm::normalize(direction)){}
 
 		inline void init(const soldier_data& data, planet<any_shape>* host_planet, glm::vec3 coord, glm::vec3 direction){
 			damage = data.damage;
@@ -45,7 +54,7 @@ namespace DTO {
 			owner = &data.owner;
 			host_planet = host_planet;
 			coord = coord;
-			direction = direction;
+			direction = glm::normalize(direction);
 		}
 	};
 
@@ -53,24 +62,29 @@ namespace DTO {
 	public:
 		bool is_alive;
 		glm::vec3 normal;
-		glm::vec3 target;
-		glm::vec3 start;
-		float speed_factor;
-		float distance;
+		my_utils::LERP<glm::vec3> path;
+		my_utils::LERP<glm::quat> turn;
+		bool first_turn;
 		int sworm_id;
 
 		attacker(soldier_data& data, planet<any_shape>* host_planet, glm::vec3 coord, glm::vec3 direction) :
 			soldier(data, host_planet, coord, direction),
 			is_alive(false),
 			normal(glm::vec3(0.f)),
-			sworm_id(0)
+			sworm_id(0),
+			path(my_utils::LERP<glm::vec3>()),
+			turn(my_utils::LERP<glm::quat>()),
+			first_turn(true)
 		{}
 
 		attacker() :
 			soldier(),
 			is_alive(false),
 			normal(glm::vec3(0.f)),
-			sworm_id(0)
+			sworm_id(0),
+			path(my_utils::LERP<glm::vec3>()),
+			turn(my_utils::LERP<glm::quat>()),
+			first_turn(true)
 		{}
 
 		inline void init(const soldier_data& data, planet<any_shape>* host_planet, glm::vec3 coords, glm::vec3 direction, int sworm_id){
@@ -101,8 +115,8 @@ namespace DTO {
 
 		//returns the planet the swoarm is currently on or flying to
 		//returns NULL if it has no units
-		inline planet<any_shape>* get_host_planet(){
-			for(attacker& att : units){
+		inline const planet<any_shape>* get_host_planet() const{
+			for(const attacker& att : units){
 				if(att.is_alive)
 					return att.host_planet;
 			}
