@@ -60,18 +60,21 @@ namespace DTO {
 
 	class attacker : public soldier {
 	public:
+		int sworm_id;
+		planet<any_shape>* target;
+
 		bool is_alive;
 		glm::vec3 normal;
 		my_utils::LERP<glm::vec3> path;
 		my_utils::LERP<glm::quat> turn;
 		bool first_turn;
-		int sworm_id;
 
 		attacker(soldier_data& data, planet<any_shape>* host_planet, glm::vec3 coord, glm::vec3 direction) :
 			soldier(data, host_planet, coord, direction),
+			sworm_id(0),
+			target(NULL),
 			is_alive(false),
 			normal(glm::vec3(0.f)),
-			sworm_id(0),
 			path(my_utils::LERP<glm::vec3>()),
 			turn(my_utils::LERP<glm::quat>()),
 			first_turn(true)
@@ -79,6 +82,7 @@ namespace DTO {
 
 		attacker() :
 			soldier(),
+			target(NULL),
 			is_alive(false),
 			normal(glm::vec3(0.f)),
 			sworm_id(0),
@@ -100,81 +104,25 @@ namespace DTO {
 			soldier(data, host_planet, coord, direction){}
 	};
 
-	class sworm {
-	private:
-		std::array<attacker, 15> units;
+	struct sworm_metrics{
+		int id;
+		int count;
+		float dmg;
+		float health;
+		float speed;
 
-	public:
-		planet<any_shape>* target;
-		const unsigned int id;
+		inline sworm_metrics() :
+			id(0),
+			count(0),
+			dmg(0.f),
+			health(0.f),
+			speed(0.f){}
 
-		sworm() :
-			id(DTO::id_generator::next_sworm()),
-			target(NULL)
-		{}
-
-		//returns the planet the swoarm is currently on or flying to
-		//returns NULL if it has no units
-		inline const planet<any_shape>* get_host_planet() const{
-			for(const attacker& att : units){
-				if(att.is_alive)
-					return att.host_planet;
-			}
-			return NULL;
-		}
-
-		inline const attacker* get_first() const{
-			for(const attacker& att : units){
-				if(att.is_alive)
-					return &att;
-			}
-			return NULL;
-		}
-
-		inline int get_size()const{
-			int size = 0;
-
-			for(const attacker& att : units){
-				if(att.is_alive)
-					size++;
-			}
-			return size;
-		}
-
-		inline bool is_full(){
-			for(attacker& att : units){
-				if(!att.is_alive)
-					return false;
-			}
-			return true;
-		}
-
-		inline bool add_unit(const attacker& att){
-			for(auto it = units.begin(); it != units.end(); it++){
-				if(!it->is_alive){
-					*it = att;
-					it->sworm_id = id;
-					it->is_alive = true;
-					return true;
-				}
-			}
-			return false;
-		}
-
-		//returns an array of pointers to all valid attackers, there will be no valid pointer after the first NULL pointer
-		inline std::array<attacker*, 15> get_units(){
-			std::array<attacker*, 15> ret = {NULL};
-
-			auto ret_it = ret.begin();
-			auto unit_it = units.begin();
-
-			for(; unit_it != units.end(); unit_it++){
-				if(unit_it->is_alive){
-					*ret_it = &(*unit_it);
-					ret_it++;
-				}
-			}
-			return ret;
+		inline sworm_metrics& operator/=(float divisor){
+			dmg /= divisor;
+			health /= divisor;
+			speed /= divisor;
+			return *this;
 		}
 	};
 }

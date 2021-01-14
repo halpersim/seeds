@@ -4,6 +4,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+#include <iomanip>
+#include <sstream>
+
 
 namespace my_utils{
 	template<class T>
@@ -17,6 +20,13 @@ namespace my_utils{
 
 	glm::quat vec3_to_quat(const glm::vec3& vec){
 		return glm::quat(0, vec);
+	}
+
+	std::string to_string(float value, int precision){
+		std::stringstream ss;
+
+		ss << std::fixed << std::setprecision(precision) << value;
+		return ss.str();
 	}
 
 	template<class T>
@@ -99,8 +109,5 @@ namespace my_utils{
 		inline glm::vec2 top_left()const{
 			return icon.pos - glm::vec2(margin);
 		}
-
 	};
-
-
 }

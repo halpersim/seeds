@@ -27,46 +27,30 @@ namespace Control{
 		att.turn = my_utils::LERP<glm::quat>(forward_0, forward_1, calc_turn_factor(att, forward_0, forward_1));
 		att.first_turn = true;
 		att.host_planet = NULL;
+		att.target = &target_planet;
 	}
 
-	void update_def_tree(DTO::tree<DTO::defender>* def_tree, float time_elapsed, std::list<DTO::defender>* def_list){
-		if(def_tree->evolve(time_elapsed)){
-			def_list->push_back(def_tree->produce_soldier());
+	template<class T>
+	void update_tree(DTO::tree<T>* tree, float time_elapsed, std::list<T>* list, std::map<int, std::tuple<int, int>>* soldiers_on_planet_map){
+		if(tree->evolve(time_elapsed) && 
+			 std::get<0>(soldiers_on_planet_map->find(tree->host_planet.id)->second) < tree->host_planet.max_soldiers){
+			list->push_back(tree->produce_soldier());
 		}
 	}
-
+	
 	void update_defender(DTO::defender& def, float time_elapsed){
 		def.coord += def.direction * def.speed * Constants::Control::VELOCITY_ON_PLANET * time_elapsed;
 	}
 
-	void update_att_tree(DTO::tree<DTO::attacker>* att_tree, float time_elapsed, std::list<DTO::sworm>* sworm_list){
-		if(att_tree->evolve(time_elapsed)){
 
-			auto available_sworm = std::find_if(sworm_list->begin(), sworm_list->end(), [&att_tree](DTO::sworm& sworm){
-				return !sworm.is_full() && &att_tree->host_planet == sworm.get_host_planet();
-			});
-
-			if(available_sworm != sworm_list->end()){
-				available_sworm->add_unit(att_tree->produce_soldier());
-			} else { //create new sworm 
-				int sworms_on_planet = std::count_if(sworm_list->begin(), sworm_list->end(), [att_tree](const DTO::sworm& sworm){return &att_tree->host_planet == sworm.get_host_planet(); });
-				if(sworms_on_planet < att_tree->host_planet.max_sworms){
-					DTO::sworm sworm;
-					sworm.add_unit(att_tree->produce_soldier());
-					sworm_list->push_back(sworm);
-				}
-			}
-		}
-	}
-
-	void update_attacker(DTO::attacker& att, float time_elapsed, DTO::sworm& sworm){
+	void update_attacker(DTO::attacker& att, float time_elapsed){
 		if(att.host_planet){
 			att.coord += att.direction * att.speed * Constants::Control::VELOCITY_ON_PLANET * time_elapsed;
 		} else {
 			if(att.first_turn && glm::length(att.path.mix() - att.path.end) < Constants::Control::BEGIN_TURN_TO_PLANET){
-				glm::vec2 new_coords = sworm.target->get_nearest_coords(att.path.start);
+				glm::vec2 new_coords = att.target->get_nearest_coords(att.path.start);
 
-				glm::quat forward = my_utils::vec3_to_quat(sworm.target->get_pos(att.coord + att.direction * att.speed * Constants::Control::VELOCITY_ON_PLANET * 0.001f, sworm.target->atmosphere_height) - att.path.end);
+				glm::quat forward = my_utils::vec3_to_quat(att.target->get_pos(att.coord + att.direction * att.speed * Constants::Control::VELOCITY_ON_PLANET * 0.001f, att.target->atmosphere_height) - att.path.end);
 				att.turn = my_utils::LERP<glm::quat>(att.turn.mix(), glm::normalize(forward), att.path.factor / (1 - att.path.time));
 				att.first_turn = false;
 			}
@@ -74,8 +58,10 @@ namespace Control{
 			att.path.add(time_elapsed * (att.first_turn ? att.turn.time : 1.f));
 
 			if(att.path.done()){
-				att.host_planet = sworm.target;
-				att.coord = glm::vec3(sworm.target->get_nearest_coords(att.path.start), sworm.target->atmosphere_height);
+				att.sworm_id = 0;
+				att.host_planet = att.target;
+				att.coord = glm::vec3(att.target->get_nearest_coords(att.path.start), att.target->atmosphere_height);
+				att.target = NULL;
 			}
 		}
 	}

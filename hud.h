@@ -195,20 +195,18 @@ namespace Rendering{
 				glDrawElements(GL_TRIANGLES, 8*3, GL_UNSIGNED_BYTE, NULL);
 			}
 				
-			inline void render(const DTO::planet<DTO::any_shape>& planet, int sworms_on_planet){
+			inline void render(const DTO::planet<DTO::any_shape>& planet, int solders_on_planet, int attacker_on_planet){
 				static const std::array<int, 5> icons = {icons::PLANET, icons::DAMAGE, icons::HEALTH, icons::SPEED, icons::SWOARM};
 
 				std::array<std::string, 5> strings = {std::string("Planet #") + std::to_string(planet.id & (~DTO::id_generator::PLANET_BIT)),
 					std::to_string(int(planet.soldier_type.damage)),
 					std::to_string(int(planet.soldier_type.health)),
 					std::to_string(int(planet.soldier_type.speed)),
-					std::to_string(planet.max_sworms) + std::string("|") + std::to_string(sworms_on_planet)
+					std::to_string(planet.max_soldiers) + std::string("|") + std::to_string(solders_on_planet)
 				};
 
 				glDisable(GL_DEPTH_TEST);
 				render_internal(icons, strings);
-
-				sworms_on_planet = 8;
 
 				std::array<glm::vec2, 3> fraction_positions;
 				for(unsigned int i = ALL_SOLDIERS; i<=QUATER_SOLDIERS; i++){
@@ -235,7 +233,7 @@ namespace Rendering{
 				icon_singleton::Instance().render_texture_array(tree_texture, tree_positions);
 
 				for(unsigned int i = 0; i<fraction_positions.size(); i++){
-					std::string str = std::to_string(int(std::round((sworms_on_planet)/float(1 << i))));
+					std::string str = std::to_string(int(std::round((attacker_on_planet)/float(1 << i))));
 					int yMax = font_obj.bearing_y_capital_A();
 					glm::vec2 offset;
 					offset.x = fraction_positions[i].x + (fraction_texture.size.x - font_obj.horizontal_advance(str)) / 2.f;
@@ -248,18 +246,25 @@ namespace Rendering{
 				glEnable(GL_DEPTH_TEST);
 			}
 
-			inline void render(const DTO::sworm& sworm){
+			inline my_utils::rect get_render_outline(){
+				return my_utils::rect(window_size - glm::vec2(LEFT_POINT, TOP_POINT), glm::vec2(LEFT_POINT, TOP_POINT));
+			}
+
+			
+			inline void render(const DTO::sworm_metrics& metrics){
 				static const std::array<int, 5> icons = {icons::SWOARM, icons::DAMAGE, icons::HEALTH, icons::SPEED, icons::ATTACKER};
 
-				std::array<std::string, 5> strings = {std::string("Sworm #") + std::to_string(sworm.id & (~DTO::id_generator::SWORM_BIT)),
-					std::to_string(int(sworm.get_first()->damage)),
-					std::to_string(int(sworm.get_first()->health)),
-					std::to_string(int(sworm.get_first()->speed)),
-					std::to_string(sworm.get_size())
+
+				std::array<std::string, 5> strings = {std::string("Sworm #") + std::to_string(metrics.id & (~DTO::id_generator::SWORM_BIT)),
+					my_utils::to_string(metrics.dmg, 1),
+					my_utils::to_string(metrics.health, 1),
+					my_utils::to_string(metrics.speed, 1),
+					std::to_string(metrics.count)
 				};
 
 				render_internal(icons, strings);
 			}
+			
 
 			private:
 				inline void render_internal(const std::array<int, 5> icons, const std::array<std::string, 5> strings){

@@ -31,7 +31,7 @@ namespace DTO {
 		const unsigned int id;
 		player& owner;
 		int health;
-		int max_sworms;
+		int max_soldiers;
 		float atmosphere_height;
 		soldier_data soldier_type;
 		glm::vec3 pos;
@@ -45,7 +45,7 @@ namespace DTO {
 			owner(owner),
 			soldier_type(soldier_type),
 			health(10),
-			max_sworms(2),
+			max_soldiers(30),
 			atmosphere_height(10),
 			pos(pos),
 			attacker_tree_list(std::list<tree<attacker>>()),
