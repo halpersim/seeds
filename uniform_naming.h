@@ -38,6 +38,7 @@ BASETYPE_WRAPPER(Uint, unsigned int);
 
 BEGIN_NAMING;
 NAME_TYPE(len, Float);
+NAME_TYPE(max_size, Float);
 NAME_TYPE(eye, glm::vec3);
 NAME_TYPE(light, glm::vec3);
 NAME_TYPE(vp, glm::mat4);

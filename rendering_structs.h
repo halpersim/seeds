@@ -5,13 +5,13 @@
 namespace Rendering{
 	namespace _3D{
 
-		struct hole{
+		struct planet_hole{
 			glm::vec3 bottom_mid;
 			float rad;
 			glm::vec3 height;
 			int padding;
 
-			hole(const DTO::planet<DTO::any_shape>& planet, const DTO::hole& hole){
+			planet_hole(const DTO::planet<DTO::any_shape>& planet, const DTO::hole& hole){
 				glm::vec3 hole_pos = planet.get_pos(hole.coords, 0);
 				glm::vec3 hole_normal = planet.get_normal(hole.coords);
 				float theta = acos(hole.rad / planet.get_radius());
@@ -20,6 +20,18 @@ namespace Rendering{
 				bottom_mid = hole_pos - height;
 				rad = hole.rad;
 				padding = 0;
+			}
+		};
+
+		struct ground_render_data{
+			glm::mat4 mat;
+
+			inline void set_id(int id){
+				mat[0][3] = id;
+			}
+
+			inline void set_size(float size){
+				mat[1][3] = size;
 			}
 		};
 

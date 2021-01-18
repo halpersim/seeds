@@ -220,8 +220,8 @@ namespace Rendering {
 			{
 				std::string error_msg = "";
 				std::array<GLuint, 5> shader;
-				shader[0] = my_utils::shader::load("media/shader/planet/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
-				shader[1] = my_utils::shader::load("media/shader/planet/tcs.glsl", GL_TESS_CONTROL_SHADER, true, &error_msg);
+				shader[0] = my_utils::shader::load("media/shader/pass_through/tessellation_vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
+				shader[1] = my_utils::shader::load("media/shader/pass_through/tessellation_tcs.glsl", GL_TESS_CONTROL_SHADER, true, &error_msg);
 				shader[2] = my_utils::shader::load("media/shader/planet/tes.glsl", GL_TESS_EVALUATION_SHADER, true, &error_msg);
 				shader[3] = my_utils::shader::load("media/shader/planet/gs.glsl", GL_GEOMETRY_SHADER, true, &error_msg);
 				shader[4] = my_utils::shader::load("media/shader/planet/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
@@ -235,7 +235,7 @@ namespace Rendering {
 			}
 
 			template<class T>
-			void render(Loki::Type2Type<DTO::planet<T>> dummy, std::list<glm::mat4> matrix_pallet, std::list<planet_renderer_data> render_data, std::list<hole> holes, std::list<int> id_list){
+			void render(Loki::Type2Type<DTO::planet<T>> dummy, std::list<glm::mat4> matrix_pallet, std::list<planet_renderer_data> render_data, std::list<planet_hole> holes, std::list<int> id_list){
 				if(matrix_pallet.size() == 0)
 					return;
 
@@ -277,5 +277,48 @@ namespace Rendering {
 		};
 
 		log4cpp::Category& planet_renderer::logger = log4cpp::Category::getInstance("Rendering._3D.planet_renderer");
-	}
+	
+		class ground_renderer{
+			static log4cpp::Category& logger;
+
+			gl_wrapper::buffer<> data_buffer;
+
+			gl_wrapper::program<LOKI_TYPELIST_2(vp, max_size)> program;
+
+		public:
+
+			inline ground_renderer() :
+				data_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW),
+				program()
+			{
+				std::string error_msg = "";
+				std::array<GLuint, 4> shader;
+				shader[0] = my_utils::shader::load("media/shader/pass_through/tessellation_vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
+				shader[1] = my_utils::shader::load("media/shader/pass_through/tessellation_tcs.glsl", GL_TESS_CONTROL_SHADER, true, &error_msg);
+				shader[2] = my_utils::shader::load("media/shader/ground/tes.glsl", GL_TESS_EVALUATION_SHADER, true, &error_msg);
+				shader[3] = my_utils::shader::load("media/shader/ground/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
+
+				if(!error_msg.empty()){
+					logger.error("GL_ERROR shader compilation error: \n%s", error_msg.c_str());
+				}
+
+				program.create(shader, "shader/ground");
+			}
+
+			void render(const std::list<Rendering::_3D::ground_render_data>& data_list){
+				copy_list_in_buffer(data_list, data_buffer);
+
+				program.Uniform<vp>() = frame_data::view_projection_matrix;
+				program.Uniform<max_size>() = float(Constants::DTO::ATTACKERS_REQUIRED_TO_FILL_HOLE);
+				program.use();
+
+				data_buffer.bind_base(0);
+
+				glPatchParameteri(GL_PATCH_VERTICES, 4); 
+				glDrawArraysInstanced(GL_PATCHES, 0, 4, data_list.size());
+			}
+		};
+
+		log4cpp::Category& ground_renderer::logger = log4cpp::Category::getInstance("Rendering._3D.ground_renderer");
+	}	
 }

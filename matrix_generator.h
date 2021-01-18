@@ -1,13 +1,16 @@
 #pragma once
-#include <list>
 #include "tree.h"
-#include "general_utils.h"
-#include <GLM/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include "soldier.h"
 #include "constants.h"
 #include "data_supplier.h"
 #include "rendering_structs.h"
+#include "general_utils.h"
+
+#include <GLM/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <list>
+#include <functional>
 #include <string>
 #include <array>
 
@@ -21,7 +24,7 @@ namespace Rendering {
 		std::array<std::list<glm::mat4>, 2> generate_matrix_pallet_tree(const std::list<DTO::tree<T>*>& in);
 
 		template<class T>
-		void generate_planet_render_data(const std::list<DTO::planet<T>>& in, std::list<Rendering::_3D::planet_renderer_data>& data_list, std::list<Rendering::_3D::hole>& hole_list);
+		void generate_planet_render_data(const std::list<DTO::planet<T>>& in, std::list<Rendering::_3D::planet_renderer_data>& data_list, std::list<Rendering::_3D::planet_hole>& hole_list);
 
 
 
@@ -58,7 +61,7 @@ namespace Rendering {
 
 			return glm::make_mat4(mat);
 		}
-
+		
 		static void generate_lookat_matrix(float* ptr, glm::vec3 pos, glm::vec3 dir, glm::vec3 normal){
 			glm::vec3 f = glm::normalize(dir);
 			glm::vec3 u = glm::normalize(normal);
@@ -225,23 +228,58 @@ namespace Rendering {
 			return data;
 		}
 
+		void handle_planet_data_generation(const DTO::planet<DTO::any_shape>& planet, 
+																const DTO::planet_entry& entry,
+																std::list<Rendering::_3D::planet_hole>* hole_list, 
+																std::list<Rendering::_3D::ground_render_data>* ground_data_list){
+
+			Rendering::_3D::planet_hole hole = Rendering::_3D::planet_hole(planet, entry.ground);
+			
+			float mat[16];
+			ZeroMemory(mat, sizeof(mat));
+			mat[15] = 1.f;
+			Rendering::_3D::ground_render_data ground_data;
+			generate_lookat_matrix(mat, hole.bottom_mid, hole.height, glm::vec3(0.f, 0.f, 1.f));
+			
+			ground_data.mat = glm::scale(glm::make_mat4(mat), glm::vec3(hole.rad, planet.get_radius(), hole.rad));
+
+			ground_data.set_id(planet.id);
+			ground_data.set_size(entry.stage);
+
+			hole_list->push_back(hole);
+			ground_data_list->push_back(ground_data);
+		}
+
+		template <class T>
+		void handle_planet_data_generation_tree(const DTO::tree<T>& tree, std::list<Rendering::_3D::planet_hole>* hole_list, std::list<Rendering::_3D::ground_render_data>* ground_data_list){
+			handle_planet_data_generation(tree.host_planet, tree, hole_list, ground_data_list);
+		}
+		
+		
 		template<class T>
-		void generate_planet_render_data(const std::list<DTO::planet<T>>& in, std::list<Rendering::_3D::planet_renderer_data>& data_list, std::list<Rendering::_3D::hole>& hole_list){
+		void generate_planet_render_data(const std::list<DTO::planet<T>>& in,
+																		 std::list<Rendering::_3D::planet_renderer_data>& data_list,
+																		 std::list<Rendering::_3D::planet_hole>& hole_list,
+																		 std::list<int>& id_list,
+																		 std::list<Rendering::_3D::ground_render_data>& ground_data){
+			using namespace std::placeholders;
 			int idx = 0;
 
 			for(const DTO::planet<T>& planet : in){
 				Rendering::_3D::planet_renderer_data data = get_planet_renderer_data(planet);
 				data.start_idx = idx;
 
-				std::list<Rendering::_3D::hole> planet_holes;
-				std::for_each(planet.attacker_tree_list.begin(), planet.attacker_tree_list.end(), [&planet_holes](const DTO::tree<DTO::attacker>& tree) { planet_holes.push_back(Rendering::_3D::hole(tree.host_planet, tree.ground)); });
-				std::for_each(planet.defender_tree_list.begin(), planet.defender_tree_list.end(), [&planet_holes](const DTO::tree<DTO::defender>& tree) { planet_holes.push_back(Rendering::_3D::hole(tree.host_planet, tree.ground)); });
-				std::for_each(planet.planet_entry_list.begin(), planet.planet_entry_list.end(), [&planet_holes, planet](const DTO::planet_entry& entry) { planet_holes.push_back(Rendering::_3D::hole(planet, entry.ground)); });
+				std::list<Rendering::_3D::planet_hole> planet_holes;
+
+				std::for_each(planet.attacker_tree_list.begin(), planet.attacker_tree_list.end(), std::bind(handle_planet_data_generation_tree<DTO::attacker>, _1, &planet_holes, &ground_data));
+				std::for_each(planet.defender_tree_list.begin(), planet.defender_tree_list.end(), std::bind(handle_planet_data_generation_tree<DTO::defender>, _1, &planet_holes, &ground_data));
+				std::for_each(planet.planet_entry_list.begin(), planet.planet_entry_list.end(), std::bind(handle_planet_data_generation, planet, _1, &planet_holes, &ground_data));
 
 				idx += planet_holes.size();
 				data.end_idx = idx;
 				std::copy(planet_holes.begin(), planet_holes.end(), std::back_inserter(hole_list));
 				data_list.push_back(data);
+				id_list.push_back(planet.id);
 			}
 		}
 	}

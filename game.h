@@ -9,10 +9,10 @@
 
 #include "object_manager.h"
 
-#include <list>
 #include <loki/Typelist.h>
 #include <log4cpp/Category.hh>
 
+#include <list>
 #include <functional>
 
 
@@ -59,7 +59,7 @@ namespace Control{
 			DTO::planet<DTO::torus>& planet = planet_torus_list.front();
 
 			DTO::hole hole;
-			hole.coords = glm::vec2(0, 1.5057f);
+			hole.coords = glm::vec2(0.f, 0.f);
 			DTO::tree<DTO::attacker> att_tree = DTO::tree<DTO::attacker>(planet, hole);
 			att_tree.add_size(5);
 			planet.attacker_tree_list.push_back(att_tree);
@@ -68,10 +68,10 @@ namespace Control{
 			def_hole.coords = glm::vec2(0, 3.141592f + 1.5057f);
 			DTO::tree<DTO::defender> def_tree = DTO::tree<DTO::defender>(planet, def_hole);
 			def_tree.add_size(5);
-			planet.defender_tree_list.push_back(def_tree);
+		//	planet.defender_tree_list.push_back(def_tree);
 
 			tree_att_list.push_back(&planet.attacker_tree_list.front());
-			tree_def_list.push_back(&planet.defender_tree_list.front());
+			//tree_def_list.push_back(&planet.defender_tree_list.front());
 		
 			DTO::soldier_data s_data = DTO::soldier_data(player, 4.f, 3.f, 2.f);
 			planet_sphere_list.push_back(DTO::planet<DTO::sphere>(player, s_data, glm::vec3(10, 5, 30), 5.f));
@@ -124,7 +124,7 @@ namespace Control{
 						});
 					} else{
 						selected_id = renderer.get_clicked_id(state.clicked);
-
+						printf("selected id = [%d]\n", selected_id);
 						if(DTO::id_generator::SWORM_BIT & selected_id){
 							Rendering::_2D::cursor_singleton::Instance().set_cursor(Rendering::_2D::cursor::ATTACK);
 						} else {

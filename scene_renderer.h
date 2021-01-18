@@ -17,6 +17,7 @@ namespace Rendering{
 			Rendering::_3D::tree_renderer<DTO::tree<DTO::defender>> tree_def_renderer;
 			Rendering::_3D::tree_renderer<DTO::tree<DTO::attacker>> tree_att_renderer;
 			Rendering::_3D::planet_renderer planet_renderer;
+			Rendering::_3D::ground_renderer ground_renderer;
 
 			const glm::mat4 projection_matrix;
 			
@@ -164,8 +165,8 @@ namespace Rendering{
 				//render 
 				def_renderer.render(def_pallet);
 				att_renderer.render(att_pallet, att_id_list);
-				tree_att_renderer.render(att_tree_pallet, get_id_list(tree_att_list));
-				tree_def_renderer.render(def_tree_pallet, get_id_list(tree_def_list));
+				//tree_att_renderer.render(att_tree_pallet, get_id_list(tree_att_list));
+				//tree_def_renderer.render(def_tree_pallet, get_id_list(tree_def_list));
 
 				render_planets(planet_sphere_list);
 				render_planets(planet_torus_list);
@@ -190,21 +191,21 @@ namespace Rendering{
 				final_render_program.Uniform<color>() = glm::vec3(1.f, 1.f, 0.f);
 				final_render_program.use();
 				glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-				printf("");
 			}
 
 		private:
 			template<class T>
 			inline void render_planets(const std::list<DTO::planet<T>>& planet_list){
 				std::list<glm::mat4> planet_pallet = Rendering::MatrixGenerator::generate_matrix_pallet(planet_list);
-				std::list<Rendering::_3D::hole> hole_list;
+				std::list<Rendering::_3D::planet_hole> hole_list;
 				std::list<Rendering::_3D::planet_renderer_data> renderer_data_list;
 				std::list<int> id_list;
+				std::list<Rendering::_3D::ground_render_data> ground_render_data;
 
-				std::for_each(planet_list.begin(), planet_list.end(), [&id_list](const DTO::planet<T>& p){id_list.push_back(p.id); });
-
-				Rendering::MatrixGenerator::generate_planet_render_data(planet_list, renderer_data_list, hole_list);
+				Rendering::MatrixGenerator::generate_planet_render_data(planet_list, renderer_data_list, hole_list, id_list, ground_render_data);
+				
 				planet_renderer.render(Loki::Type2Type<DTO::planet<T>>(), planet_pallet, renderer_data_list, hole_list, id_list);
+				ground_renderer.render(ground_render_data);
 			}
 
 
