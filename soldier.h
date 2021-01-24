@@ -14,7 +14,6 @@ namespace DTO {
 
 	class any_shape;
 	
-	
 	class soldier {
 	public:
 		float damage;
@@ -61,34 +60,48 @@ namespace DTO {
 	class attacker : public soldier {
 	public:
 		int sworm_id;
+		bool is_alive;
+
+		/*
 		planet<any_shape>* target;
 
-		bool is_alive;
 		glm::vec3 normal;
 		my_utils::LERP<glm::vec3> path;
 		my_utils::LERP<glm::quat> turn;
+		my_utils::LERP<glm::quat> normal_turn;
+
+		glm::vec2 target_on_planet;
 		bool first_turn;
+		*/
 
 		attacker(soldier_data& data, planet<any_shape>* host_planet, glm::vec3 coord, glm::vec3 direction) :
 			soldier(data, host_planet, coord, direction),
 			sworm_id(0),
+			is_alive(false)
+			/*,
 			target(NULL),
-			is_alive(false),
 			normal(glm::vec3(0.f)),
 			path(my_utils::LERP<glm::vec3>()),
 			turn(my_utils::LERP<glm::quat>()),
-			first_turn(true)
+			normal_turn(my_utils::LERP<glm::quat>()),
+			target_on_planet(glm::vec2(-1.f)),
+			state(attacker_states::ROAMING),
+			first_turn(true)*/
 		{}
 
 		attacker() :
 			soldier(),
+			is_alive(false)
+			/*,
 			target(NULL),
-			is_alive(false),
 			normal(glm::vec3(0.f)),
 			sworm_id(0),
 			path(my_utils::LERP<glm::vec3>()),
 			turn(my_utils::LERP<glm::quat>()),
-			first_turn(true)
+			normal_turn(my_utils::LERP<glm::quat>()),
+			target_on_planet(glm::vec2(-1.f)),
+			state(attacker_states::ROAMING),
+			first_turn(true)*/
 		{}
 
 		inline void init(const soldier_data& data, planet<any_shape>* host_planet, glm::vec3 coords, glm::vec3 direction, int sworm_id){

@@ -3,8 +3,6 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <GLM/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 #include <log4cpp/Category.hh>
 #include <log4cpp/PropertyConfigurator.hh>
@@ -12,13 +10,14 @@
 #include <freetype-2.10.1/include/ft2build.h>
 #include FT_FREETYPE_H
 
-
 #include <my_utils/my_utils.h>
 #include <iostream>
 #include <time.h>
 #include <thread>
 #include <chrono>
 #include <functional>
+
+#define NOMINMAX
 
 #include "game.h"
 #include "timer.h"
@@ -29,6 +28,12 @@
 #include "icons.h"
 #include "hud.h"
 #include "cursor.h"
+
+
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+
 
 
 HI::user_input user_input;
@@ -165,7 +170,7 @@ int main() {
 
 		
 		ss.str("");
-		ss << "do semma ba grob " << 1/timer.diff << " fps";
+		ss << " ~" << std::setprecision(1) << std::fixed << 1/timer.diff << " fps";
 		diff = ss.str();
 		d += timer.diff;
 	}

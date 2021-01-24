@@ -59,6 +59,7 @@ namespace DTO {
 		
 		virtual hole make_hole(const glm::vec2& parameter, float size)const = 0;
 		virtual glm::vec3 get_pos(const glm::vec2& parameter, float height)const = 0;
+		virtual glm::vec3 get_local_pos(const glm::vec2& parameter)const = 0;
 		virtual glm::vec3 get_normal(const glm::vec2& parameter)const = 0;
 		virtual glm::vec3 get_tangent_alpha(const glm::vec2& coords)const = 0;
 		virtual glm::vec3 get_tangent_theta(const glm::vec2& coords)const = 0;
@@ -85,7 +86,7 @@ namespace DTO {
 			return thickness;
 		}
 
-		glm::vec3 get_local_pos(const glm::vec2& parameter)const{
+		glm::vec3 get_local_pos(const glm::vec2& parameter)const override{
 			return glm::vec3(
 				(radius + thickness * cos(parameter.x)) * cos(parameter.y),
 				thickness * sin(parameter.x),
@@ -128,10 +129,7 @@ namespace DTO {
 		}
 
 		hole make_hole(const glm::vec2& parameter, float size)const override{
-			hole c;
-			c.rad = size;
-			c.coords = parameter;
-			return c;
+			return hole(parameter, size);
 		}
 
 		glm::vec3 get_normal(const glm::vec2& parameter)const override{
@@ -165,7 +163,7 @@ namespace DTO {
 			return radius;
 		}
 
-		glm::vec3 get_local_pos(const glm::vec2& parameter)const{
+		glm::vec3 get_local_pos(const glm::vec2& parameter)const override{
 			return glm::vec3(
 				radius * cos(parameter.x) * sin(parameter.y),
 				radius * cos(parameter.x) * cos(parameter.y),
@@ -197,7 +195,7 @@ namespace DTO {
 			));
 		}
 		hole make_hole(const glm::vec2& parameter, float size)const override{
-			return hole();
+			return hole(parameter, size);
 		}
 
 		glm::vec3 get_normal(const glm::vec2& parameter)const override{

@@ -20,10 +20,10 @@ layout(binding = 0, std140) readonly buffer matrix_buffer{
 };
 
 float get_depth(float x, float size){
-    if(size < 0.1){
+    if((max_size - size) < 0.1){
         return 0.f;
     }
-    return pow(x, 0.7f * (size - 1.f)/(5.f - 1.f) + 0.1f) - 1.f;    
+    return pow(x, 0.8f - 0.7f * (size - 1.f)/(max_size - 1.f)) - 1.f;    
 }
 
 vec4 evaluate_patch(vec2 coords){
@@ -35,12 +35,7 @@ vec4 evaluate_patch(vec2 coords){
     float theta = coords.x * 2 * 3.141592;
     float radius = coords.y;
     
-    float depth;
-    if(size < 0.1){
-        depth = 0.f;
-    } else {
-        depth = get_depth(coords.y, size);
-    }
+    float depth = get_depth(coords.y, size);
     vec2 pos_2d = radius * vec2(cos(theta), sin(theta));
     
     return matrix * vec4(pos_2d.x, depth, pos_2d.y, 1);

@@ -13,14 +13,17 @@ namespace DTO {
 
 		planet_entry(const hole& ground):
 			ground(ground),
-			stage(Constants::DTO::ATTACKERS_REQUIRED_TO_FILL_HOLE)
+			stage(-Constants::DTO::ATTACKERS_REQUIRED_TO_BUILD_HOLE)
 		{}
 
 		template<class T>
 		planet_entry(const DTO::tree<T>& tree) :
 			ground(tree.ground),
-			stage(0)
+			stage(Constants::DTO::ATTACKERS_REQUIRED_TO_FILL_HOLE)
 		{}
 
+		inline bool is_established() const{
+			return stage >= 0;
+		}
 	};
 }

@@ -12,11 +12,12 @@ namespace Rendering{
 			int padding;
 
 			planet_hole(const DTO::planet<DTO::any_shape>& planet, const DTO::hole& hole){
-				glm::vec3 hole_pos = planet.get_pos(hole.coords, 0);
+				glm::vec3 hole_pos = planet.get_local_pos(hole.coords);
 				glm::vec3 hole_normal = planet.get_normal(hole.coords);
 				float theta = acos(hole.rad / planet.get_radius());
 
 				height = hole_normal * planet.get_radius() * (1 - sin(theta));
+				height *= 1.5f;
 				bottom_mid = hole_pos - height;
 				rad = hole.rad;
 				padding = 0;

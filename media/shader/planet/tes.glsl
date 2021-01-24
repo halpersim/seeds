@@ -34,13 +34,13 @@ vec3[2] evaluate_patch_sphere(in vec2 coord){
 
     vec3[2] ret_value;
 
-    ret_value[0] = vec3(
-        rad * cos(alpha) * sin(theta),
-        rad * cos(alpha) * cos(theta),
-        rad * sin(alpha)
+    ret_value[1] = vec3(
+        cos(alpha) * sin(theta),
+        cos(alpha) * cos(theta),
+        sin(alpha)
     );
-
-    ret_value[1] = normalize(ret_value[0]);
+    
+    ret_value[0] = ret_value[1] * rad;
 
     return ret_value;
 }

@@ -21,7 +21,7 @@ namespace Rendering{
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryLinearExpanding, sizeof(int) * 12> index_buffer;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryLinearExpanding, sizeof(glm::mat4) * 12> matrix_buffer;
 			
-			gl_wrapper::program<LOKI_TYPELIST_1(none)> program;
+			gl_wrapper::program<LOKI_TYPELIST_1(bw)> program;
 
 		public:
 			//new icons must have size 18*18
@@ -76,7 +76,7 @@ namespace Rendering{
 			}
 
 			template<unsigned int N>
-			inline void render_texture_array(const gl_wrapper::texture<gl_wrapper::Texture_Array_2D>& tex, const std::array<glm::vec2, N>& pos){
+			inline void render_texture_array(const gl_wrapper::texture<gl_wrapper::Texture_Array_2D>& tex, const std::array<glm::vec2, N>& pos, bool is_bw = false){
 				unsigned int size = N;
 				if(pos.size() != tex.size.z) {
 					logger.warn("render_texture_array: pos_array.size() [%d] != texture.size.z [%d] - rendering only [%d] instances", pos.size(), tex.size.z, (std::min<int>)(N, tex.size.z));
@@ -89,7 +89,7 @@ namespace Rendering{
 					*ptr = i;
 				index_buffer.unmap();
 
-				render_internal(tex, pos.data(), size);				
+				render_internal(tex, pos.data(), size, is_bw);
 			}
 				
 			inline void render_icons(const int* indices, const glm::vec2* positions, unsigned int size){
@@ -99,46 +99,12 @@ namespace Rendering{
 				memcpy(index_buffer.map(GL_WRITE_ONLY), indices, sizeof(int) * size);
 				index_buffer.unmap();
 
-				render_internal(icons_texture, positions, size);
-				/*int viewport[4];
-				glGetIntegerv(GL_VIEWPORT, viewport);
-
-				glm::mat3 mat = glm::mat3(1.f);
-				float scale_x = 2.0 / viewport[2];
-				float scale_y = 2.0 / viewport[3];
-
-				glm::mat4* mat_ptr = reinterpret_cast<glm::mat4*>(matrix_buffer.map(GL_WRITE_ONLY));
-				ZeroMemory(mat_ptr, sizeof(glm::mat4) * size);
-
-				for(unsigned int i = 0; i < size; i++){
-					mat_ptr[i][0][0] = scale_x;
-					mat_ptr[i][1][1] = scale_y;
-					mat_ptr[i][2][2] = 1;
-
-					mat_ptr[i][2][0] = (2 * positions[i].x)/viewport[2] - 1;
-					mat_ptr[i][2][1] = 1 - (2 * (positions[i].y + ICON_SIZE))/viewport[3];
-				}
-				matrix_buffer.unmap();
-
-				icons_texture.bind_unit(0);
-
-				index_buffer.bind_base(0);
-				matrix_buffer.bind_base(1);
-
-				array_buffer.bind();
-				glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-				glEnableVertexAttribArray(0);
-
-				program.use();
-
-				glDisable(GL_DEPTH_TEST);
-				glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, size);
-				glEnable(GL_DEPTH_TEST);*/
+				render_internal(icons_texture, positions, size, false);
 			}
 		
 		private:
 			
-			inline void render_internal(const gl_wrapper::texture<gl_wrapper::Texture_Array_2D>& tex, const glm::vec2* positions, unsigned int size){
+			inline void render_internal(const gl_wrapper::texture<gl_wrapper::Texture_Array_2D>& tex, const glm::vec2* positions, unsigned int size, bool is_bw){
 				matrix_buffer.resize(sizeof(glm::mat4) * size);
 				int viewport[4];
 				glGetIntegerv(GL_VIEWPORT, viewport);
@@ -169,6 +135,7 @@ namespace Rendering{
 				glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 				glEnableVertexAttribArray(0);
 
+				program.Uniform<bw>() = is_bw;
 				program.use();
 
 				glDisable(GL_DEPTH_TEST);

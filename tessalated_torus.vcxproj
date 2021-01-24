@@ -138,6 +138,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="attacker_states.h" />
     <ClInclude Include="button.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="constants.h" />
@@ -150,6 +151,7 @@
     <ClInclude Include="hud.h" />
     <ClInclude Include="hud_manager.h" />
     <ClInclude Include="icons.h" />
+    <ClInclude Include="object_lists.h" />
     <ClInclude Include="object_manager.h" />
     <ClInclude Include="render_manager.h" />
     <ClInclude Include="user_input.h" />

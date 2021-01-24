@@ -4,12 +4,12 @@
 
 namespace DTO {
 	struct hole {
-		float rad;
 		glm::vec2 coords;
+		float rad;
 
-		hole() :
-			rad(1.5f),
-			coords(glm::vec2(0.f))
+		hole(const glm::vec2& coords, float rad) :
+			coords(coords),
+			rad(rad)
 		{}
 	};
 }

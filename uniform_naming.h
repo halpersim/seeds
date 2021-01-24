@@ -23,7 +23,7 @@ struct TypeName<name> {							\
 struct name {																\
 	type value;																\
 																						\
-	name() {}																	\
+	name() : value(0) {}											\
 	name(type val) : value(val) {}						\
 																						\
 	operator type()const { return value; }		\
@@ -47,3 +47,4 @@ NAME_TYPE(color, glm::vec3);
 NAME_TYPE(none, Void);
 NAME_TYPE(border_size, Uint);
 NAME_TYPE(selected_id, Uint);
+NAME_TYPE(bw, Uint);

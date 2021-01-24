@@ -1,10 +1,11 @@
 #pragma once
 #include "tree.h"
-#include "soldier.h"
 #include "constants.h"
 #include "data_supplier.h"
 #include "rendering_structs.h"
 #include "general_utils.h"
+
+#include "attacker_states.h"
 
 #include <GLM/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -78,29 +79,12 @@ namespace Rendering {
 		}
 
 
-		static glm::mat4 generate_matrix(float* ptr, const DTO::attacker* att){
-			glm::vec3 pos, dir, normal;
+		static glm::mat4 generate_matrix(float* ptr, const std::unique_ptr<Control::attacker>* att_ptr){
+			Control::attacker* att = att_ptr->get();
 
-			if(att->host_planet) {
-				pos = att->host_planet->get_pos(att->coord, att->coord.z);
-				normal = att->host_planet->get_normal(att->coord);
+			generate_lookat_matrix(ptr, att->pos(), att->forward(), att->normal());
 
-				if(att->turn.done()) {
-					glm::vec3 next_vector = glm::normalize(att->direction) * 0.001f;
-					glm::vec3 next = att->host_planet->get_pos(att->coord + next_vector, att->coord.z + next_vector.z);
-					dir = next - pos;
-				} else {
-					dir = glm::normalize(my_utils::quat_to_vec3(att->turn.mix()));
-				}
-			} else {
-				pos = att->path.mix();
-				dir = glm::normalize(my_utils::quat_to_vec3(att->turn.mix()));
-				normal = att->normal;
-			}
-
-			generate_lookat_matrix(ptr, pos, dir, normal);
-
-			return glm::scale(glm::make_mat4(ptr), glm::vec3(att->health, att->damage, att->health) * Constants::Rendering::SOLDIER_SCALE);
+			return glm::scale(glm::make_mat4(ptr), glm::vec3(att->dto->health, att->dto->damage, att->dto->health) * Constants::Rendering::SOLDIER_SCALE);
 		}
 
 		static glm::mat4 generate_matrix(float* ptr, const DTO::defender* def){
@@ -112,6 +96,7 @@ namespace Rendering {
 
 			return glm::scale(glm::make_mat4(ptr), glm::vec3(1, 1 / def->damage, 1) * def->health * Constants::Rendering::SOLDIER_SCALE);
 		}
+
 		static glm::mat4 generate_matrix(float* ptr, const DTO::planet<DTO::any_shape>* planet){
 			return glm::translate(glm::mat4(1.f), planet->pos);
 		}
@@ -183,20 +168,20 @@ namespace Rendering {
 		}
 
 		template<class T>
-		std::array<std::list<glm::mat4>, 2> generate_matrix_tree(const DTO::tree<T>* tree){
+		static std::array<std::list<glm::mat4>, 2> generate_matrix_tree(const DTO::tree<T>* tree){
 			glm::mat4 model_to_world;
 
 			glm::vec3 x = tree->host_planet.get_tangent_alpha(tree->ground.coords);
 			glm::vec3 y = tree->host_planet.get_normal(tree->ground.coords);
 			glm::vec3 z = tree->host_planet.get_tangent_theta(tree->ground.coords);
 
-			model_to_world = glm::translate(glm::mat4(1.f), tree->host_planet.get_pos(tree->ground.coords, 0.f)) * align_to_axis(x, y, z);
+			model_to_world = glm::translate(glm::mat4(1.f),  _3D::planet_hole(tree->host_planet, tree->ground).bottom_mid) * align_to_axis(x, y, z);
 
 			auto pallet = generate_matrix_tree_recursive(tree->nodes, tree->nodes.front(), Constants::Rendering::TREE_FIRST_TRUNK_SCALE);
 
 			std::for_each(pallet.begin(), pallet.end(), [&model_to_world](std::list<glm::mat4>& list){
 				std::for_each(list.begin(), list.end(), [&model_to_world](glm::mat4& m){m = model_to_world * m; });
-										});
+			});
 
 			return pallet;
 		}
@@ -214,44 +199,47 @@ namespace Rendering {
 			return ret;
 		}
 
-		Rendering::_3D::planet_renderer_data get_planet_renderer_data(const DTO::planet<DTO::torus>& planet){
+		static Rendering::_3D::planet_renderer_data get_planet_renderer_data(const DTO::planet<DTO::torus>& planet){
 			Rendering::_3D::planet_renderer_data data;
 			data.radius = planet.radius;
 			data.thickness = planet.thickness;
 			return data;
 		}
 
-		Rendering::_3D::planet_renderer_data get_planet_renderer_data(const DTO::planet<DTO::sphere>& planet){
+		static Rendering::_3D::planet_renderer_data get_planet_renderer_data(const DTO::planet<DTO::sphere>& planet){
 			Rendering::_3D::planet_renderer_data data;
 
 			data.radius = planet.radius;
 			return data;
 		}
 
-		void handle_planet_data_generation(const DTO::planet<DTO::any_shape>& planet, 
+		static void handle_planet_data_generation(const DTO::planet<DTO::any_shape>& planet,
 																const DTO::planet_entry& entry,
 																std::list<Rendering::_3D::planet_hole>* hole_list, 
-																std::list<Rendering::_3D::ground_render_data>* ground_data_list){
+																std::list<Rendering::_3D::ground_render_data>* ground_data_list)
+		{
+			if(entry.stage >= 0){
+				Rendering::_3D::planet_hole hole = Rendering::_3D::planet_hole(planet, entry.ground);
 
-			Rendering::_3D::planet_hole hole = Rendering::_3D::planet_hole(planet, entry.ground);
-			
-			float mat[16];
-			ZeroMemory(mat, sizeof(mat));
-			mat[15] = 1.f;
-			Rendering::_3D::ground_render_data ground_data;
-			generate_lookat_matrix(mat, hole.bottom_mid, hole.height, glm::vec3(0.f, 0.f, 1.f));
-			
-			ground_data.mat = glm::scale(glm::make_mat4(mat), glm::vec3(hole.rad, planet.get_radius(), hole.rad));
+				float mat[16];
+				ZeroMemory(mat, sizeof(mat));
+				mat[15] = 1.f;
+				Rendering::_3D::ground_render_data ground_data;
 
-			ground_data.set_id(planet.id);
-			ground_data.set_size(entry.stage);
+				generate_lookat_matrix(mat, hole.bottom_mid + planet.pos, hole.height, glm::vec3(hole.height.y, -hole.height.x, hole.height.z));
 
-			hole_list->push_back(hole);
-			ground_data_list->push_back(ground_data);
+				ground_data.mat = glm::scale(glm::make_mat4(mat), glm::vec3(hole.rad, planet.get_radius(), hole.rad));
+
+				ground_data.set_id(planet.id);
+				ground_data.set_size(entry.stage);
+
+				hole_list->push_back(hole);
+				ground_data_list->push_back(ground_data);
+			}
 		}
 
 		template <class T>
-		void handle_planet_data_generation_tree(const DTO::tree<T>& tree, std::list<Rendering::_3D::planet_hole>* hole_list, std::list<Rendering::_3D::ground_render_data>* ground_data_list){
+		static void handle_planet_data_generation_tree(const DTO::tree<T>& tree, std::list<Rendering::_3D::planet_hole>* hole_list, std::list<Rendering::_3D::ground_render_data>* ground_data_list){
 			handle_planet_data_generation(tree.host_planet, tree, hole_list, ground_data_list);
 		}
 		
@@ -267,7 +255,6 @@ namespace Rendering {
 
 			for(const DTO::planet<T>& planet : in){
 				Rendering::_3D::planet_renderer_data data = get_planet_renderer_data(planet);
-				data.start_idx = idx;
 
 				std::list<Rendering::_3D::planet_hole> planet_holes;
 
@@ -275,8 +262,10 @@ namespace Rendering {
 				std::for_each(planet.defender_tree_list.begin(), planet.defender_tree_list.end(), std::bind(handle_planet_data_generation_tree<DTO::defender>, _1, &planet_holes, &ground_data));
 				std::for_each(planet.planet_entry_list.begin(), planet.planet_entry_list.end(), std::bind(handle_planet_data_generation, planet, _1, &planet_holes, &ground_data));
 
+				data.start_idx = idx;
 				idx += planet_holes.size();
 				data.end_idx = idx;
+			
 				std::copy(planet_holes.begin(), planet_holes.end(), std::back_inserter(hole_list));
 				data_list.push_back(data);
 				id_list.push_back(planet.id);

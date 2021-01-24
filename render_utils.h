@@ -33,11 +33,11 @@ namespace my_utils {
 	unsigned char* load_2d_array_texture(const std::string& folderpath, const std::string* filenames, const glm::ivec3& size, int channels = 4){
 		unsigned char* tex_data = new unsigned char[channels * size.x * size.y * size.z];
 		unsigned char* icon_data = NULL;
-		int x, y, dummy;
+		int x, y, chan;
 
 		my_utils::set_flip_vertically_on_load(true);
 		for(int i = 0; i<size.z; i++){
-			icon_data = my_utils::load_img((folderpath + filenames[i]).c_str(), &x, &y, &dummy, channels);
+			icon_data = my_utils::load_img((folderpath + filenames[i]).c_str(), &x, &y, &chan, channels);
 			memcpy(tex_data + channels * size.x * size.y * i, icon_data, sizeof(unsigned char) * channels * size.x * size.y);
 			delete[] icon_data;
 		}

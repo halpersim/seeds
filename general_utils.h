@@ -3,6 +3,7 @@
 #include <GLM/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <glm/gtc/random.hpp>
 
 #include <iomanip>
 #include <sstream>
@@ -20,6 +21,10 @@ namespace my_utils{
 
 	glm::quat vec3_to_quat(const glm::vec3& vec){
 		return glm::quat(0, vec);
+	}
+
+	glm::vec3 get_random_dir(){
+		return glm::vec3(glm::normalize(glm::linearRand(glm::vec2(0.f), glm::vec2(6.2831f))), 0.f);
 	}
 
 	std::string to_string(float value, int precision){

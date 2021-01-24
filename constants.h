@@ -5,10 +5,12 @@ namespace Constants {
 	namespace DTO{
 		static const int TREE_GROWTH = 5;
 		static const float TREE_CAP = 50.f;
-		static const float INIT_SPAWN_RATE = 20.f; //seconds
-		static const float FINAL_SPAWN_RATE = 20.f; //seconds
+		static const float INIT_SPAWN_RATE = 3.f; //seconds
+		static const float FINAL_SPAWN_RATE = 3.f; //seconds
 		
 		static const int ATTACKERS_REQUIRED_TO_FILL_HOLE = 5;
+		static const int ATTACKERS_REQUIRED_TO_BUILD_HOLE = 5;
+		static const float MIN_DISTANCE_TO_PLANET_ENTRY = 0.1f;
 	}
 
 	namespace Rendering{

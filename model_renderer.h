@@ -95,11 +95,11 @@ namespace Rendering {
 				Model::Instance().load();
 			}
 
-			void render(std::list<glm::mat4>& pallet){
+			void render(const std::list<glm::mat4>& pallet){
 				render(pallet, std::list<int>());
 			}
 
-			void render(std::list<glm::mat4>& pallet, const std::list<int>& id_list){
+			void render(const std::list<glm::mat4>& pallet, const std::list<int>& id_list){
 
 				//set unifroms
 				program.Uniform<vp>() = frame_data::view_projection_matrix;
@@ -166,9 +166,9 @@ namespace Rendering {
 				SoldierModel::Instance().load();
 			}
 
-			void render(std::array<std::list<glm::mat4>, 2>& pallet, const std::list<int>& id_list){
-				std::list<glm::mat4>& trunk_pallet = pallet[0];
-				std::list<glm::mat4>& soldier_pallet = pallet[1];
+			void render(const std::array<std::list<glm::mat4>, 2>& pallet, const std::list<int>& id_list){
+				const std::list<glm::mat4>& trunk_pallet = pallet[0];
+				const std::list<glm::mat4>& soldier_pallet = pallet[1];
 
 
 				//set uniforms

@@ -97,7 +97,7 @@ void main(){
 		bool broke = false;
 		vec4 pos;
 	
-		for(uint i=hole_idx_data[gs_in[0].instance_id].start_idx; i <= hole_idx_data[gs_in[0].instance_id].end_idx; i++){
+		for(uint i=hole_idx_data[gs_in[0].instance_id].start_idx; i < hole_idx_data[gs_in[0].instance_id].end_idx; i++){
 			vec3 normal = normalize(excluded_space[i].height);
 			float dot_value = dot(normal, gl_in[k].gl_Position.xyz - excluded_space[i].bottom_mid);
 			vec3 proj_point = gl_in[k].gl_Position.xyz - normal * dot_value;

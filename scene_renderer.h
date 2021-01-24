@@ -10,8 +10,6 @@ namespace Rendering{
 		private:
 			glm::vec2 window_size;
 
-			Rendering::_3D::free_cam cam;
-
 			Rendering::_3D::soldier_renderer<DTO::defender> def_renderer;
 			Rendering::_3D::soldier_renderer<DTO::attacker> att_renderer;
 			Rendering::_3D::tree_renderer<DTO::tree<DTO::defender>> tree_def_renderer;
@@ -44,7 +42,6 @@ namespace Rendering{
 
 		public:
 			inline scene_renderer(const glm::vec2& window_size) :
-				cam(),
 				window_size(window_size),
 				projection_matrix(glm::perspective<float>(90, window_size.x/window_size.y, 0.1, 100)),
 				color_texture(window_size, GL_RGBA8),
@@ -102,10 +99,6 @@ namespace Rendering{
 				}
 			}
 
-			inline void update_cam(const HI::input_state& state){
-				cam.update(state);
-			}
-
 			inline int get_clicked_id(const glm::vec2& clicked){
 				float id = 0;
 				
@@ -118,16 +111,21 @@ namespace Rendering{
 			}
 
 			inline void render(
+				const glm::vec3 eye,
+				const glm::mat4 look_at,
 				int highlighted_id,
-				const std::list<DTO::defender>& def_list,
-				const std::list<DTO::attacker>& att_list,
-				const std::list<DTO::tree<DTO::defender>*>& tree_def_list,
-				const std::list<DTO::tree<DTO::attacker>*>& tree_att_list,
+				const std::list<glm::mat4>& def_pallet,
+				const std::list<glm::mat4>& att_pallet,
+				const std::list<int>& att_id_list,
+				const std::array<std::list<glm::mat4>, 2>& att_tree_pallet,
+				const std::list<int>& att_tree_id_list,
+				const std::array<std::list<glm::mat4>, 2>& def_tree_pallet,
+				const std::list<int>& def_tree_id_list,
 				const std::list<DTO::planet<DTO::sphere>>& planet_sphere_list,
 				const std::list<DTO::planet<DTO::torus>>& planet_torus_list)
 			{
-				Rendering::frame_data::view_projection_matrix = projection_matrix * cam.look_at();
-				Rendering::frame_data::eye = cam.pos;
+				Rendering::frame_data::view_projection_matrix = projection_matrix * look_at;
+				Rendering::frame_data::eye = eye;
 				Rendering::frame_data::light = glm::vec3(0);
 
 				/*
@@ -145,12 +143,6 @@ namespace Rendering{
 				gl_wrapper::texture<gl_wrapper::Texture_2D>& cur_border_texture = border_texture_0;
 				gl_wrapper::texture<gl_wrapper::Texture_2D>& next_border_texture = border_texture_0;
 
-				//generate matrices
-				std::list<glm::mat4> def_pallet = Rendering::MatrixGenerator::generate_matrix_pallet(def_list);
-				std::list<glm::mat4> att_pallet = Rendering::MatrixGenerator::generate_matrix_pallet(att_list);
-				std::array<std::list<glm::mat4>, 2> att_tree_pallet = Rendering::MatrixGenerator::generate_matrix_pallet_tree(tree_att_list);
-				std::array<std::list<glm::mat4>, 2> def_tree_pallet = Rendering::MatrixGenerator::generate_matrix_pallet_tree(tree_def_list);
-
 				fbo.bind();
 				
 				glClearBufferfv(GL_COLOR, COLOR_TEXTURE, Constants::Rendering::BACKGROUND);
@@ -159,14 +151,11 @@ namespace Rendering{
 				float one = 1.f;
 				glClearBufferfv(GL_DEPTH, 0, &one);
 
-				std::list<int> att_id_list;
-				std::for_each(att_list.begin(), att_list.end(), [&att_id_list](const DTO::attacker& att){ att_id_list.push_back(att.sworm_id); });
-				
 				//render 
 				def_renderer.render(def_pallet);
 				att_renderer.render(att_pallet, att_id_list);
-				//tree_att_renderer.render(att_tree_pallet, get_id_list(tree_att_list));
-				//tree_def_renderer.render(def_tree_pallet, get_id_list(tree_def_list));
+				tree_att_renderer.render(att_tree_pallet, att_tree_id_list);
+				tree_def_renderer.render(def_tree_pallet, def_tree_id_list);
 
 				render_planets(planet_sphere_list);
 				render_planets(planet_torus_list);

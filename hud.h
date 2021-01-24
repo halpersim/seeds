@@ -54,6 +54,7 @@ namespace Rendering{
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 0> fractions_ab;
 
 			gl_wrapper::texture<gl_wrapper::Texture_Array_2D> tree_texture;
+			gl_wrapper::texture<gl_wrapper::Texture_Array_2D> tree_texture_bw;
 			gl_wrapper::texture<gl_wrapper::Texture_Array_2D> fraction_texture;
 
 			font font_obj;
@@ -70,6 +71,7 @@ namespace Rendering{
 				fractions_ab(GL_ARRAY_BUFFER, GL_STATIC_DRAW),
 				font_obj(font::CONSOLAS, Constants::Rendering::HUD::FONT_COLOR, FONT_SIZE),
 				tree_texture(TREE_TEXTURE_SIZE, GL_RGBA8),
+				tree_texture_bw(TREE_TEXTURE_SIZE, GL_RGBA8),
 				fraction_texture(FRACTION_TEXTURE_SIZE, GL_RGBA8),
 				button_boxes(std::array<my_utils::box, NONE>())
 			{
@@ -162,11 +164,19 @@ namespace Rendering{
 				program.create(shader);
 
 				std::string folderpath = "media/textures/icons/";
+
 				std::array<std::string, 3> str_array = {"attacker_tree_transparent.png", "defender_tree_transparent.png"};
 				unsigned char* tex_data = my_utils::load_2d_array_texture(folderpath, str_array, tree_texture.size);
 				tree_texture.fill_data(GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
 				delete[] tex_data;
-							 			 
+				
+				glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
+				str_array = {"attacker_tree_transparent_BW.png", "defender_tree_transparent_BW.png"};
+				tex_data = my_utils::load_2d_array_texture(folderpath, str_array, tree_texture_bw.size, 2);
+				tree_texture_bw.fill_data(GL_RG, GL_UNSIGNED_BYTE, tex_data);
+				delete[] tex_data;
+				glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
 				str_array = {"whole.png", "half.png", "quater.png"};
 				tex_data = my_utils::load_2d_array_texture(folderpath, str_array, fraction_texture.size);
 				fraction_texture.fill_data(GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
@@ -195,7 +205,7 @@ namespace Rendering{
 				glDrawElements(GL_TRIANGLES, 8*3, GL_UNSIGNED_BYTE, NULL);
 			}
 				
-			inline void render(const DTO::planet<DTO::any_shape>& planet, int solders_on_planet, int attacker_on_planet){
+			inline void render(const DTO::planet<DTO::any_shape>& planet, int solders_on_planet, int attacker_on_planet, bool grow_tree_available){
 				static const std::array<int, 5> icons = {icons::PLANET, icons::DAMAGE, icons::HEALTH, icons::SPEED, icons::SWOARM};
 
 				std::array<std::string, 5> strings = {std::string("Planet #") + std::to_string(planet.id & (~DTO::id_generator::PLANET_BIT)),
@@ -230,7 +240,7 @@ namespace Rendering{
 				glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 				icon_singleton::Instance().render_texture_array(fraction_texture, fraction_positions);
-				icon_singleton::Instance().render_texture_array(tree_texture, tree_positions);
+				icon_singleton::Instance().render_texture_array(grow_tree_available ? tree_texture : tree_texture_bw, tree_positions, !grow_tree_available);
 
 				for(unsigned int i = 0; i<fraction_positions.size(); i++){
 					std::string str = std::to_string(int(std::round((attacker_on_planet)/float(1 << i))));

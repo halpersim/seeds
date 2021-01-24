@@ -74,9 +74,6 @@
     <ClInclude Include="planet.h">
       <Filter>Source Files\DTOs</Filter>
     </ClInclude>
-    <ClInclude Include="hole.h">
-      <Filter>Source Files\DTOs</Filter>
-    </ClInclude>
     <ClInclude Include="frame_data.h">
       <Filter>Source Files\Rendering</Filter>
     </ClInclude>
@@ -119,9 +116,6 @@
     <ClInclude Include="scene_renderer.h">
       <Filter>Source Files\Rendering\3D</Filter>
     </ClInclude>
-    <ClInclude Include="render_manager.h">
-      <Filter>Source Files\Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="game.h">
       <Filter>Source Files\Control</Filter>
     </ClInclude>
@@ -154,6 +148,18 @@
     </ClInclude>
     <ClInclude Include="object_manager.h">
       <Filter>Source Files\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="attacker_states.h">
+      <Filter>Source Files\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="render_manager.h">
+      <Filter>Source Files\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="object_lists.h">
+      <Filter>Source Files\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="hole.h">
+      <Filter>Source Files\DTOs</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
