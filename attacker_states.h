@@ -32,7 +32,7 @@ namespace Control{
 			dto(dto)
 		{}
 
-		virtual const DTO::planet<DTO::any_shape>* host_planet() const = 0;
+		virtual DTO::planet<DTO::any_shape>* host_planet() const = 0;
 		virtual const DTO::planet<DTO::any_shape>* target_planet() const = 0;
 		virtual attacker* update(float time_elapsed) = 0;
 
@@ -51,21 +51,21 @@ namespace Control{
 
 	class roaming : public attacker{
 	private:
-		const DTO::planet<DTO::any_shape>& host;
+		DTO::planet<DTO::any_shape>& host;
 
 		glm::vec3 coords;
 		glm::vec3 direction;
 
 	public:
 
-		inline roaming(std::shared_ptr<DTO::attacker> dto, const DTO::planet<DTO::any_shape>& host_planet, const glm::vec3& coords, const glm::vec3& direction):
+		inline roaming(std::shared_ptr<DTO::attacker> dto, DTO::planet<DTO::any_shape>& host_planet, const glm::vec3& coords, const glm::vec3& direction):
 			attacker(dto),
 			host(host_planet),
 			coords(coords),
 			direction(direction)
 		{}
 
-		virtual inline const DTO::planet<DTO::any_shape>* host_planet() const override{
+		virtual inline DTO::planet<DTO::any_shape>* host_planet() const override{
 			return &host;
 		}
 
@@ -101,7 +101,7 @@ namespace Control{
 
 	class moving : public attacker{
 	private:
-		const DTO::planet<DTO::any_shape>& target;
+		DTO::planet<DTO::any_shape>& target;
 
 		my_utils::LERP<glm::vec3> path;
 		my_utils::LERP<glm::quat> turn;
@@ -113,7 +113,7 @@ namespace Control{
 		bool turn_to_target;
 
 	public:
-		inline moving(Control::attacker& old_state, const DTO::planet<DTO::any_shape>& target) :
+		inline moving(Control::attacker& old_state, DTO::planet<DTO::any_shape>& target) :
 			attacker(old_state.dto),
 			target(target),
 			target_coords(target.get_nearest_coords(old_state.pos())),
@@ -131,7 +131,7 @@ namespace Control{
 			normal_lerp = my_utils::LERP<glm::quat>(my_utils::vec3_to_quat(glm::normalize(old_state.normal())), my_utils::vec3_to_quat(glm::normalize(glm::cross(my_utils::quat_to_vec3(turn_start), my_utils::quat_to_vec3(turn_end)))), turn_factor);
 		}
 
-		virtual inline const DTO::planet<DTO::any_shape>* host_planet() const override{
+		virtual inline DTO::planet<DTO::any_shape>* host_planet() const override{
 			return NULL;
 		}
 
@@ -197,7 +197,7 @@ namespace Control{
 			m_forward(old_state.forward())
 		{}
 
-		virtual const DTO::planet<DTO::any_shape>* host_planet() const override{
+		virtual DTO::planet<DTO::any_shape>* host_planet() const override{
 			return NULL;
 		}
 
@@ -254,7 +254,7 @@ namespace Control{
 			m_pos = my_utils::LERP<glm::vec3>(old_state.pos(), target, dto->speed / glm::length(old_state.pos() - target));
 		}
 
-		virtual const DTO::planet<DTO::any_shape>* host_planet() const override{
+		virtual DTO::planet<DTO::any_shape>* host_planet() const override{
 			return NULL;
 		}
 
@@ -297,7 +297,7 @@ namespace Control{
 
 	class ordered : public attacker{
 	private:
-		const DTO::planet<DTO::any_shape>& host;
+		DTO::planet<DTO::any_shape>& host;
 
 		glm::vec3 coords;
 		glm::vec3 direction;
@@ -307,21 +307,28 @@ namespace Control{
 	public:
 		DTO::planet_entry& target;
 
-		inline ordered(Control::attacker& old_state, const DTO::planet<DTO::any_shape>& host_planet, DTO::planet_entry& target) :
+		inline ordered(Control::attacker& old_state, DTO::planet<DTO::any_shape>& host_planet, DTO::planet_entry& target) :
 			attacker(old_state.dto),
 			host(host_planet),
 			target(target),
 			coords(old_state.get_coords())
 		{
-			direction = glm::normalize(glm::vec3(target.ground.coords - glm::vec2(coords), -coords.z));
-			
+			glm::vec2 dir = target.ground.coords - my_utils::get_unit_coords(glm::vec2(coords));
+			glm::vec2 opposite_dir;
+			opposite_dir.x = dir.x + 6.281385f * (dir.x < 0.f ? 1 : -1);
+			opposite_dir.y = dir.y + 6.281385f * (dir.y < 0.f ? 1 : -1);
+
+			direction = glm::normalize(glm::vec3(glm::dot(dir, dir) < glm::dot(opposite_dir, opposite_dir) ? dir : opposite_dir, -coords.z));					
+
 			glm::quat start = my_utils::vec3_to_quat(old_state.forward());
 			glm::quat end = my_utils::vec3_to_quat(forward());
 
 			turn = my_utils::LERP<glm::quat>(start, end, calc_turn_factor(dto->speed, start, end));
+
+			target.attackers_heading_to++;
 		}
 
-		virtual inline const DTO::planet<DTO::any_shape>* host_planet() const override{
+		virtual inline DTO::planet<DTO::any_shape>* host_planet() const override{
 			return &host;
 		}
 
@@ -330,9 +337,14 @@ namespace Control{
 		}
 
 		virtual inline attacker* update(float time_elapsed) override{
+			if(target.stage >= Constants::DTO::ATTACKERS_REQUIRED_TO_FILL_HOLE){
+				target.attackers_heading_to--;
+				return new roaming(dto, host, coords, direction);
+			}
+						
 			if(turn.done()){
 				float start_entering = !target.is_established() ? Constants::DTO::MIN_DISTANCE_TO_PLANET_ENTRY : target.ground.rad;
-				if (length(glm::vec2(coords) - target.ground.coords) < start_entering) {
+				if (length(host.get_pos(coords, coords.z) - host.get_pos(target.ground.coords, 0.f)) < start_entering) {
 					glm::vec3 end = target.is_established() ? host.get_pos(target.ground.coords, 0.f) - (host.get_normal(target.ground.coords) * host.get_radius()) : host.get_pos(target.ground.coords, 0.f);
 					
 					return new entering(*this, target, end);

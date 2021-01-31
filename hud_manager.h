@@ -6,22 +6,17 @@ namespace Control{
 	
 	class hud_manager{
 	public:
-		enum class tree_type{
-			ATTACKER,
-			DEFENDER,
-			NONE
-		};
-
+	
 		Rendering::_2D::hud hud;
 
 		std::vector<std::function<void(float)>> select_soldiers_callbacks;
-		std::vector<std::function<void(tree_type)>> grow_tree_callbacks;
+		std::vector<std::function<void(DTO::tree_type)>> grow_tree_callbacks;
 
 
 		inline hud_manager(const glm::vec2& window_size) :
 			hud(window_size),
 			select_soldiers_callbacks(std::vector<std::function<void(float)>>()),
-			grow_tree_callbacks(std::vector<std::function<void(tree_type)>>())
+			grow_tree_callbacks(std::vector<std::function<void(DTO::tree_type)>>())
 		{}
 
 		inline bool check_hud_clicked(const glm::vec2& click){
@@ -34,7 +29,7 @@ namespace Control{
 
 			for(int i = hud.GROW_ATTACKER_TREE; i <= hud.GROW_DEFENDER_TREE; i++){
 				if(hud.get_button_outline(i).contains(click)){
-					std::for_each(grow_tree_callbacks.begin(), grow_tree_callbacks.end(), [i](std::function<void(tree_type)>& func){	func(tree_type_from_button(i)); });
+					std::for_each(grow_tree_callbacks.begin(), grow_tree_callbacks.end(), [i](std::function<void(DTO::tree_type)>& func){	func(tree_type_from_button(i)); });
 					return true;
 				}
 			}
@@ -43,12 +38,12 @@ namespace Control{
 		}
 
 	private:
-		inline static tree_type tree_type_from_button(int hud_button){
+		inline static DTO::tree_type tree_type_from_button(int hud_button){
 			switch(hud_button){
-				case Rendering::_2D::hud::GROW_ATTACKER_TREE: return tree_type::ATTACKER;
-				case Rendering::_2D::hud::GROW_DEFENDER_TREE: return tree_type::DEFENDER;
+				case Rendering::_2D::hud::GROW_ATTACKER_TREE: return DTO::tree_type::ATTACKER;
+				case Rendering::_2D::hud::GROW_DEFENDER_TREE: return DTO::tree_type::DEFENDER;
 			}
-			return tree_type::NONE;
+			return DTO::tree_type::NONE;
 		}
 	};
 }

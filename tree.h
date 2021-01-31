@@ -10,6 +10,13 @@
 
 namespace DTO {
 
+	enum class tree_type{
+		ATTACKER,
+		DEFENDER,
+		NONE
+	};
+
+
 	template<class T>
 	class planet;
 
@@ -35,24 +42,29 @@ namespace DTO {
 	template<class soldier_type>
 	class tree {
 	private:
+		static log4cpp::Category& logger;
+		static const int IS_ATTACKER = type_traits::SelectInt<Loki::IsSameType<soldier_type, attacker>::value, 1, 0>::value;
+
 		float size;
 		float time_since_last_spawn;
 		float spawn_rate;
-		static log4cpp::Category& logger;
 
+		
 	public:
+		const tree_type TYPE;
 		const unsigned int id;
 		hole ground;
 		planet<any_shape>& host_planet;
 		std::vector<tree_node<soldier_type>> nodes;
 
 		tree(planet<any_shape>& host_planet, const hole& ground) :
-			id(id_generator::next_id()),
-			host_planet(host_planet),
-			ground(ground),
 			size(0),
 			time_since_last_spawn(0),
-			spawn_rate(Constants::DTO::INIT_SPAWN_RATE)
+			spawn_rate(Constants::DTO::INIT_SPAWN_RATE),
+			TYPE(IS_ATTACKER ? tree_type::ATTACKER : tree_type::DEFENDER),
+			id(id_generator::next_id()),
+			ground(ground),
+			host_planet(host_planet)
 		{
 			nodes.push_back(tree_node<soldier_type>(0, -1));
 		}

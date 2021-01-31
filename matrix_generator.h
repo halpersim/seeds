@@ -94,7 +94,7 @@ namespace Rendering {
 
 			generate_lookat_matrix(ptr, pos, next - pos, def->host_planet->get_normal(def->coord));
 
-			return glm::scale(glm::make_mat4(ptr), glm::vec3(1, 1 / def->damage, 1) * def->health * Constants::Rendering::SOLDIER_SCALE);
+			return glm::scale(glm::make_mat4(ptr), glm::vec3(1, def->damage * 0.5f, 1) * def->health * Constants::Rendering::SOLDIER_SCALE);
 		}
 
 		static glm::mat4 generate_matrix(float* ptr, const DTO::planet<DTO::any_shape>* planet){
@@ -141,6 +141,7 @@ namespace Rendering {
 
 			glm::vec3 x = glm::normalize(x_ref - pos);
 			glm::vec3 z = glm::normalize(glm::cross(x, y));
+			x = glm::normalize(glm::cross(z, y));
 
 			glm::mat4 mat = align_to_axis(x, y, z);
 			mat[3] = glm::vec4(scale *(pos + glm::vec3(0, 1, 0)), 1.f);
@@ -154,7 +155,7 @@ namespace Rendering {
 
 			for(int side = 0; side < me.branch_size; side++){
 				if(me.next[side] != -1){
-					std::array<std::list<glm::mat4>, 2> branch_transforms = generate_matrix_tree_recursive(other, other.at(me.next[side]));
+					std::array<std::list<glm::mat4>, 2> branch_transforms = generate_matrix_tree_recursive(other, other.at(me.next[side]), scale * Constants::Rendering::TREE_BRANCHES_SIZE_DECREASE);
 					glm::mat4 side_transform = get_tree_node_side_data<T>(side, scale);
 
 					for(unsigned int i = 0; i<branch_transforms.size(); i++)
@@ -171,11 +172,12 @@ namespace Rendering {
 		static std::array<std::list<glm::mat4>, 2> generate_matrix_tree(const DTO::tree<T>* tree){
 			glm::mat4 model_to_world;
 
-			glm::vec3 x = tree->host_planet.get_tangent_alpha(tree->ground.coords);
-			glm::vec3 y = tree->host_planet.get_normal(tree->ground.coords);
-			glm::vec3 z = tree->host_planet.get_tangent_theta(tree->ground.coords);
+			glm::vec3 x = glm::normalize(tree->host_planet.get_tangent_alpha(tree->ground.coords));
+			glm::vec3 y = glm::normalize(tree->host_planet.get_normal(tree->ground.coords));
+			glm::vec3 z = glm::normalize(glm::cross(x, y));
+			x = glm::normalize(glm::cross(z, y));
 
-			model_to_world = glm::translate(glm::mat4(1.f),  _3D::planet_hole(tree->host_planet, tree->ground).bottom_mid) * align_to_axis(x, y, z);
+			model_to_world = glm::translate(glm::mat4(1.f), tree->host_planet.pos + _3D::planet_hole(tree->host_planet, tree->ground).bottom_mid) * align_to_axis(x, y, z);
 
 			auto pallet = generate_matrix_tree_recursive(tree->nodes, tree->nodes.front(), Constants::Rendering::TREE_FIRST_TRUNK_SCALE);
 

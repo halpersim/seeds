@@ -10,6 +10,11 @@
 
 
 namespace my_utils{
+
+	glm::vec2 get_unit_coords(const glm::vec2& vec, const glm::vec2& start = glm::vec2(0.f), const glm::vec2& end = glm::vec2(6.283185f)){
+		return start + vec - glm::floor((vec - start) / (end - start)) * (end - start);
+	}
+
 	template<class T>
 	bool float_equal(T lhs, T rhs, double epsilon = 0.0001){
 		return fabs(lhs - rhs) < epsilon;
@@ -24,7 +29,7 @@ namespace my_utils{
 	}
 
 	glm::vec3 get_random_dir(){
-		return glm::vec3(glm::normalize(glm::linearRand(glm::vec2(0.f), glm::vec2(6.2831f))), 0.f);
+		return glm::vec3(glm::normalize(glm::linearRand(glm::vec2(-1.f), glm::vec2(1.f))), 0.f);
 	}
 
 	std::string to_string(float value, int precision){

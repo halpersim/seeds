@@ -67,10 +67,10 @@ namespace Control{
 			DTO::player player = DTO::player();
 
 			DTO::soldier_data soldier_data = DTO::soldier_data(player, 2, 5, 3);
-			lists.planet_torus.push_back(DTO::planet<DTO::torus>(player, soldier_data, glm::vec3(0, 0, 0), 6.f, 3.f));
+			lists.planet_torus.push_back(DTO::planet<DTO::torus>(player, soldier_data, glm::vec3(0, -10, 0), 6.f, 3.f));
 			DTO::planet<DTO::torus>& planet = lists.planet_torus.front();
 
-			DTO::hole hole = DTO::hole(glm::vec2(0.f), 1.5f);
+			DTO::hole hole = DTO::hole(glm::vec2(1.5057f, 0.f), 1.5f);
 			DTO::tree<DTO::attacker> att_tree = DTO::tree<DTO::attacker>(planet, hole);
 			att_tree.add_size(5);
 			planet.attacker_tree_list.push_back(att_tree);
@@ -113,12 +113,13 @@ namespace Control{
 			}
 		}
 
-		inline void grow_tree(hud_manager::tree_type type){
+		inline void grow_tree(DTO::tree_type type){
 			if((selected_id & DTO::id_generator::PLANET_BIT) && std::get<ATTACKER>(soldiers_on_planet_map.find(selected_id)->second) >= Constants::DTO::ATTACKERS_REQUIRED_TO_BUILD_HOLE){
 				DTO::planet<DTO::any_shape>* planet = lists.find_planet(selected_id);
 
 				glm::vec2 coords = glm::linearRand(glm::vec2(0.f, 0.f), glm::vec2(1.f) * 6.2831f);
-				DTO::planet_entry entry = DTO::planet_entry(DTO::hole(coords, 1.5f));
+				
+				DTO::planet_entry entry = DTO::planet_entry(DTO::hole(coords, 1.5f), type);
 
 				planet->planet_entry_list.push_back(entry);
 
@@ -171,10 +172,13 @@ namespace Control{
 		inline void update(){
 			if(!freeze){
 				using namespace std::placeholders;
-				using att_list_type = std::list<std::unique_ptr<Control::attacker>>;
 				
 				float time_elapsed = Rendering::frame_data::delta_time;
 				
+				sworm_metric = DTO::sworm_metrics();
+				std::for_each(soldiers_on_planet_map.begin(), soldiers_on_planet_map.end(), [](auto& pair){pair.second = std::make_tuple(0, 0); });
+				
+				using att_list_type = std::list<std::unique_ptr<Control::attacker>>;
 				std::list<typename att_list_type::iterator> to_delte;
 
 				for(auto it = lists.att.begin(); it != lists.att.end(); it++){
@@ -187,50 +191,88 @@ namespace Control{
 						}
 						att.reset(new_state);
 					}
+
 					if(att->get_state() == Control::attacker_state::STUCK){
 						if(reinterpret_cast<Control::stuck*>(att.get())->entry.stage >= 0){
 							to_delte.push_back(it);
+						}
+					} else if(att->get_state() == Control::attacker_state::ROAMING) {
+						for(DTO::planet_entry& entry : att->host_planet()->planet_entry_list){
+							if(glm::length(att->pos() - att->host_planet()->get_pos(entry.ground.coords, 0.f)) < Constants::DTO::DISTANCE_FLY_TO_PLANET_ENTRY &&
+								 entry.stage < Constants::DTO::ATTACKERS_REQUIRED_TO_FILL_HOLE){
+								att.reset(new ordered(*(att.get()), *att->host_planet(), entry));
+								break;
+							}
+						}
+					}
+
+					if(att->dto->sworm_id == selected_id){
+						sworm_metric.id = selected_id;
+						sworm_metric.count++;
+
+						sworm_metric.dmg += att->dto->damage;
+						sworm_metric.health += att->dto->health;
+						sworm_metric.speed += att->dto->speed;
+					}
+
+					if(att->host_planet() != NULL){
+						auto it = soldiers_on_planet_map.find(att->host_planet()->id);
+						if(it != soldiers_on_planet_map.end()){
+							std::get<SOLDERS>(it->second)++;
+							std::get<ATTACKER>(it->second)++;
 						}
 					}
 				}
 				std::for_each(to_delte.begin(), to_delte.end(), [this](const auto& it){lists.att.erase(it); });
 				
 				
-				std::for_each(lists.def.begin(), lists.def.end(), std::bind(update_defender, _1, time_elapsed));
+				std::for_each(lists.def.begin(), lists.def.end(), [this, time_elapsed](DTO::defender& def) {
+					def.coord += def.direction * def.speed * Constants::Control::VELOCITY_ON_PLANET * time_elapsed;
+					auto it = soldiers_on_planet_map.find(def.host_planet->id);
+					if(it != soldiers_on_planet_map.end()){
+						std::get<SOLDERS>(it->second)++;
+					}
+				});
 
 				std::for_each(lists.tree_def.begin(), lists.tree_def.end(), std::bind(update_tree<DTO::defender>, _1, time_elapsed, &lists.def, &soldiers_on_planet_map));
 				std::for_each(lists.tree_att.begin(), lists.tree_att.end(), std::bind(update_att_tree, _1, time_elapsed, &lists.att, &soldiers_on_planet_map));
 				
-				
-				std::for_each(soldiers_on_planet_map.begin(), soldiers_on_planet_map.end(), [](auto& pair){pair.second = std::make_tuple(0, 0); });
-				
-				sworm_metric = DTO::sworm_metrics();
-				std::for_each(lists.att.begin(), lists.att.end(), [this](const std::unique_ptr<Control::attacker>& att){
+				lists.for_each_planet([this](DTO::planet<DTO::any_shape>& planet){
+					std::list<typename std::list<DTO::planet_entry>::iterator> to_delte;
 					
-					if(att->dto->sworm_id == selected_id){
-						sworm_metric.id = selected_id;
-						sworm_metric.count++;
-						
-						sworm_metric.dmg += att->dto->damage;
-						sworm_metric.health += att->dto->health;
-						sworm_metric.speed += att->dto->speed;
-					}
-					
-					if(att->host_planet() != NULL){
-						auto it = soldiers_on_planet_map.find(att->host_planet()->id);
-						if(it != soldiers_on_planet_map.end()){
-							std::get<0>(it->second)++;
-							std::get<1>(it->second)++;
+					for(auto it = planet.planet_entry_list.begin(); it != planet.planet_entry_list.end(); it++){
+						DTO::planet_entry& entry = *it;
+
+						if(entry.stage >= Constants::DTO::ATTACKERS_REQUIRED_TO_FILL_HOLE){
+							if(!entry.tree_grown){
+								if(entry.TREE_TYPE == DTO::tree_type::ATTACKER){
+									planet.attacker_tree_list.push_back(DTO::tree<DTO::attacker>(planet, entry.ground));
+									lists.tree_att.push_back(&planet.attacker_tree_list.back());
+									entry.tree_grown = true;
+
+								} else if(entry.TREE_TYPE == DTO::tree_type::DEFENDER){
+									planet.defender_tree_list.push_back(DTO::tree<DTO::defender>(planet, entry.ground));
+									lists.tree_def.push_back(&planet.defender_tree_list.back());
+									entry.tree_grown = true;
+
+								}
+							}
+							if(entry.attackers_heading_to == 0){
+								to_delte.push_back(it);
+							}
 						}
 					}
+					std::for_each(to_delte.begin(), to_delte.end(), [&planet](auto& it){ planet.planet_entry_list.erase(it); });
 				});
+				
+				
+			
 				if(selected_id & DTO::id_generator::SWORM_BIT && sworm_metric.count == 0){
 					selected_id = 0;
 					Rendering::_2D::cursor_singleton::Instance().set_default();
 				} else if(sworm_metric.count != 0){
 					sworm_metric /= sworm_metric.count;
 				}
-				std::for_each(lists.def.begin(), lists.def.end(), [this](const DTO::defender& def) { std::get<0>(soldiers_on_planet_map.find(def.host_planet->id)->second)++; });
 			}
 		}
 

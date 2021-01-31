@@ -24,17 +24,4 @@ namespace Control{
 	//		list->push_back(std::unique_ptr<Control::attacker>(new roaming(tree->produce_soldier(), tree->host_planet, glm::vec3(tree->ground.coords, 1.f), my_utils::get_random_dir()))
 		}
 	}
-	
-	void update_defender(DTO::defender& def, float time_elapsed){
-		def.coord += def.direction * def.speed * Constants::Control::VELOCITY_ON_PLANET * time_elapsed;
-	}
-
-
-	void update_attacker(std::unique_ptr<Control::attacker>& att, float time_elapsed){
-		Control::attacker* new_state = att->update(time_elapsed);
-
-		if(new_state != NULL){
-			att.reset(new_state);
-		}
-	}
 }

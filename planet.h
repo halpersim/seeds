@@ -141,7 +141,7 @@ namespace DTO {
 		}
 
 		glm::vec3 get_tangent_theta(const glm::vec2& coords) const override{
-			return glm::normalize(get_local_pos(coords + glm::vec2(0, 1.5707f)) - get_inner_mid(coords + glm::vec2(0, 1.5707f)));
+			return glm::normalize(get_local_pos(coords + glm::vec2(0, 1.5707f)) - get_inner_mid(coords));
 		}
 
 		virtual glm::vec3 get_pos(const glm::vec2& parameter, float height)const = 0;
@@ -164,9 +164,11 @@ namespace DTO {
 		}
 
 		glm::vec3 get_local_pos(const glm::vec2& parameter)const override{
+			float theta = parameter.y / 2.f;
+			
 			return glm::vec3(
-				radius * cos(parameter.x) * sin(parameter.y),
-				radius * cos(parameter.x) * cos(parameter.y),
+				radius * cos(parameter.x) * sin(theta),
+				radius * cos(parameter.x) * cos(theta),
 				radius * sin(parameter.x)
 			);
 		}

@@ -212,7 +212,7 @@ namespace Rendering{
 					std::to_string(int(planet.soldier_type.damage)),
 					std::to_string(int(planet.soldier_type.health)),
 					std::to_string(int(planet.soldier_type.speed)),
-					std::to_string(planet.max_soldiers) + std::string("|") + std::to_string(solders_on_planet)
+					std::to_string(solders_on_planet) + std::string("|") + std::to_string(planet.max_soldiers)
 				};
 
 				glDisable(GL_DEPTH_TEST);
