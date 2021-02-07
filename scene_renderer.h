@@ -46,7 +46,7 @@ namespace Rendering{
 
 
 			gl_wrapper::program<LOKI_TYPELIST_1(color)> final_render_program;
-			gl_wrapper::program<LOKI_TYPELIST_2(border_size, selected_id)> compute_program;
+			gl_wrapper::program<LOKI_TYPELIST_3(border_size, selected_id, direction)> compute_program;
 
 			bool odd_frame;
 			bool frame_started;
@@ -104,7 +104,7 @@ namespace Rendering{
 
 				error_msg = "";
 				std::array<GLuint, 1> compute_shader;
-				compute_shader[0] = my_utils::shader::load("media/shader/scene_renderer/cs.glsl", GL_COMPUTE_SHADER, true, &error_msg);
+				compute_shader[0] = my_utils::shader::load("media/shader/scene_renderer/cs_v2.glsl", GL_COMPUTE_SHADER, true, &error_msg);
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR shader compilation error -> scene_renderer constructor:\n%s", error_msg.c_str());
 				}
@@ -168,6 +168,8 @@ namespace Rendering{
 				glClearBufferfv(GL_COLOR, COLOR_TEXTURE, Constants::Rendering::BACKGROUND);
 				int zero = 0;
 				glClearBufferiv(GL_COLOR, ID_TEXTURE, &zero);
+				float neg_one = -1;
+				glClearBufferfv(GL_COLOR, BORDER_TEXTURE, &neg_one);
 				float one = 1.f;
 				glClearBufferfv(GL_DEPTH, 0, &one);
 
@@ -183,11 +185,14 @@ namespace Rendering{
 
 				if(highlighted_id != 0){
 					priv_id_texture->bind_img(0, GL_READ_ONLY);
-					next_border_texture->bind_img(1, GL_WRITE_ONLY);
+					next_border_texture->bind_img(1, GL_READ_WRITE);
 					compute_program.Uniform<border_size>() = Constants::Rendering::BOARDER_THICKNESS;
 					compute_program.Uniform<selected_id>() = highlighted_id;
-					compute_program.use();
-					compute_program.dispatch_compute(window_size.x, window_size.y);
+
+				//	for(int k = 0; k<2; k++)
+						for(unsigned int i = 0; i < 4; i++){
+							dispatch_compute(i, (i >> 1) ? window_size.y : window_size.x);
+						}
 				} else {
 					int zero = 0;
 					glClearBufferiv(GL_COLOR, BORDER_TEXTURE, &zero);
@@ -202,6 +207,13 @@ namespace Rendering{
 				final_render_program.use();
 				glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 			}
+
+			private:
+				inline void dispatch_compute(unsigned int dir, unsigned int size){
+					compute_program.Uniform<direction>() = dir;
+					compute_program.use();
+					compute_program.dispatch_compute(size);
+				}
 		};
 
 		log4cpp::Category& scene_renderer::logger = log4cpp::Category::getInstance("Rendering.scene_renderer");

@@ -14,14 +14,22 @@ void main(){
   float t = texture(border_tex, tc).x;
   vec4 col = texture(color_tex, tc);
   
+  if(t > 0.f){
+    t = 1.f;
+  } else {
+    t = 0.f;
+  }
   
   color_out = mix(col, vec4(color, 1), t);
 
 
-/*
-  vec4 t = texture(id_texture, tc);
 
-  switch(int(t.x)){
+//  vec4 t = texture(id_texture, tc);
+
+  /*
+  switch(int(t)){
+    case -1: color_out = vec4(1, 0, 0, 1); break;
+    case 0: color_out =  vec4(0.1, 0.9, 0.1, 1); break;
     case 1: color_out =  vec4(0.1, 0.1, 0.9, 1); break;
     case 2: color_out =  vec4(0.4, 1.0, 0.1, 1); break;
     case 3: color_out =  vec4(0.5, 0.5, 0.7, 1); break;
@@ -33,7 +41,7 @@ void main(){
     case 9: color_out =  vec4(0.4, 0.9, 0.7, 1); break;
     case 10: color_out = vec4(0.9, 0.3, 0.1, 1); break;
     case 11: color_out = vec4(0.4, 0.0, 0.4, 1); break;
-    default: color_out = vec4(0.6, 0.1, 0.9, 1); break;
+    default: color_out = vec4(0.6, 0.1, 0.1, 1); break;
   } */
 //  color_out = vec4(texture(color_tex, tc).xyz, 1);
 

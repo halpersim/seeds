@@ -48,3 +48,4 @@ NAME_TYPE(none, Void);
 NAME_TYPE(border_size, Uint);
 NAME_TYPE(selected_id, Uint);
 NAME_TYPE(bw, Uint);
+NAME_TYPE(direction, Uint);
