@@ -139,7 +139,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="attacker_states.h" />
-    <ClInclude Include="button.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="constants.h" />
     <ClInclude Include="cursor.h" />
@@ -153,6 +152,7 @@
     <ClInclude Include="icons.h" />
     <ClInclude Include="object_lists.h" />
     <ClInclude Include="object_manager.h" />
+    <ClInclude Include="data_lists.h" />
     <ClInclude Include="render_manager.h" />
     <ClInclude Include="user_input.h" />
     <ClInclude Include="id_generator.h" />

@@ -10,8 +10,12 @@ namespace Constants {
 		
 		static const int ATTACKERS_REQUIRED_TO_FILL_HOLE = 5;
 		static const int ATTACKERS_REQUIRED_TO_BUILD_HOLE = 5;
-		static const float MIN_DISTANCE_TO_PLANET_ENTRY = 0.2f;
-		static const float DISTANCE_FLY_TO_PLANET_ENTRY = 5.f;
+		static const float MIN_DISTANCE_TO_PLANET_ENTRY = 0.5f;
+		static const float DISTANCE_FLY_TO_PLANET_ENTRY = 15.f;
+
+		static const float TREES_MIN_DISTANCE = 5.f;
+
+		static const int MAX_TREES_ON_PLANET = 5;
 	}
 
 	namespace Rendering{

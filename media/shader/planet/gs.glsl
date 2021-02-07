@@ -60,19 +60,20 @@ void set_output_parameters(vec3 pos, vec3 normal, vec3 color){
     gs_out.instance_id = gs_in[0].instance_id;
 }
 
-
-vec3 calc_intersection_proj_line_on_cirlce(vec3 I, vec3 O, hole c){
-	vec3 N = normalize(c.height);
-	vec3 I_proj = I - N * dot(N, I - c.bottom_mid);
-	vec3 O_proj = O - N * dot(N, O - c.bottom_mid);
-	vec3 V = normalize(O_proj - I_proj);
-	vec3 F = I_proj - c.bottom_mid;
+//projects the line onto the plane defined by the hole's normal and calculates the intersection with the circle defined by the hole
+vec3 calc_intersection_proj_line_on_cirlce(vec3 line_start, vec3 line_end, hole h){
+	vec3 N = normalize(h.height);
+	vec3 start_proj = line_start - N * dot(N, line_start - h.bottom_mid);
+	vec3 end_proj = line_end - N * dot(N, line_end - h.bottom_mid);
 	
-	float a = dot(V, V);
-	float b = 2 * dot(V, F);
-	float cs = dot(F, F) - c.rad * c.rad;
+    vec3 vector = normalize(end_proj - start_proj);
+	vec3 to_circle_mid = start_proj - h.bottom_mid;
 	
-	float discriminant = b*b - 4*a*cs;
+	float a = dot(vector, vector);
+	float b = 2 * dot(vector, to_circle_mid);
+	float c = dot(to_circle_mid, to_circle_mid) - h.rad * h.rad;
+	
+	float discriminant = b*b - 4*a*c;
 	
 	if(discriminant < 0){
 		return vec3(0.f);
@@ -82,7 +83,7 @@ vec3 calc_intersection_proj_line_on_cirlce(vec3 I, vec3 O, hole c){
 	if(t < 0)
 		t = (-b - discriminant)/(2*a);
 	
-	return I_proj + V * t;
+	return start_proj + vector * t;
 }   
 
 void main(){
@@ -102,7 +103,8 @@ void main(){
 			float dot_value = dot(normal, gl_in[k].gl_Position.xyz - excluded_space[i].bottom_mid);
 			vec3 proj_point = gl_in[k].gl_Position.xyz - normal * dot_value;
 			
-			if(dot_value > 0 && dot_value < length(excluded_space[i].height) && length(proj_point - excluded_space[i].bottom_mid) < excluded_space[i].rad){
+            //length(excluded_space[i].height) * 1.5f - because points might not match the shape exactly
+			if(dot_value > 0 && dot_value < length(excluded_space[i].height) * 1.5f && length(proj_point - excluded_space[i].bottom_mid) < excluded_space[i].rad){
 				vertex_inside[k] = i;
 				inside_count++;
 				break;
@@ -131,17 +133,11 @@ void main(){
                     space_violated_idx = vertex_inside[vertex_to_remove_idx];
                     break;
                 }
-            //skizze sullt drauß ling
+            //a sketch explaining this should be in this directory
             vec3 new_vertices[5];
 
-            uint first_idx;
-            uint second_idx;
-
-            switch(vertex_to_remove_idx){
-                case 0: first_idx = 1; second_idx = 2; break;
-                case 1: first_idx = 2; second_idx = 0; break;
-                case 2: first_idx = 0; second_idx = 1; break;
-            }
+            uint first_idx = (vertex_to_remove_idx + 1) % 3;
+            uint second_idx = (vertex_to_remove_idx + 2) % 3;
 
             new_vertices[0] = calc_intersection_proj_line_on_cirlce(gl_in[vertex_to_remove_idx].gl_Position.xyz, gl_in[first_idx].gl_Position.xyz, excluded_space[space_violated_idx]);
 			new_vertices[1] = gl_in[first_idx].gl_Position.xyz;
@@ -157,7 +153,7 @@ void main(){
 
             uint normal_idx = 0;
             for(int i=0; i<5; i++){
-                set_output_parameters(new_vertices[i], vertex_normals[normal_idx], vec3(0.f, 0, 0));//normalize(cross(gl_in[0].gl_Position.xyz - gl_in[1].gl_Position.xyz, gl_in[2].gl_Position.xyz - gl_in[1].gl_Position.xyz))/2 + vec3(0.5f));
+                set_output_parameters(new_vertices[i], vertex_normals[normal_idx], vec3(0.f, 0, 0));
 
                 if(i == 1 || i == 2)
                     normal_idx++;

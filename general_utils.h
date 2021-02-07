@@ -11,8 +11,13 @@
 
 namespace my_utils{
 
-	glm::vec2 get_unit_coords(const glm::vec2& vec, const glm::vec2& start = glm::vec2(0.f), const glm::vec2& end = glm::vec2(6.283185f)){
+	template<class T>
+	T get_unit_coords(const T& vec, const T& start = T(0.f), const T& end = T(6.283185f)){
 		return start + vec - glm::floor((vec - start) / (end - start)) * (end - start);
+	}
+
+	float get_unit_coord(float t, float start = 0.f, float end = 6.283185f){
+		return start + t - std::floor((t - start) / (end - start)) * (end - start);
 	}
 
 	template<class T>
@@ -29,7 +34,7 @@ namespace my_utils{
 	}
 
 	glm::vec3 get_random_dir(){
-		return glm::vec3(glm::normalize(glm::linearRand(glm::vec2(-1.f), glm::vec2(1.f))), 0.f);
+		return glm::vec3(glm::normalize(glm::linearRand(glm::vec3(-1.f), glm::vec3(1.f))));
 	}
 
 	std::string to_string(float value, int precision){

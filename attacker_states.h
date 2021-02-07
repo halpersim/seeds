@@ -9,11 +9,15 @@ namespace Control{
 	static float calc_turn_factor(float speed, const glm::quat& begin, const glm::quat& end){
 		return speed / acos(glm::dot(begin, end)) * Constants::Control::TURN_VELOCITY;
 	}
+
+	static glm::vec3 get_pos(const DTO::planet<DTO::any_shape>& host, const glm::vec3& coords){
+		return host.get_pos(coords, (std::sin(coords.z + 4.71238f) * 0.5f + 0.5f) * host.atmosphere_height);
+	}
 	
 	static glm::vec3 forward_on_planet(const DTO::planet<DTO::any_shape>& host, const glm::vec3& coords, const glm::vec3& direction){
 		glm::vec3 next_vector = glm::normalize(direction) * 0.001f;
-		glm::vec3 next = host.get_pos(coords + next_vector, coords.z + next_vector.z);
-		return glm::normalize(next - host.get_pos(coords, coords.z));
+		glm::vec3 next = get_pos(host, coords + next_vector);
+		return glm::normalize(next - get_pos(host, coords));
 	}
 
 	enum class attacker_state{
@@ -31,6 +35,8 @@ namespace Control{
 		inline attacker(std::shared_ptr<DTO::attacker> dto) :
 			dto(dto)
 		{}
+
+		virtual ~attacker(){}
 
 		virtual DTO::planet<DTO::any_shape>* host_planet() const = 0;
 		virtual const DTO::planet<DTO::any_shape>* target_planet() const = 0;
@@ -79,7 +85,7 @@ namespace Control{
 		}
 
 		virtual inline glm::vec3 pos() const override{
-			return host.get_pos(coords, coords.z);
+			return get_pos(host, coords);
 		}
 
 		virtual inline glm::vec3 normal() const override{
@@ -318,7 +324,12 @@ namespace Control{
 			opposite_dir.x = dir.x + 6.281385f * (dir.x < 0.f ? 1 : -1);
 			opposite_dir.y = dir.y + 6.281385f * (dir.y < 0.f ? 1 : -1);
 
-			direction = glm::normalize(glm::vec3(glm::dot(dir, dir) < glm::dot(opposite_dir, opposite_dir) ? dir : opposite_dir, -coords.z));					
+			float height_dir = my_utils::get_unit_coord(coords.z, 0, 3.1415f);
+			
+			if(height_dir > 1.5057f)
+				height_dir *= -1;
+
+			direction = glm::normalize(glm::vec3(glm::dot(dir, dir) < glm::dot(opposite_dir, opposite_dir) ? dir : opposite_dir, height_dir));
 
 			glm::quat start = my_utils::vec3_to_quat(old_state.forward());
 			glm::quat end = my_utils::vec3_to_quat(forward());
@@ -326,6 +337,10 @@ namespace Control{
 			turn = my_utils::LERP<glm::quat>(start, end, calc_turn_factor(dto->speed, start, end));
 
 			target.attackers_heading_to++;
+		}
+
+		virtual inline ~ordered(){
+			target.attackers_heading_to--;
 		}
 
 		virtual inline DTO::planet<DTO::any_shape>* host_planet() const override{
@@ -338,13 +353,11 @@ namespace Control{
 
 		virtual inline attacker* update(float time_elapsed) override{
 			if(target.stage >= Constants::DTO::ATTACKERS_REQUIRED_TO_FILL_HOLE){
-				target.attackers_heading_to--;
 				return new roaming(dto, host, coords, direction);
 			}
 						
 			if(turn.done()){
-				float start_entering = !target.is_established() ? Constants::DTO::MIN_DISTANCE_TO_PLANET_ENTRY : target.ground.rad;
-				if (length(host.get_pos(coords, coords.z) - host.get_pos(target.ground.coords, 0.f)) < start_entering) {
+				if (length(host.get_pos(coords, 0.f) - host.get_pos(target.ground.coords, 0.f)) < Constants::DTO::MIN_DISTANCE_TO_PLANET_ENTRY) {
 					glm::vec3 end = target.is_established() ? host.get_pos(target.ground.coords, 0.f) - (host.get_normal(target.ground.coords) * host.get_radius()) : host.get_pos(target.ground.coords, 0.f);
 					
 					return new entering(*this, target, end);
@@ -358,7 +371,7 @@ namespace Control{
 		}
 
 		virtual inline glm::vec3 pos() const override{
-			return host.get_pos(coords, coords.z);
+			return get_pos(host, coords);
 		}
 
 		virtual inline glm::vec3 normal() const override{

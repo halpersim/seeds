@@ -40,13 +40,13 @@ namespace DTO {
 		std::list<tree<defender>> defender_tree_list;
 		std::list<planet_entry> planet_entry_list;
 		
-		planet(player& owner, soldier_data soldier_type, glm::vec3 pos) :
+		planet(player& owner, soldier_data soldier_type, glm::vec3 pos, int atmosphere_height) :
 			id(id_generator::next_planet()),
 			owner(owner),
 			soldier_type(soldier_type),
 			health(10),
 			max_soldiers(30),
-			atmosphere_height(10),
+			atmosphere_height(atmosphere_height),
 			pos(pos),
 			attacker_tree_list(std::list<tree<attacker>>()),
 			defender_tree_list(std::list<tree<defender>>()),
@@ -57,9 +57,11 @@ namespace DTO {
 			return soldier_type;
 		}
 		
+		virtual ~planet(){}
+
 		virtual hole make_hole(const glm::vec2& parameter, float size)const = 0;
-		virtual glm::vec3 get_pos(const glm::vec2& parameter, float height)const = 0;
-		virtual glm::vec3 get_local_pos(const glm::vec2& parameter)const = 0;
+		virtual glm::vec3 get_pos(const glm::vec2& parameter, float height = 0.f)const = 0;
+		virtual glm::vec3 get_local_pos(const glm::vec2& parameter, float height = 0.f)const = 0;
 		virtual glm::vec3 get_normal(const glm::vec2& parameter)const = 0;
 		virtual glm::vec3 get_tangent_alpha(const glm::vec2& coords)const = 0;
 		virtual glm::vec3 get_tangent_theta(const glm::vec2& coords)const = 0;
@@ -73,8 +75,8 @@ namespace DTO {
 		float radius;
 		float thickness;
 
-		torus(player& owner, soldier_data soldier_type, glm::vec3 pos, float radius, float thickness) :
-			planet(owner, soldier_type, pos),
+		torus(player& owner, soldier_data soldier_type, glm::vec3 pos, int atmosphere_height, float radius, float thickness) :
+			planet(owner, soldier_type, pos, atmosphere_height),
 			radius(radius),
 			thickness(thickness){}
 
@@ -86,12 +88,15 @@ namespace DTO {
 			return thickness;
 		}
 
-		glm::vec3 get_local_pos(const glm::vec2& parameter)const override{
-			return glm::vec3(
+		glm::vec3 get_local_pos(const glm::vec2& parameter, float height = 0.f)const override{
+			glm::vec3 point_on_surface = glm::vec3(
 				(radius + thickness * cos(parameter.x)) * cos(parameter.y),
 				thickness * sin(parameter.x),
-				(radius + thickness * cos(parameter.x)) * sin(parameter.y)
-			);
+				(radius + thickness * cos(parameter.x)) * sin(parameter.y));
+
+			glm::vec3 inner_mid = get_inner_mid(parameter);
+
+			return point_on_surface + glm::normalize(point_on_surface - inner_mid) * height;
 		}
 
 		glm::vec2 get_nearest_coords(const glm::vec3& point)const override{
@@ -151,8 +156,8 @@ namespace DTO {
 	public:
 		float radius;
 
-		inline sphere(player& owner, soldier_data soldier_type, glm::vec3 pos, float rad) :
-			planet(owner, soldier_type, pos),
+		inline sphere(player& owner, soldier_data soldier_type, glm::vec3 pos, int atmosphere_height, float rad) :
+			planet(owner, soldier_type, pos, atmosphere_height),
 			radius(rad){}
 
 		glm::vec3 get_inner_mid(const glm::vec2& coords)const{
@@ -163,14 +168,17 @@ namespace DTO {
 			return radius;
 		}
 
-		glm::vec3 get_local_pos(const glm::vec2& parameter)const override{
+		glm::vec3 get_local_pos(const glm::vec2& parameter, float height = 0.f)const override{
 			float theta = parameter.y / 2.f;
 			
-			return glm::vec3(
-				radius * cos(parameter.x) * sin(theta),
-				radius * cos(parameter.x) * cos(theta),
-				radius * sin(parameter.x)
+
+			glm::vec3 unscaled_point = glm::vec3(
+				cos(parameter.x) * sin(theta),
+				cos(parameter.x) * cos(theta),
+				sin(parameter.x)
 			);
+
+			return unscaled_point * radius + unscaled_point * height;
 		}
 
 		glm::vec2 get_nearest_coords(const glm::vec3& point)const override{
@@ -212,16 +220,16 @@ namespace DTO {
 	class planet : public planet_model{
 	public:
 
-		planet(player& owner, soldier_data& soldier_type, glm::vec3 pos, float arg1):
-			planet_model(owner, soldier_type, pos, arg1)
+		planet(player& owner, soldier_data& soldier_type, glm::vec3 pos, int atmosphere_height, float arg1):
+			planet_model(owner, soldier_type, pos, atmosphere_height, arg1)
 		{}
 
-		planet(player& owner, soldier_data& soldier_type, glm::vec3 pos, float arg1, float arg2) :
-			planet_model(owner, soldier_type, pos, arg1, arg2)
+		planet(player& owner, soldier_data& soldier_type, glm::vec3 pos, int atmosphere_height, float arg1, float arg2) :
+			planet_model(owner, soldier_type, pos, atmosphere_height, arg1, arg2)
 		{}
 
-		virtual glm::vec3 get_pos(const glm::vec2& parameter, float height) const override{
-			return planet<any_shape>::pos + planet_model::get_local_pos(parameter);
+		virtual glm::vec3 get_pos(const glm::vec2& parameter, float height = 0.f) const override{
+			return planet<any_shape>::pos + planet_model::get_local_pos(parameter, height);
 		}
 
 		virtual int get_render_idx()const override{

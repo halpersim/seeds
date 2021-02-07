@@ -21,7 +21,6 @@ namespace Control{
 		if(tree->evolve(time_elapsed) &&
 			 std::get<0>(soldiers_on_planet_map->find(tree->host_planet.id)->second) < tree->host_planet.max_soldiers){
 			list->push_back(std::make_unique<Control::roaming>(std::make_shared<DTO::attacker>(tree->produce_soldier()), tree->host_planet, glm::vec3(tree->ground.coords, 1.f), my_utils::get_random_dir()));
-	//		list->push_back(std::unique_ptr<Control::attacker>(new roaming(tree->produce_soldier(), tree->host_planet, glm::vec3(tree->ground.coords, 1.f), my_utils::get_random_dir()))
 		}
 	}
 }

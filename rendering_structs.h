@@ -3,7 +3,7 @@
 #include "hole.h"
 
 namespace Rendering{
-	namespace _3D{
+	namespace Data{
 
 		struct planet_hole{
 			glm::vec3 bottom_mid;

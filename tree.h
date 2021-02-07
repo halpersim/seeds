@@ -51,11 +51,11 @@ namespace DTO {
 
 		
 	public:
+		std::vector<tree_node<soldier_type>> nodes;
 		const tree_type TYPE;
 		const unsigned int id;
 		hole ground;
 		planet<any_shape>& host_planet;
-		std::vector<tree_node<soldier_type>> nodes;
 
 		tree(planet<any_shape>& host_planet, const hole& ground) :
 			size(0),

@@ -240,22 +240,24 @@ namespace gl_wrapper {
 	>
 		class buffer {
 		private:
+			typedef NewStoragePolicy<MemoryAllocationPolicy, StoragePolicyParameter> StoragePolicy;
+			
 			GLuint name;
 			bool set_up;
 			unsigned int size;
-			const GLenum target;
-			const GLenum usage;
 
-			typedef NewStoragePolicy<MemoryAllocationPolicy, StoragePolicyParameter> StoragePolicy;
 
 		public:
+			const GLenum usage;
+			const GLenum target;
 
 			buffer(GLenum target, GLenum usage, unsigned int size = 0) :
-				target(target),
 				size(size),
 				set_up(false),
 				usage(usage),
-				name(-1){
+				name(-1),
+				target(target) 
+			{
 				GLenum error = glGetError();
 				if(error != GL_NO_ERROR)
 					printf("error before buffer [%s]\n", get_enum_string(error).c_str());
@@ -272,6 +274,19 @@ namespace gl_wrapper {
 				}
 			}
 
+			template<class T>
+			void copy_vector_in_buffer(const std::vector<T>& vector){
+				bind();
+				resize(vector.size() * sizeof(T));
+
+				if(!vector.empty()){
+					T* ptr = (T*)map(GL_WRITE_ONLY);
+					if(ptr){
+						std::memcpy(ptr, vector.data(), sizeof(T) * vector.size());
+					}
+					unmap();
+				}
+			}
 
 			//fills the data with the given data, the buffer has the given size afterwards
 			void fill_data(void* data, unsigned int size){

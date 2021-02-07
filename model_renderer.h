@@ -7,6 +7,7 @@
 #include "matrix_generator.h"
 #include "frame_data.h"
 #include "rendering_structs.h"
+#include "data_lists.h"
 
 #include <loki/Singleton.h>
 #include <array>
@@ -14,22 +15,6 @@
 
 namespace Rendering {
 	namespace _3D{
-
-
-		template<class T, class P1, template <class, int> class P2, int I>
-		static void copy_list_in_buffer(const std::list<T>& list, gl_wrapper::buffer<P1, P2, I>& buffer){
-			buffer.bind();
-			buffer.resize(list.size() * sizeof(T));
-			
-			if(!list.empty()){
-				T* ptr = (T*)buffer.map(GL_WRITE_ONLY);
-				if(ptr){
-					std::for_each(list.begin(), list.end(), [&ptr](const T& value) {*ptr = value; ptr++; });
-				}
-				buffer.unmap();
-			}
-		}
-
 		/*	template<class T>
 			class renderer {
 			private:
@@ -71,13 +56,15 @@ namespace Rendering {
 			gl_wrapper::program<LOKI_TYPELIST_3(vp, eye, light)> program;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryExponentiallyExpanding, sizeof(glm::mat4) * 5> matrix_buffer;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryExponentiallyExpanding, sizeof(int) * 4> id_buffer;
+			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryExponentiallyExpanding, sizeof(int) * 4> owner_index_buffer;
 			typedef Loki::SingletonHolder<Models::model<T>> Model;
 
 			static log4cpp::Category& logger;
 		public:
 			soldier_renderer() :
 				matrix_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW),
-				id_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW)
+				id_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW),
+				owner_index_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW)
 			{
 				//load shader 
 				std::string error_msg = "";
@@ -95,11 +82,8 @@ namespace Rendering {
 				Model::Instance().load();
 			}
 
-			void render(const std::list<glm::mat4>& pallet){
-				render(pallet, std::list<int>());
-			}
 
-			void render(const std::list<glm::mat4>& pallet, const std::list<int>& id_list){
+			void render(const Data::soldier& data){
 
 				//set unifroms
 				program.Uniform<vp>() = frame_data::view_projection_matrix;
@@ -107,16 +91,19 @@ namespace Rendering {
 				program.Uniform<light>() = frame_data::light;
 				program.use();
 				//set buffer
-				copy_list_in_buffer(pallet, matrix_buffer);
+				matrix_buffer.copy_vector_in_buffer(data.pallet);
+				owner_index_buffer.copy_vector_in_buffer(data.owner_indices);
 				matrix_buffer.bind_base(0);
+				owner_index_buffer.bind_base(2);
 
-				if(!id_list.empty()){
-					copy_list_in_buffer(id_list, id_buffer);
+				if(!data.ids.empty()){
+					id_buffer.copy_vector_in_buffer(data.ids);
 					id_buffer.bind_base(1);
+				} else {
+					glBindBufferBase(id_buffer.target, 1, 0);
 				}
-				//[CPU culling]
 				//draw logic
-				Model::Instance().render(0, 1, pallet.size());
+				Model::Instance().render(0, 1, data.pallet.size());
 			}
 
 			~soldier_renderer(){
@@ -138,6 +125,7 @@ namespace Rendering {
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryLinearExpanding, sizeof(glm::mat4) * 5 *2> trunk_matrix_buffer;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryLinearExpanding, sizeof(glm::mat4) * 5 *2> soldier_matrix_buffer;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryLinearExpanding, sizeof(int) * 4> id_buffer;
+			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryLinearExpanding, sizeof(int) * 4> owner_index_buffer;
 
 			typedef Loki::SingletonHolder<Models::model<DTO::tree<T>>> TrunkModel;
 			typedef Loki::SingletonHolder<Models::model<T>> SoldierModel;
@@ -148,7 +136,8 @@ namespace Rendering {
 			tree_renderer() :
 				trunk_matrix_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW),
 				soldier_matrix_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW),
-				id_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW)
+				id_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW),
+				owner_index_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW)
 			{
 				//load shader 
 				std::string error_msg = "";
@@ -166,9 +155,9 @@ namespace Rendering {
 				SoldierModel::Instance().load();
 			}
 
-			void render(const std::array<std::list<glm::mat4>, 2>& pallet, const std::list<int>& id_list){
-				const std::list<glm::mat4>& trunk_pallet = pallet[0];
-				const std::list<glm::mat4>& soldier_pallet = pallet[1];
+			void render(const Data::tree& data){
+				const std::vector<glm::mat4>& trunk_pallet = data.pallet[0];
+				const std::vector<glm::mat4>& soldier_pallet = data.pallet[1];
 
 
 				//set uniforms
@@ -177,16 +166,19 @@ namespace Rendering {
 				program.Uniform<light>() = frame_data::light;
 				program.use();
 
-				copy_list_in_buffer(id_list, id_buffer);
+				id_buffer.copy_vector_in_buffer(data.ids);
 				id_buffer.bind_base(1);
 
+				owner_index_buffer.copy_vector_in_buffer(data.owner_indices);
+				owner_index_buffer.bind_base(2);
+
 				//set buffer
-				copy_list_in_buffer(trunk_pallet, trunk_matrix_buffer);
+				trunk_matrix_buffer.copy_vector_in_buffer(trunk_pallet);
 				trunk_matrix_buffer.bind_base(0);
 				TrunkModel::Instance().render(0, 1, trunk_pallet.size());
 
 
-				copy_list_in_buffer(soldier_pallet, soldier_matrix_buffer);
+				soldier_matrix_buffer.copy_vector_in_buffer(soldier_pallet);
 				soldier_matrix_buffer.bind_base(0);
 				SoldierModel::Instance().render(0, 1, soldier_pallet.size());
 			}
@@ -204,10 +196,12 @@ namespace Rendering {
 		class planet_renderer{
 		private:
 			static log4cpp::Category& logger;
-			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 1> hole_buffer;
-			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 1> matrix_buffer;
-			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 1> render_data_buffer;
-			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 1> id_buffer;
+			gl_wrapper::buffer<> hole_buffer;
+			gl_wrapper::buffer<> matrix_buffer;
+			gl_wrapper::buffer<> render_data_buffer;
+			gl_wrapper::buffer<> id_buffer;
+			gl_wrapper::buffer<> owner_index_buffer;
+
 			gl_wrapper::program<LOKI_TYPELIST_3(vp, eye, light)> program;
 
 		public:
@@ -216,7 +210,8 @@ namespace Rendering {
 				hole_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW),
 				matrix_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW),
 				render_data_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW),
-				id_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW)
+				id_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW),
+				owner_index_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW)
 			{
 				std::string error_msg = "";
 				std::array<GLuint, 5> shader;
@@ -235,8 +230,8 @@ namespace Rendering {
 			}
 
 			template<class T>
-			void render(Loki::Type2Type<DTO::planet<T>> dummy, std::list<glm::mat4> matrix_pallet, std::list<planet_renderer_data> render_data, std::list<planet_hole> holes, std::list<int> id_list){
-				if(matrix_pallet.size() == 0)
+			void render(Loki::Type2Type<DTO::planet<T>> dummy, const Rendering::Data::planet& data){
+				if(data.pallet.size() == 0)
 					return;
 
 
@@ -246,16 +241,18 @@ namespace Rendering {
 				program.Uniform<light>() = frame_data::light;
 				program.use();
 				
-				copy_list_in_buffer(render_data, render_data_buffer);
-				copy_list_in_buffer(holes, hole_buffer);
-				copy_list_in_buffer(matrix_pallet, matrix_buffer);
-				copy_list_in_buffer(id_list, id_buffer);
+				render_data_buffer.copy_vector_in_buffer(data.render_data);
+				hole_buffer.copy_vector_in_buffer(data.holes);
+				matrix_buffer.copy_vector_in_buffer(data.pallet);
+				id_buffer.copy_vector_in_buffer(data.ids);
+				owner_index_buffer.copy_vector_in_buffer(data.owner_indices);
 
 				render_data_buffer.bind_base(0);
 				hole_buffer.bind_base(1);
 				matrix_buffer.bind_base(2);
 				id_buffer.bind_base(3);
-				
+				owner_index_buffer.bind_base(4);
+
 				const GLuint subroutine_idx = Loki::TL::IndexOf<LOKI_TYPELIST_2(DTO::sphere, DTO::torus), T>::value;
 				glUniformSubroutinesuiv(GL_TESS_EVALUATION_SHADER, 1, &subroutine_idx);
 				GLenum error = glGetError();
@@ -272,7 +269,7 @@ namespace Rendering {
 					}
 				}
 				glPatchParameteri(GL_PATCH_VERTICES, 4); //hiarz 4, ba an gscheiten TCS werns mehr wern
-				glDrawArraysInstanced(GL_PATCHES, 0, 4, matrix_pallet.size());
+				glDrawArraysInstanced(GL_PATCHES, 0, 4, data.pallet.size());
 			}
 		};
 
@@ -305,8 +302,8 @@ namespace Rendering {
 				program.create(shader, "shader/ground");
 			}
 
-			void render(const std::list<Rendering::_3D::ground_render_data>& data_list){
-				copy_list_in_buffer(data_list, data_buffer);
+			void render(const Data::ground& data_struct){
+				data_buffer.copy_vector_in_buffer(data_struct.data);
 
 				program.Uniform<vp>() = frame_data::view_projection_matrix;
 				program.Uniform<max_size>() = float(Constants::DTO::ATTACKERS_REQUIRED_TO_FILL_HOLE);
@@ -315,7 +312,7 @@ namespace Rendering {
 				data_buffer.bind_base(0);
 
 				glPatchParameteri(GL_PATCH_VERTICES, 4); 
-				glDrawArraysInstanced(GL_PATCHES, 0, 4, data_list.size());
+				glDrawArraysInstanced(GL_PATCHES, 0, 4, data_struct.data.size());
 			}
 		};
 

@@ -43,6 +43,9 @@
     <Filter Include="Source Files\Rendering\3D">
       <UniqueIdentifier>{646f8095-3f5c-4368-a8cf-0b57db15a5e5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Rendering\Data">
+      <UniqueIdentifier>{27d9a79d-f246-4041-bf64-877cddb9d12c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -104,9 +107,6 @@
     <ClInclude Include="model_renderer.h">
       <Filter>Source Files\Rendering\3D</Filter>
     </ClInclude>
-    <ClInclude Include="rendering_structs.h">
-      <Filter>Source Files\Rendering\3D</Filter>
-    </ClInclude>
     <ClInclude Include="id_generator.h">
       <Filter>Source Files\DTOs</Filter>
     </ClInclude>
@@ -134,9 +134,6 @@
     <ClInclude Include="gl_wrapper.h">
       <Filter>Source Files\Rendering\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="button.h">
-      <Filter>Source Files\Rendering\Utils</Filter>
-    </ClInclude>
     <ClInclude Include="render_utils.h">
       <Filter>Source Files\Rendering\Utils</Filter>
     </ClInclude>
@@ -160,6 +157,12 @@
     </ClInclude>
     <ClInclude Include="hole.h">
       <Filter>Source Files\DTOs</Filter>
+    </ClInclude>
+    <ClInclude Include="rendering_structs.h">
+      <Filter>Source Files\Rendering\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="data_lists.h">
+      <Filter>Source Files\Rendering\Data</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

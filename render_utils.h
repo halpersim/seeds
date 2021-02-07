@@ -3,7 +3,7 @@
 #include "uniform_naming.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb\stb_image.h>
+#include <stb\stb_image.h>	
 
 namespace my_math {
 	int int_log(int base, int x){
@@ -20,6 +20,7 @@ namespace my_math {
 }
 
 namespace my_utils {
+
 
 	void set_flip_vertically_on_load(bool flip){
 		stbi_set_flip_vertically_on_load(flip);
