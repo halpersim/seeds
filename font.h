@@ -67,13 +67,13 @@ namespace Rendering{
 
 			FT_Library library;
 			FT_Face face;
-			gl_wrapper::program<LOKI_TYPELIST_2(w2NDS, color)> program;
+			gl_wrapper::program<LOKI_TYPELIST_2(Uniform::w2NDS, Uniform::color)> program;
 
 			gl_wrapper::texture<gl_wrapper::Texture_2D> bitmap_texture;
 
-			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 0> outline_ab;
-			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 0> matrix_buffer;
-			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 0> texture_index_buffer;
+			gl_wrapper::buffer<> outline_ab;
+			gl_wrapper::buffer<> matrix_buffer;
+			gl_wrapper::buffer<> texture_index_buffer;
 
 			std::map<int, font_size_data> loaded_sizes;
 			
@@ -387,7 +387,7 @@ namespace Rendering{
 
 					data.texture.bind_unit(0);
 
-					program.Uniform<color>() = font_color;
+					program.set<Uniform::color>() = font_color;
 					program.use();
 
 					glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, glyphs_in_this_call);

@@ -72,7 +72,7 @@ namespace gl_wrapper {
 
 
 	template<typename T>
-	struct Uniform {
+	struct uniform {
 		GLuint loc;
 		T value;
 
@@ -87,10 +87,10 @@ namespace gl_wrapper {
 		}
 	};
 
-	template<class TL = LOKI_TYPELIST_1(none)>
+	template<class TL = LOKI_TYPELIST_1(Uniform::none)>
 	class program {
 	private:
-		typedef Loki::GenScatterHierarchy<TL, Uniform> Uniforms;
+		typedef Loki::GenScatterHierarchy<TL, uniform> Uniforms;
 
 		Uniforms uniforms;
 
@@ -138,7 +138,7 @@ namespace gl_wrapper {
 		}
 
 		template<typename T>
-		inline Uniform<T>& Uniform(){
+		inline uniform<T>& set(){
 			return Loki::Field<T>(uniforms);
 		}
 
@@ -160,7 +160,7 @@ namespace gl_wrapper {
 		inline void set_uniform_locations(Loki::Int2Type<i> t){
 			typedef typename Loki::FieldHelper<Uniforms, i>::ResultType::UnderlyingType Name;
 
-			Loki::Field<i>(uniforms).loc = glGetUniformLocation(name, TypeName<Name>::get_name());
+			Loki::Field<i>(uniforms).loc = glGetUniformLocation(name, Uniform::TypeName<Name>::get_name());
 			set_uniform_locations(Loki::Int2Type<i - 1>());
 		}
 
@@ -168,7 +168,7 @@ namespace gl_wrapper {
 		inline void set_uniform_locations(Loki::Int2Type<0> t){
 			typedef typename Loki::FieldHelper<Uniforms, 0>::ResultType::UnderlyingType Name;
 
-			Loki::Field<0>(uniforms).loc = glGetUniformLocation(name, TypeName<Name>::get_name());
+			Loki::Field<0>(uniforms).loc = glGetUniformLocation(name, Uniform::TypeName<Name>::get_name());
 		}
 
 	};

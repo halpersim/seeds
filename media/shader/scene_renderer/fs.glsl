@@ -8,26 +8,25 @@ layout(binding = 2) uniform sampler2D id_texture;
 out vec4 color_out;
 
 uniform vec3 color;
+uniform uint border_size;
 
 void main(){
  
   float t = texture(border_tex, tc).x;
   vec4 col = texture(color_tex, tc);
   
-  if(t > 0.f){
-    t = 1.f;
+  if(t > 0.f){ 
+    t = 1 - smoothstep(0, border_size, t);
   } else {
     t = 0.f;
   }
-  
   color_out = mix(col, vec4(color, 1), t);
 
 
-
+  //------------for debugging purposes--------------------
 //  vec4 t = texture(id_texture, tc);
-
   /*
-  switch(int(t)){
+  switch(int(texture(border_tex, tc).x)){
     case -1: color_out = vec4(1, 0, 0, 1); break;
     case 0: color_out =  vec4(0.1, 0.9, 0.1, 1); break;
     case 1: color_out =  vec4(0.1, 0.1, 0.9, 1); break;

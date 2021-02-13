@@ -137,6 +137,7 @@ int main() {
 	printf("GL_VERSION = [%s]\n", glGetString(GL_VERSION));
 
 	Rendering::_2D::cursor_singleton::Instance().set_cursor(Rendering::_2D::cursor::ATTACK);
+	my_utils::dropout_array<double, 50> last_frames;
 	while (!glfwWindowShouldClose(window)) {
 		timer.start(glfwGetTime());
 
@@ -168,9 +169,11 @@ int main() {
 		glfwSwapBuffers(window);
 		timer.end(glfwGetTime());
 
-		
+		last_frames.add(timer.diff);
+		double avg_time = 0;
+		last_frames.for_each([&avg_time](const double& d){avg_time += d; });
 		ss.str("");
-		ss << " ~" << std::setprecision(1) << std::fixed << 1/timer.diff << " fps";
+		ss << " ~" << std::setprecision(1) << std::fixed << last_frames.size()/avg_time << " fps";
 		diff = ss.str();
 		d += timer.diff;
 	}

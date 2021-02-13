@@ -7,6 +7,7 @@
 
 #include <iomanip>
 #include <sstream>
+#include <array>
 
 
 namespace my_utils{
@@ -91,6 +92,34 @@ namespace my_utils{
 			return pos.x < point.x && (pos.x + size.x) > point.x &&
 				pos.y < point.y && (pos.y + size.y) > point.y;
 		}
+	};
+
+	template<class T, int N>
+	class dropout_array{
+	private:
+		std::array<T, N> array;
+		int idx;
+
+	public:
+		inline dropout_array() :
+			array(std::array<T, N>()),
+			idx(0)				
+		{}
+
+		inline void add(const T& value){
+			array[idx] = value;
+
+			idx = (idx + 1) % N;
+		}
+
+		inline void for_each(const std::function<void(const T&)>& func){
+			std::for_each(array.begin(), array.end(), func);
+		}
+
+		inline int size(){
+			return N;
+		}
+
 	};
 
 	class box{

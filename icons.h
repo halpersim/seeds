@@ -21,7 +21,7 @@ namespace Rendering{
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryLinearExpanding, sizeof(int) * 12> index_buffer;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryLinearExpanding, sizeof(glm::mat4) * 12> matrix_buffer;
 			
-			gl_wrapper::program<LOKI_TYPELIST_1(bw)> program;
+			gl_wrapper::program<LOKI_TYPELIST_1(Uniform::bw)> program;
 
 		public:
 			//new icons must have size 18*18
@@ -135,7 +135,7 @@ namespace Rendering{
 				glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 				glEnableVertexAttribArray(0);
 
-				program.Uniform<bw>() = is_bw;
+				program.set<Uniform::bw>() = is_bw;
 				program.use();
 
 				glDisable(GL_DEPTH_TEST);

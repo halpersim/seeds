@@ -53,7 +53,7 @@ namespace Rendering {
 		class soldier_renderer {
 		private:
 
-			gl_wrapper::program<LOKI_TYPELIST_3(vp, eye, light)> program;
+			gl_wrapper::program<LOKI_TYPELIST_3(Uniform::vp, Uniform::eye, Uniform::light)> program;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryExponentiallyExpanding, sizeof(glm::mat4) * 5> matrix_buffer;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryExponentiallyExpanding, sizeof(int) * 4> id_buffer;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryExponentiallyExpanding, sizeof(int) * 4> owner_index_buffer;
@@ -86,9 +86,9 @@ namespace Rendering {
 			void render(const Data::soldier& data){
 
 				//set unifroms
-				program.Uniform<vp>() = frame_data::view_projection_matrix;
-				program.Uniform<eye>() = frame_data::eye;
-				program.Uniform<light>() = frame_data::light;
+				program.set<Uniform::vp>() = frame_data::view_projection_matrix;
+				program.set<Uniform::eye>() = frame_data::eye;
+				program.set<Uniform::light>() = frame_data::light;
 				program.use();
 				//set buffer
 				matrix_buffer.copy_vector_in_buffer(data.pallet);
@@ -121,7 +121,7 @@ namespace Rendering {
 		template<class T>
 		class tree_renderer<DTO::tree<T>> {
 		private:
-			gl_wrapper::program<LOKI_TYPELIST_3(vp, eye, light)> program;
+			gl_wrapper::program<LOKI_TYPELIST_3(Uniform::vp, Uniform::eye, Uniform::light)> program;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryLinearExpanding, sizeof(glm::mat4) * 5 *2> trunk_matrix_buffer;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryLinearExpanding, sizeof(glm::mat4) * 5 *2> soldier_matrix_buffer;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryLinearExpanding, sizeof(int) * 4> id_buffer;
@@ -161,9 +161,9 @@ namespace Rendering {
 
 
 				//set uniforms
-				program.Uniform<vp>() = frame_data::view_projection_matrix;
-				program.Uniform<eye>() = frame_data::eye;
-				program.Uniform<light>() = frame_data::light;
+				program.set<Uniform::vp>() = frame_data::view_projection_matrix;
+				program.set<Uniform::eye>() = frame_data::eye;
+				program.set<Uniform::light>() = frame_data::light;
 				program.use();
 
 				id_buffer.copy_vector_in_buffer(data.ids);
@@ -202,7 +202,7 @@ namespace Rendering {
 			gl_wrapper::buffer<> id_buffer;
 			gl_wrapper::buffer<> owner_index_buffer;
 
-			gl_wrapper::program<LOKI_TYPELIST_3(vp, eye, light)> program;
+			gl_wrapper::program<LOKI_TYPELIST_3(Uniform::vp, Uniform::eye, Uniform::light)> program;
 
 		public:
 
@@ -236,9 +236,9 @@ namespace Rendering {
 
 
 				//set uniforms
-				program.Uniform<vp>() = frame_data::view_projection_matrix;
-				program.Uniform<eye>() = frame_data::eye;
-				program.Uniform<light>() = frame_data::light;
+				program.set<Uniform::vp>() = frame_data::view_projection_matrix;
+				program.set<Uniform::eye>() = frame_data::eye;
+				program.set<Uniform::light>() = frame_data::light;
 				program.use();
 				
 				render_data_buffer.copy_vector_in_buffer(data.render_data);
@@ -280,7 +280,7 @@ namespace Rendering {
 
 			gl_wrapper::buffer<> data_buffer;
 
-			gl_wrapper::program<LOKI_TYPELIST_2(vp, max_size)> program;
+			gl_wrapper::program<LOKI_TYPELIST_2(Uniform::vp, Uniform::max_size)> program;
 
 		public:
 
@@ -305,8 +305,8 @@ namespace Rendering {
 			void render(const Data::ground& data_struct){
 				data_buffer.copy_vector_in_buffer(data_struct.data);
 
-				program.Uniform<vp>() = frame_data::view_projection_matrix;
-				program.Uniform<max_size>() = float(Constants::DTO::ATTACKERS_REQUIRED_TO_FILL_HOLE);
+				program.set<Uniform::vp>() = frame_data::view_projection_matrix;
+				program.set<Uniform::max_size>() = float(Constants::DTO::ATTACKERS_REQUIRED_TO_FILL_HOLE);
 				program.use();
 
 				data_buffer.bind_base(0);

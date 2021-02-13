@@ -45,8 +45,8 @@ namespace Rendering{
 			gl_wrapper::buffer<> player_color_buffer;
 
 
-			gl_wrapper::program<LOKI_TYPELIST_1(color)> final_render_program;
-			gl_wrapper::program<LOKI_TYPELIST_3(border_size, selected_id, direction)> compute_program;
+			gl_wrapper::program<LOKI_TYPELIST_2(Uniform::color, Uniform::border_size)> final_render_program;
+			gl_wrapper::program<LOKI_TYPELIST_3(Uniform::border_size, Uniform::selected_id, Uniform::shifted)> compute_program;
 
 			bool odd_frame;
 			bool frame_started;
@@ -104,7 +104,8 @@ namespace Rendering{
 
 				error_msg = "";
 				std::array<GLuint, 1> compute_shader;
-				compute_shader[0] = my_utils::shader::load("media/shader/scene_renderer/cs_v2.glsl", GL_COMPUTE_SHADER, true, &error_msg);
+				const int& border_thicknes = Constants::Rendering::BOARDER_THICKNESS;
+				compute_shader[0] = my_utils::shader::load("media/shader/scene_renderer/cs.glsl", GL_COMPUTE_SHADER, true, &error_msg, {std::to_string((border_thicknes & 1 ? border_thicknes + 1 : border_thicknes) + 2)});
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR shader compilation error -> scene_renderer constructor:\n%s", error_msg.c_str());
 				}
@@ -153,7 +154,7 @@ namespace Rendering{
 				Rendering::frame_data::eye = eye;
 				Rendering::frame_data::light = glm::vec3(0);
 
-				/*
+				
 				gl_wrapper::texture<gl_wrapper::Texture_2D>& cur_id_texture = odd_frame ? id_texture_0 : id_texture_1;
 				gl_wrapper::texture<gl_wrapper::Texture_2D>& priv_id_texture = !odd_frame ? id_texture_0 : id_texture_1;
 				gl_wrapper::texture<gl_wrapper::Texture_2D>& cur_border_texture = odd_frame ? border_texture_0 : border_texture_1;
@@ -161,7 +162,7 @@ namespace Rendering{
 				odd_frame = !odd_frame;
 				fbo.set_color_texture(cur_id_texture, ID_TEXTURE);
 				fbo.set_color_texture(cur_border_texture, BORDER_TEXTURE);
-				*/
+				
 
 				fbo.bind();
 
@@ -186,16 +187,18 @@ namespace Rendering{
 				if(highlighted_id != 0){
 					priv_id_texture->bind_img(0, GL_READ_ONLY);
 					next_border_texture->bind_img(1, GL_READ_WRITE);
-					compute_program.Uniform<border_size>() = Constants::Rendering::BOARDER_THICKNESS;
-					compute_program.Uniform<selected_id>() = highlighted_id;
+					compute_program.set<Uniform::border_size>() = Constants::Rendering::BOARDER_THICKNESS;
+					compute_program.set<Uniform::selected_id>() = highlighted_id;
+					
+					//glm::ivec2 num_work_groups = glm::ivec2(glm::ceil(window_size / float(Constants::Rendering::BOARDER_THICKNESS)));
+					glm::ivec2 num_work_groups = glm::ceil(window_size / float(Constants::Rendering::BOARDER_THICKNESS));
+					compute_program.set<Uniform::shifted>() = false;
+					compute_program.use();
+					compute_program.dispatch_compute(num_work_groups.x, num_work_groups.y);
 
-				//	for(int k = 0; k<2; k++)
-						for(unsigned int i = 0; i < 4; i++){
-							dispatch_compute(i, (i >> 1) ? window_size.y : window_size.x);
-						}
-				} else {
-					int zero = 0;
-					glClearBufferiv(GL_COLOR, BORDER_TEXTURE, &zero);
+					compute_program.set<Uniform::shifted>() = true;
+					compute_program.use();
+					compute_program.dispatch_compute(num_work_groups.x, num_work_groups.y);
 				}
 
 				fbo.unbind();
@@ -203,17 +206,11 @@ namespace Rendering{
 				color_texture.bind_unit(0);
 				cur_border_texture->bind_unit(1);
 				cur_id_texture->bind_unit(2);
-				final_render_program.Uniform<color>() = glm::vec3(1.f, 1.f, 0.f);
+				final_render_program.set<Uniform::color>() = glm::vec3(1.f, 1.f, 0.f);
+				final_render_program.set<Uniform::border_size>() = Constants::Rendering::BOARDER_THICKNESS;
 				final_render_program.use();
 				glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 			}
-
-			private:
-				inline void dispatch_compute(unsigned int dir, unsigned int size){
-					compute_program.Uniform<direction>() = dir;
-					compute_program.use();
-					compute_program.dispatch_compute(size);
-				}
 		};
 
 		log4cpp::Category& scene_renderer::logger = log4cpp::Category::getInstance("Rendering.scene_renderer");

@@ -48,7 +48,7 @@ namespace Rendering{
 
 			glm::vec2 window_size;
 
-			gl_wrapper::program<LOKI_TYPELIST_1(color)> program;
+			gl_wrapper::program<LOKI_TYPELIST_1(Uniform::color)> program;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 0> outline_ab;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 0> outline_ib;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryTightlyPacked, 0> fractions_ab;
@@ -199,7 +199,7 @@ namespace Rendering{
 
 				outline_ib.bind();
 
-				program.Uniform<color>() = Constants::Rendering::HUD::COLOR;
+				program.set<Uniform::color>() = Constants::Rendering::HUD::COLOR;
 				program.use();
 
 				glDrawElements(GL_TRIANGLES, 8*3, GL_UNSIGNED_BYTE, NULL);
@@ -234,7 +234,7 @@ namespace Rendering{
 				glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 				glEnableVertexAttribArray(0);
 
-				program.Uniform<color>() = Constants::Rendering::HUD::COLOR;
+				program.set<Uniform::color>() = Constants::Rendering::HUD::COLOR;
 				program.use();
 
 				glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
