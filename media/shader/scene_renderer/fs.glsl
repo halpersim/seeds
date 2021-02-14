@@ -1,9 +1,10 @@
 #version 440 core
+
 in vec2 tc;
 
 layout(binding = 0) uniform sampler2D color_tex;
-layout(binding = 1) uniform sampler2D border_tex;
-layout(binding = 2) uniform sampler2D id_texture;
+layout(binding = 1) uniform isampler2D border_tex;
+//layout(binding = 2) uniform sampler2D id_texture;
 
 out vec4 color_out;
 
@@ -11,17 +12,16 @@ uniform vec3 color;
 uniform uint border_size;
 
 void main(){
- 
-  float t = texture(border_tex, tc).x;
+  int dist = texture(border_tex, tc).x;
   vec4 col = texture(color_tex, tc);
-  
-  if(t > 0.f){ 
-    t = 1 - smoothstep(0, border_size, t);
+  float t;
+
+  if(dist > 0){ 
+     t = 1 - smoothstep(0, border_size, dist);
   } else {
     t = 0.f;
   }
   color_out = mix(col, vec4(color, 1), t);
-
 
   //------------for debugging purposes--------------------
 //  vec4 t = texture(id_texture, tc);

@@ -49,7 +49,14 @@ void main(){
 		color = vec4(fs_in.color, 1);*/
 
 	//id = ivec4(1, 0, 0, 0);
+	int owner_idx = owner_indices[fs_in.instance_id >> 2][fs_in.instance_id & 3];
+	vec3 natural_color = normalize(fs_in.N) * 0.5 + 0.5;
+	if(owner_idx != 0){
+		color = vec4(natural_color * 0.3 + (player_colors[owner_idx] * 0.4).xyz, 1);
+	} else {
+		color = vec4(vec3(natural_color.x * 0.1 + natural_color.y * 0.6 + natural_color.z * 0.3), 1);
+	}
 
-	color = vec4((normalize(fs_in.N) * 0.5 + 0.5) * 0.3 + (player_colors[owner_indices[fs_in.instance_id >> 2][fs_in.instance_id & 3]] * 0.4).xyz, 1);
+
 	id = vec4(ids[fs_in.instance_id >> 2][fs_in.instance_id & 3], 0, 0, 0);
 }

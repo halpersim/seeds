@@ -53,8 +53,15 @@ namespace Control{
 			freeze(false),
 			sworm_metric()
 		{
-			players.push_back(DTO::player("Peda", glm::vec3(0.f, 0.6f, 0.9f)));
+			
+			players.push_back(DTO::player("none", glm::vec3(0.4f)));
 			players.back().idx = 0;
+
+			DTO::soldier_data s_data = DTO::soldier_data(players.back(), 4.f, 3.f, 2.f);
+			lists.planet_sphere.push_back(DTO::planet<DTO::sphere>(players.back(), s_data, glm::vec3(15, 10, 30), 6, 10.f));
+			
+			players.push_back(DTO::player("Peda", glm::vec3(0.f, 0.6f, 0.9f)));
+			players.back().idx = 1;
 
 			DTO::soldier_data soldier_data = DTO::soldier_data(players.back(), 2, 5, 3);
 			lists.planet_torus.push_back(DTO::planet<DTO::torus>(players.back(), soldier_data, glm::vec3(0, -10, 0), 5, 8.f, 5.f));
@@ -73,8 +80,11 @@ namespace Control{
 			lists.tree_att.push_back(&planet.attacker_tree_list.front());
 			lists.tree_def.push_back(&planet.defender_tree_list.front());
 		
-			DTO::soldier_data s_data = DTO::soldier_data(players.back(), 4.f, 3.f, 2.f);
-			lists.planet_sphere.push_back(DTO::planet<DTO::sphere>(players.back(), s_data, glm::vec3(15, 10, 30), 6, 10.f));
+			players.push_back(DTO::player("Resi", glm::vec3(0.9f, 0.6f, 0.f)));
+			players.back().idx = 2;
+			
+			DTO::soldier_data resi_data = DTO::soldier_data(players.back(), 5.f, 4.f, 1.f);
+			lists.planet_torus.push_back(DTO::planet<DTO::torus>(players.back(), resi_data, glm::vec3(-10, 40, 20), 5, 10.f, 6.f));
 
 
 			//------------actual constructor

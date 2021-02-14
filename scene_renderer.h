@@ -62,8 +62,8 @@ namespace Rendering{
 				color_texture(window_size, GL_RGBA8),
 				id_texture_0(window_size, GL_R32F),
 				id_texture_1(window_size, GL_R32F),
-				border_texture_0(window_size, GL_R32F),
-				border_texture_1(window_size, GL_R32F),
+				border_texture_0(window_size, GL_R8I),
+				border_texture_1(window_size, GL_R8I),
 				cur_id_texture(NULL),
 				priv_id_texture(NULL),
 				cur_border_texture(NULL),
@@ -105,7 +105,8 @@ namespace Rendering{
 				error_msg = "";
 				std::array<GLuint, 1> compute_shader;
 				const int& border_thicknes = Constants::Rendering::BOARDER_THICKNESS;
-				compute_shader[0] = my_utils::shader::load("media/shader/scene_renderer/cs.glsl", GL_COMPUTE_SHADER, true, &error_msg, {std::to_string((border_thicknes & 1 ? border_thicknes + 1 : border_thicknes) + 2)});
+				compute_shader[0] = my_utils::shader::load("media/shader/scene_renderer/cs.glsl", GL_COMPUTE_SHADER, true, &error_msg, {std::to_string(Constants::Rendering::BOARDER_THICKNESS * 2)});
+
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR shader compilation error -> scene_renderer constructor:\n%s", error_msg.c_str());
 				}
@@ -135,7 +136,7 @@ namespace Rendering{
 				float id = 0;
 				
 				fbo.bind();
-				glReadBuffer(GL_COLOR_ATTACHMENT1);
+				glReadBuffer(GL_COLOR_ATTACHMENT0 + ID_TEXTURE);
 				glReadPixels(int(clicked.x), int(window_size.y - clicked.y), 1, 1, GL_RED, GL_FLOAT, &id);
 				fbo.unbind();
 
@@ -154,7 +155,7 @@ namespace Rendering{
 				Rendering::frame_data::eye = eye;
 				Rendering::frame_data::light = glm::vec3(0);
 
-				
+				/*
 				gl_wrapper::texture<gl_wrapper::Texture_2D>& cur_id_texture = odd_frame ? id_texture_0 : id_texture_1;
 				gl_wrapper::texture<gl_wrapper::Texture_2D>& priv_id_texture = !odd_frame ? id_texture_0 : id_texture_1;
 				gl_wrapper::texture<gl_wrapper::Texture_2D>& cur_border_texture = odd_frame ? border_texture_0 : border_texture_1;
@@ -162,15 +163,15 @@ namespace Rendering{
 				odd_frame = !odd_frame;
 				fbo.set_color_texture(cur_id_texture, ID_TEXTURE);
 				fbo.set_color_texture(cur_border_texture, BORDER_TEXTURE);
-				
+				*/
 
 				fbo.bind();
 
 				glClearBufferfv(GL_COLOR, COLOR_TEXTURE, Constants::Rendering::BACKGROUND);
 				int zero = 0;
 				glClearBufferiv(GL_COLOR, ID_TEXTURE, &zero);
-				float neg_one = -1;
-				glClearBufferfv(GL_COLOR, BORDER_TEXTURE, &neg_one);
+				int neg_one = -1;
+				glClearBufferiv(GL_COLOR, BORDER_TEXTURE, &neg_one);
 				float one = 1.f;
 				glClearBufferfv(GL_DEPTH, 0, &one);
 
@@ -190,15 +191,14 @@ namespace Rendering{
 					compute_program.set<Uniform::border_size>() = Constants::Rendering::BOARDER_THICKNESS;
 					compute_program.set<Uniform::selected_id>() = highlighted_id;
 					
-					//glm::ivec2 num_work_groups = glm::ivec2(glm::ceil(window_size / float(Constants::Rendering::BOARDER_THICKNESS)));
-					glm::ivec2 num_work_groups = glm::ceil(window_size / float(Constants::Rendering::BOARDER_THICKNESS));
+					glm::ivec2 num_work_groups = glm::ceil(window_size / float(Constants::Rendering::BOARDER_THICKNESS * 2));
 					compute_program.set<Uniform::shifted>() = false;
 					compute_program.use();
 					compute_program.dispatch_compute(num_work_groups.x, num_work_groups.y);
-
+				
 					compute_program.set<Uniform::shifted>() = true;
-					compute_program.use();
-					compute_program.dispatch_compute(num_work_groups.x, num_work_groups.y);
+		    	compute_program.use();
+					compute_program.dispatch_compute(num_work_groups.x - 1, num_work_groups.y - 1);
 				}
 
 				fbo.unbind();
