@@ -300,7 +300,7 @@ namespace gl_wrapper {
 				unmap();
 			}
 
-			void bind(){
+			void bind() const{
 				glBindBuffer(target, name);
 			}
 
@@ -399,16 +399,18 @@ namespace gl_wrapper {
 			binding_target(Type::BINDING_TARGET),
 			size(size),
 			internal_format(internal_format),
-			levels(mipmap_levels){
+			levels(mipmap_levels)
+		{
 			gen_texture();
 		}
 
-		inline texture(texture<Type>&& rhs) :
+		inline texture(texture<Type>&& rhs) noexcept :
 			name(rhs.name),
 			binding_target(rhs.binding_target),
 			size(rhs.size),
 			internal_format(rhs.internal_format),
-			levels(rhs.levels){
+			levels(rhs.levels)
+		{
 			rhs.name = -1;
 		}
 
@@ -430,7 +432,7 @@ namespace gl_wrapper {
 			gen_texture();
 		}
 
-		inline void fill_data(GLenum format, GLenum type, const GLvoid* pixels, const Dimension& offset = Dimension(0.f), Dimension dim = Dimension(0), GLint level = 0){
+		inline void fill_data(GLenum format, GLenum type, const GLvoid* pixels, Dimension dim = Dimension(0), const Dimension& offset = Dimension(0.f), GLint level = 0){
 			bind();
 
 			if(dim == Dimension(0))

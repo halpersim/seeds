@@ -3,14 +3,15 @@
 #include "DTO/id_generator.h"
 
 #include "Rendering/3D/scene_renderer.h"
-#include "Rendering/2D/cursor.h"
+#include "Rendering/HUD/cursor.h"
 #include "Rendering/frame_data.h"
 
-#include "hud_manager.h"
-#include "object_manager.h"
-#include "attacker_states.h"
-#include "object_lists.h"
-#include "render_manager.h"
+#include "Control/hud_manager.h"
+#include "Control/object_manager.h"
+#include "Control/attacker_states.h"
+#include "Control/object_lists.h"
+#include "Control/render_manager.h"
+#include "Control/soldiers_on_planet.h"
 
 #include <loki/Typelist.h>
 #include <log4cpp/Category.hh>
@@ -27,11 +28,9 @@ namespace Control{
 	private:
 		static log4cpp::Category& logger;
 
-		static const int SOLDERS = 0;
-		static const int ATTACKER = 1;
 
 		Control::object_lists lists;
-		std::map<int, std::tuple<int, int>> soldiers_on_planet_map;
+		std::map<int, Control::soldiers_on_planet> soldiers_on_planet_map;
 
 		std::list<DTO::player> players;
 		
@@ -46,7 +45,7 @@ namespace Control{
 	public:
 
 		inline game(float window_width, float window_height) :
-			soldiers_on_planet_map(std::map<int, std::tuple<int, int>>()),
+			soldiers_on_planet_map(std::map<int, soldiers_on_planet>()),
 			hud_man(glm::vec2(window_width, window_height)),
 			render_man(glm::vec2(window_width, window_height)),
 			selected_id(0),
@@ -88,7 +87,7 @@ namespace Control{
 
 
 			//------------actual constructor
-			lists.for_each_planet([this](DTO::planet<DTO::any_shape>& planet){soldiers_on_planet_map.emplace(planet.id, std::make_tuple(0, 0)); });
+			lists.for_each_planet([this](DTO::planet<DTO::any_shape>& planet){soldiers_on_planet_map.emplace(planet.id, soldiers_on_planet()); });
 			
 			using namespace std::placeholders;
 			hud_man.grow_tree_callbacks.push_back(std::bind(&game::grow_tree, this, _1));
@@ -99,7 +98,7 @@ namespace Control{
 
 		inline void select_soldiers(float fraction){
 			if(selected_id & DTO::id_generator::PLANET_BIT){
-				int select_soldiers = int(std::round(std::get<ATTACKER>(soldiers_on_planet_map.find(selected_id)->second) * fraction));
+				int select_soldiers = int(std::round(soldiers_on_planet_map.find(selected_id)->second.attacker * fraction));
 				if(select_soldiers > 0){
 					int sworm_id = DTO::id_generator::next_sworm();
 
@@ -110,7 +109,7 @@ namespace Control{
 						}
 					}
 					selected_id = sworm_id;
-					Rendering::_2D::cursor_singleton::Instance().set_cursor(Rendering::_2D::cursor::ATTACK);
+					Rendering::HUD::cursor_singleton::Instance().set_cursor(Rendering::HUD::cursor::ATTACK);
 				}
 			}
 		}
@@ -174,9 +173,9 @@ namespace Control{
 						selected_id = render_man.get_clicked_id(state.clicked);
 						//printf("selected id = [%d]\n", selected_id);
 						if(DTO::id_generator::SWORM_BIT & selected_id){
-							Rendering::_2D::cursor_singleton::Instance().set_cursor(Rendering::_2D::cursor::ATTACK);
+							Rendering::HUD::cursor_singleton::Instance().set_cursor(Rendering::HUD::cursor::ATTACK);
 						} else {
-							Rendering::_2D::cursor_singleton::Instance().set_default();
+							Rendering::HUD::cursor_singleton::Instance().set_default();
 						}
 					}
 				}
@@ -194,7 +193,7 @@ namespace Control{
 				float time_elapsed = Rendering::frame_data::delta_time;
 
 				sworm_metric = DTO::sworm_metrics();
-				std::for_each(soldiers_on_planet_map.begin(), soldiers_on_planet_map.end(), [](auto& pair){pair.second = std::make_tuple(0, 0); });
+				std::for_each(soldiers_on_planet_map.begin(), soldiers_on_planet_map.end(), [](auto& pair){pair.second = soldiers_on_planet(); });
 				
 				std::list<typename std::list<std::unique_ptr<Control::attacker>>::iterator> to_delte;
 
@@ -230,6 +229,9 @@ namespace Control{
 						sworm_metric.dmg += att->dto->damage;
 						sworm_metric.health += att->dto->health;
 						sworm_metric.speed += att->dto->speed;
+
+						sworm_metric.owner = att->dto->owner;
+
 					} else if(att->dto->sworm_id != 0 && att->get_state() != Control::attacker_state::MOVING){
 						att->dto->sworm_id = 0;
 					}
@@ -237,8 +239,7 @@ namespace Control{
 					if(att->host_planet() != NULL){
 						auto it = soldiers_on_planet_map.find(att->host_planet()->id);
 						if(it != soldiers_on_planet_map.end()){
-							std::get<SOLDERS>(it->second)++;
-							std::get<ATTACKER>(it->second)++;
+							it->second.attacker++;
 						}
 					}
 				}
@@ -249,7 +250,7 @@ namespace Control{
 					def.coord += def.direction * def.speed * Constants::Control::VELOCITY_ON_PLANET * time_elapsed;
 					auto it = soldiers_on_planet_map.find(def.host_planet->id);
 					if(it != soldiers_on_planet_map.end()){
-						std::get<SOLDERS>(it->second)++;
+						it->second.defender++;
 					}
 				});
 
@@ -288,7 +289,7 @@ namespace Control{
 			
 				if(selected_id & DTO::id_generator::SWORM_BIT && sworm_metric.count == 0){
 					selected_id = 0;
-					Rendering::_2D::cursor_singleton::Instance().set_default();
+					Rendering::HUD::cursor_singleton::Instance().set_default();
 				} else if(sworm_metric.count != 0){
 					sworm_metric /= sworm_metric.count;
 				}
@@ -301,14 +302,11 @@ namespace Control{
 			if(selected_id & DTO::id_generator::PLANET_BIT){
 				DTO::planet<DTO::any_shape>* selected_planet = lists.find_planet(selected_id);
 				if(selected_planet != NULL){
-					hud_man.hud.render(*selected_planet, 
-														 std::get<SOLDERS>(soldiers_on_planet_map.find(selected_planet->id)->second), 
-														 std::get<ATTACKER>(soldiers_on_planet_map.find(selected_planet->id)->second),
-														 grow_tree_possible(*selected_planet));
+					hud_man.render(*selected_planet, lists, soldiers_on_planet_map, grow_tree_possible(*selected_planet));
 				}
 			} 
 			else if(selected_id & DTO::id_generator::SWORM_BIT){
-				hud_man.hud.render(sworm_metric);
+				hud_man.render(sworm_metric, lists, soldiers_on_planet_map);
 			}
 		}
 
@@ -318,7 +316,7 @@ namespace Control{
 			inline bool grow_tree_possible(const DTO::planet<DTO::any_shape>& planet){
 				return planet.planet_entry_list.empty() &&
 					planet.attacker_tree_list.size() + planet.defender_tree_list.size() < Constants::DTO::MAX_TREES_ON_PLANET &&
-					std::get<ATTACKER>(soldiers_on_planet_map.find(planet.id)->second) >= Constants::DTO::ATTACKERS_REQUIRED_TO_BUILD_HOLE;
+					soldiers_on_planet_map.find(planet.id)->second.attacker >= Constants::DTO::ATTACKERS_REQUIRED_TO_BUILD_HOLE;
 			}
 	};
 

@@ -30,8 +30,18 @@ namespace Constants {
 		static const int BOARDER_THICKNESS = 9; 
 
 		namespace HUD{
-			static const glm::vec3 COLOR = glm::vec3(0.f, 0.f, 0.f);
+			static const glm::vec3 PLANET_FRACTIONS_BG = glm::vec3(0.15f);
+			static const glm::vec3 COLOR = glm::vec3(0.05f);
+
+			static const char* const FONT_TYPE = "C:\\WINDOWS\\Fonts\\CONSOLA.TTF";
+
 			static const glm::vec3 FONT_COLOR = glm::vec3(0.9f, 0.9f, 0.9f);
+
+			static const int FONT_SIZE = 15.f;
+
+			static const int FONT_HORIZONTAL_INDENT = 5;
+			static const int FONT_VERTICAL_INDENT = 5;
+			static const int INDENT_FROM_BORDER = 5;
 		}	
 	}
 

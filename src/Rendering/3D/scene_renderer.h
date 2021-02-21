@@ -90,8 +90,8 @@ namespace Rendering{
 
 				std::string error_msg = "";
 				std::array<GLuint, 2> shader;
-				shader[0] = my_utils::shader::load("../seeds/media/shader/scene_renderer/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
-				shader[1] = my_utils::shader::load("../seeds/media/shader/scene_renderer/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
+				shader[0] = my_utils::shader::load("../seeds/media/shader/3D/scene_renderer/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
+				shader[1] = my_utils::shader::load("../seeds/media/shader/3D/scene_renderer/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
 
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR shader compilation error -> scene_renderer constructor:\n%s", error_msg.c_str());
@@ -106,7 +106,7 @@ namespace Rendering{
 				error_msg = "";
 				std::array<GLuint, 1> compute_shader;
 				const int& border_thicknes = Constants::Rendering::BOARDER_THICKNESS;
-				compute_shader[0] = my_utils::shader::load("../seeds/media/shader/scene_renderer/cs.glsl", GL_COMPUTE_SHADER, true, &error_msg, {std::to_string(Constants::Rendering::BOARDER_THICKNESS * 2)});
+				compute_shader[0] = my_utils::shader::load("../seeds/media/shader/3D/scene_renderer/cs.glsl", GL_COMPUTE_SHADER, true, &error_msg, {std::to_string(Constants::Rendering::BOARDER_THICKNESS * 2)});
 
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR shader compilation error -> scene_renderer constructor:\n%s", error_msg.c_str());

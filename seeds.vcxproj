@@ -77,10 +77,11 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\External_Ressources\GLFW\include;$(SolutionDir)..\External_Ressources;$(SolutionDir)..\External_Ressources\GLEW\include;$(SolutionDir)..\External_Ressources\loki-0.1.7\include;$(SolutionDir)..\External_Ressources\log4cpp-1.1.3\log4cpp\include;$(SolutionDir)..\External_Ressources\ftgl-2.1.3~rc5\src;$(SolutionDir)..\External_Ressources\freetype-2.10.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\External_Ressources\GLFW\include;$(SolutionDir)..\External_Ressources;$(SolutionDir)..\External_Ressources\GLEW\include;$(SolutionDir)..\External_Ressources\loki-0.1.7\include;$(SolutionDir)..\External_Ressources\log4cpp-1.1.3\log4cpp\include;$(SolutionDir)..\External_Ressources\ftgl-2.1.3~rc5\src;$(SolutionDir)..\External_Ressources\freetype-2.10.1\include;$(SolutionDir)seeds\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -135,9 +136,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="src\Constants\constants.h" />
     <ClInclude Include="src\Control\attacker_states.h" />
     <ClInclude Include="src\Control\game.h" />
@@ -145,6 +143,7 @@
     <ClInclude Include="src\Control\object_lists.h" />
     <ClInclude Include="src\Control\object_manager.h" />
     <ClInclude Include="src\Control\render_manager.h" />
+    <ClInclude Include="src\Control\soldiers_on_planet.h" />
     <ClInclude Include="src\Control\timer.h" />
     <ClInclude Include="src\DTO\hole.h" />
     <ClInclude Include="src\DTO\id_generator.h" />
@@ -157,16 +156,19 @@
     <ClInclude Include="src\DTO\tree.h" />
     <ClInclude Include="src\HI\input_state.h" />
     <ClInclude Include="src\HI\user_input.h" />
-    <ClInclude Include="src\Rendering\2D\cursor.h" />
-    <ClInclude Include="src\Rendering\2D\font.h" />
-    <ClInclude Include="src\Rendering\2D\hud.h" />
-    <ClInclude Include="src\Rendering\2D\icons.h" />
     <ClInclude Include="src\Rendering\3D\camera.h" />
     <ClInclude Include="src\Rendering\3D\model_renderer.h" />
     <ClInclude Include="src\Rendering\3D\scene_renderer.h" />
     <ClInclude Include="src\Rendering\Data\data_lists.h" />
     <ClInclude Include="src\Rendering\Data\rendering_structs.h" />
     <ClInclude Include="src\Rendering\frame_data.h" />
+    <ClInclude Include="src\Rendering\HUD\cursor.h" />
+    <ClInclude Include="src\Rendering\HUD\font.h" />
+    <ClInclude Include="src\Rendering\HUD\hud_internal.h" />
+    <ClInclude Include="src\Rendering\HUD\icons.h" />
+    <ClInclude Include="src\Rendering\HUD\planet.h" />
+    <ClInclude Include="src\Rendering\HUD\player.h" />
+    <ClInclude Include="src\Rendering\HUD\sworm.h" />
     <ClInclude Include="src\Rendering\Models\data_supplier.h" />
     <ClInclude Include="src\Rendering\Models\model.h" />
     <ClInclude Include="src\Rendering\Utils\gl_wrapper.h" />
@@ -175,6 +177,9 @@
     <ClInclude Include="src\Rendering\Utils\uniform_naming.h" />
     <ClInclude Include="src\Utils\general_utils.h" />
     <ClInclude Include="src\Utils\type_traits.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

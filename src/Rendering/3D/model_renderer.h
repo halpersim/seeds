@@ -72,15 +72,15 @@ namespace Rendering {
 				//load shader 
 				std::string error_msg = "";
 				std::array<GLuint, 2> shader;
-				shader[0] = my_utils::shader::load("../seeds/media/shader/model/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
-				shader[1] = my_utils::shader::load("../seeds/../seeds/media/shader/model/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
+				shader[0] = my_utils::shader::load("../seeds/media/shader/3D/model/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
+				shader[1] = my_utils::shader::load("../seeds/media/shader/3D/model/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
 
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR loading shaders: %s", error_msg.c_str());
 				}
 
 				//create program
-				program.create(shader, "shader/model");
+				program.create(shader, "shader/3D/model");
 
 				Model::Instance().load();
 			}
@@ -145,14 +145,14 @@ namespace Rendering {
 				//load shader 
 				std::string error_msg = "";
 				std::array<GLuint, 2> shader;
-				shader[0] = my_utils::shader::load("../seeds/media/shader/model/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
-				shader[1] = my_utils::shader::load("../seeds/media/shader/model/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
+				shader[0] = my_utils::shader::load("../seeds/media/shader/3D/model/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
+				shader[1] = my_utils::shader::load("../seeds/media/shader/3D/model/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
 
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR shader compilation error: %s", error_msg.c_str());
 				}
 
-				program.create(shader, "shader/model");
+				program.create(shader, "shader/3D/model");
 
 				TrunkModel::Instance().load();
 				SoldierModel::Instance().load();
@@ -218,17 +218,17 @@ namespace Rendering {
 			{
 				std::string error_msg = "";
 				std::array<GLuint, 5> shader;
-				shader[0] = my_utils::shader::load("../seeds/media/shader/pass_through/tessellation_vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
-				shader[1] = my_utils::shader::load("../seeds/media/shader/pass_through/tessellation_tcs.glsl", GL_TESS_CONTROL_SHADER, true, &error_msg);
-				shader[2] = my_utils::shader::load("../seeds/media/shader/planet/tes.glsl", GL_TESS_EVALUATION_SHADER, true, &error_msg);
-				shader[3] = my_utils::shader::load("../seeds/media/shader/planet/gs.glsl", GL_GEOMETRY_SHADER, true, &error_msg);
-				shader[4] = my_utils::shader::load("../seeds/media/shader/planet/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
+				shader[0] = my_utils::shader::load("../seeds/media/shader/3D/pass_through/tessellation_vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
+				shader[1] = my_utils::shader::load("../seeds/media/shader/3D/pass_through/tessellation_tcs.glsl", GL_TESS_CONTROL_SHADER, true, &error_msg);
+				shader[2] = my_utils::shader::load("../seeds/media/shader/3D/planet/tes.glsl", GL_TESS_EVALUATION_SHADER, true, &error_msg);
+				shader[3] = my_utils::shader::load("../seeds/media/shader/3D/planet/gs.glsl", GL_GEOMETRY_SHADER, true, &error_msg);
+				shader[4] = my_utils::shader::load("../seeds/media/shader/3D/planet/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
 
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR shader compilation error: \n%s", error_msg.c_str());
 				}
 
-				program.create(shader, "shader/planet");
+				program.create(shader, "shader/3D/planet");
 				//	glGetSubroutineUniformLocation(program.name, GL_TESS_EVALUATION_SHADER, "mySubroutineUniform");
 			}
 
@@ -293,16 +293,16 @@ namespace Rendering {
 			{
 				std::string error_msg = "";
 				std::array<GLuint, 4> shader;
-				shader[0] = my_utils::shader::load("../seeds/media/shader/pass_through/tessellation_vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
-				shader[1] = my_utils::shader::load("../seeds/media/shader/pass_through/tessellation_tcs.glsl", GL_TESS_CONTROL_SHADER, true, &error_msg);
-				shader[2] = my_utils::shader::load("../seeds/media/shader/ground/tes.glsl", GL_TESS_EVALUATION_SHADER, true, &error_msg);
-				shader[3] = my_utils::shader::load("../seeds/media/shader/ground/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
+				shader[0] = my_utils::shader::load("../seeds/media/shader/3D/pass_through/tessellation_vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
+				shader[1] = my_utils::shader::load("../seeds/media/shader/3D/pass_through/tessellation_tcs.glsl", GL_TESS_CONTROL_SHADER, true, &error_msg);
+				shader[2] = my_utils::shader::load("../seeds/media/shader/3D/ground/tes.glsl", GL_TESS_EVALUATION_SHADER, true, &error_msg);
+				shader[3] = my_utils::shader::load("../seeds/media/shader/3D/ground/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
 
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR shader compilation error: \n%s", error_msg.c_str());
 				}
 
-				program.create(shader, "shader/ground");
+				program.create(shader, "shader/3D/ground");
 			}
 
 			void render(const Data::ground& data_struct){

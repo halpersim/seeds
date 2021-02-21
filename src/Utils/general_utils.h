@@ -12,6 +12,8 @@
 
 namespace my_utils{
 
+
+
 	template<class T>
 	T get_unit_coords(const T& vec, const T& start = T(0.f), const T& end = T(6.283185f)){
 		return start + vec - glm::floor((vec - start) / (end - start)) * (end - start);

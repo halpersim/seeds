@@ -93,13 +93,16 @@ namespace DTO {
 		float dmg;
 		float health;
 		float speed;
+		const player* owner;
 
 		inline sworm_metrics() :
 			id(0),
 			count(0),
 			dmg(0.f),
 			health(0.f),
-			speed(0.f){}
+			speed(0.f),
+			owner(NULL)
+		{}
 
 		inline sworm_metrics& operator/=(float divisor){
 			dmg /= divisor;

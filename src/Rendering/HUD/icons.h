@@ -7,7 +7,7 @@
 
 
 namespace Rendering{
-	namespace _2D{
+	namespace HUD{
 		class icons{
 		private:
 			static log4cpp::Category& logger;
@@ -44,14 +44,14 @@ namespace Rendering{
 				index_buffer(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, sizeof(int) * 12),
 				matrix_buffer(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, sizeof(glm::mat4) * 12)
 			{
-				unsigned char* tex_data = my_utils::load_2d_array_texture(ICON_PATH, ICON_NAMES, icons_texture.size);
+				unsigned char* tex_data = my_utils::loadHUD_array_texture(ICON_PATH, ICON_NAMES, icons_texture.size);
 				icons_texture.fill_data(GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
 				delete[] tex_data;
 
 				std::string error_msg = "";
 				std::array<GLuint, 2> shader;
-				shader[0] = my_utils::shader::load("../seeds/media/shader/icons/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
-				shader[1] = my_utils::shader::load("../seeds/media/shader/icons/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
+				shader[0] = my_utils::shader::load("../seeds/media/shader/HUD/icons/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
+				shader[1] = my_utils::shader::load("../seeds/media/shader/HUD/icons/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
 
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR shader compilation error; class icons, constructor: %s", error_msg.c_str());
@@ -156,7 +156,7 @@ namespace Rendering{
 			"swoarm.png"
 		};
 
-		log4cpp::Category& icons::logger = log4cpp::Category::getInstance("Rendering._2D.icons");
+		log4cpp::Category& icons::logger = log4cpp::Category::getInstance("Rendering.HUD.icons");
 
 		typedef Loki::SingletonHolder<icons, Loki::CreateStatic> icon_singleton;
 	}

@@ -11,7 +11,7 @@
 
 
 namespace Rendering{
-	namespace _2D{
+	namespace HUD{
 		class cursor {
 		public:
 			enum cursor_indices{
@@ -39,7 +39,7 @@ namespace Rendering{
 				GLFWimage img;
 
 				for(int i = 0; i<NUM_CURSOR; i++){
-					icon_data = my_utils::load_img((CURSOR_PATH + CURSOR_NAMES[i]).c_str(), &x, &y, &dummy, 4);
+					icon_data = my_utils::load_img((CURSOR_PATH + CURSOR_NAMES[i]).c_str(), x, y, dummy, 4);
 
 					img.width = x;
 					img.height = y;
@@ -81,7 +81,7 @@ namespace Rendering{
 		const std::string cursor::CURSOR_PATH = "../seeds/media/textures/cursor/";
 		const std::string cursor::CURSOR_NAMES[] = {"attack.png"};
 		const glm::vec2 cursor::CURSOR_HOTSPOTS[] = {glm::vec2(0, 0)};
-		log4cpp::Category& cursor::logger = log4cpp::Category::getInstance("Rendering._2D.cursor");
+		log4cpp::Category& cursor::logger = log4cpp::Category::getInstance("Rendering.HUD.cursor");
 
 		typedef Loki::SingletonHolder<cursor, Loki::CreateStatic> cursor_singleton;
 	}

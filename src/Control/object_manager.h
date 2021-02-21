@@ -10,16 +10,16 @@ namespace Control{
 	}
 
 	template<class T>
-	void update_tree(DTO::tree<T>* tree, float time_elapsed, std::list<T>* list, std::map<int, std::tuple<int, int>>* soldiers_on_planet_map){
+	void update_tree(DTO::tree<T>* tree, float time_elapsed, std::list<T>* list, std::map<int, soldiers_on_planet>* soldiers_on_planet_map){
 		if(tree->evolve(time_elapsed) && 
-			 std::get<0>(soldiers_on_planet_map->find(tree->host_planet.id)->second) < tree->host_planet.max_soldiers){
+			 soldiers_on_planet_map->find(tree->host_planet.id)->second.sum() < tree->host_planet.max_soldiers){
 			list->push_back(tree->produce_soldier());
 		}
 	}
 
-	void update_att_tree(DTO::tree<DTO::attacker>* tree, float time_elapsed, std::list<std::unique_ptr<Control::attacker>>* list, std::map<int, std::tuple<int, int>>* soldiers_on_planet_map){
+	void update_att_tree(DTO::tree<DTO::attacker>* tree, float time_elapsed, std::list<std::unique_ptr<Control::attacker>>* list, std::map<int, soldiers_on_planet>* soldiers_on_planet_map){
 		if(tree->evolve(time_elapsed) &&
-			 std::get<0>(soldiers_on_planet_map->find(tree->host_planet.id)->second) < tree->host_planet.max_soldiers){
+			 soldiers_on_planet_map->find(tree->host_planet.id)->second.sum() < tree->host_planet.max_soldiers){
 			list->push_back(std::make_unique<Control::roaming>(std::make_shared<DTO::attacker>(tree->produce_soldier()), tree->host_planet, glm::vec3(tree->ground.coords, 1.f), my_utils::get_random_dir()));
 		}
 	}

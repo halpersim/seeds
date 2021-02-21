@@ -23,8 +23,9 @@
 #include "Control/timer.h"
 
 #include "HI/user_input.h"
-#include "Rendering/2D/font.h"
 
+#include "Rendering/HUD/font.h"
+#include "Rendering/HUD/cursor.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -56,7 +57,7 @@ int main() {
 	glfwSetKeyCallback(window, window_key_callback);
 	glfwSetMouseButtonCallback(window, window_mouse_button_callback);
 	glfwSetCursorPosCallback(window, window_cursor_pos_callback);
-	Rendering::_2D::cursor_singleton::Instance().init(window);
+	Rendering::HUD::cursor_singleton::Instance().init(window);
 
 /*
 	FT_Library ft_library;
@@ -100,7 +101,6 @@ int main() {
 		glfwTerminate();
 		return 0;
 	}
-	system("dir");
 	log4cpp::PropertyConfigurator::configure("../seeds/config/log4cpp.properties");
 	srand(time(NULL));
 
@@ -126,12 +126,14 @@ int main() {
 	}
 	const float& one = 1.f;
 	GLenum error;
-	Rendering::_2D::font font(Rendering::_2D::font::CONSOLAS, glm::vec3(1.f), 20.f);
+	Rendering::HUD::font font(Rendering::HUD::font::CONSOLAS, glm::vec3(1.f), 20.f);
 	std::string diff = "";
 	std::stringstream ss;
 	double d = 0.01;
 
 	printf("GL_VERSION = [%s]\n", glGetString(GL_VERSION));
+
+
 
 	my_utils::dropout_array<double, 50> last_frames;
 	while (!glfwWindowShouldClose(window)) {
@@ -169,7 +171,7 @@ int main() {
 		double avg_time = 0;
 		last_frames.for_each([&avg_time](const double& d){avg_time += d; });
 		ss.str("");
-		ss << " ~" << std::setprecision(1) << std::fixed << last_frames.size()/avg_time << " fps";
+		ss << " ~" << std::setprecision(1) << std::fixed << last_frames.size()/avg_time << " fps - frame time = " << std::setprecision(1) << std::fixed <<  1000 * avg_time/last_frames.size() << " ms ";
 		diff = ss.str();
 		d += timer.diff;
 	}

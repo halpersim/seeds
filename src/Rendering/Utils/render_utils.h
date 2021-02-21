@@ -21,24 +21,30 @@ namespace my_math {
 
 namespace my_utils {
 
+	glm::ivec2 get_viewport(){
+		int viewport[4];
+		glGetIntegerv(GL_VIEWPORT, viewport);
+
+		return glm::ivec2(viewport[2], viewport[3]);
+	}
 
 	void set_flip_vertically_on_load(bool flip){
 		stbi_set_flip_vertically_on_load(flip);
 	}
 
-	unsigned char* load_img(const char* filename, int* x, int* y, int* comp, int req_comp){
-		return stbi_load(filename, x, y, comp, req_comp);
+	unsigned char* load_img(const char* filename, int& x, int& y, int& channels, int required_channels){
+		return stbi_load(filename, &x, &y, &channels, required_channels);
 	}
 
 	
-	unsigned char* load_2d_array_texture(const std::string& folderpath, const std::string* filenames, const glm::ivec3& size, int channels = 4){
+	unsigned char* loadHUD_array_texture(const std::string& folderpath, const std::string* filenames, const glm::ivec3& size, int channels = 4){
 		unsigned char* tex_data = new unsigned char[channels * size.x * size.y * size.z];
 		unsigned char* icon_data = NULL;
 		int x, y, chan;
 
 		my_utils::set_flip_vertically_on_load(true);
 		for(int i = 0; i<size.z; i++){
-			icon_data = my_utils::load_img((folderpath + filenames[i]).c_str(), &x, &y, &chan, channels);
+			icon_data = my_utils::load_img((folderpath + filenames[i]).c_str(), x, y, chan, channels);
 			memcpy(tex_data + channels * size.x * size.y * i, icon_data, sizeof(unsigned char) * channels * size.x * size.y);
 			delete[] icon_data;
 		}
@@ -47,8 +53,8 @@ namespace my_utils {
 	}
 
 	template<int N>
-	unsigned char* load_2d_array_texture(const std::string& folderpath, const std::array<std::string, N>& filenames, const glm::ivec3& size, int channels = 4){
-		return load_2d_array_texture(folderpath, filenames.data(), size, channels);
+	unsigned char* loadHUD_array_texture(const std::string& folderpath, const std::array<std::string, N>& filenames, const glm::ivec3& size, int channels = 4){
+		return loadHUD_array_texture(folderpath, filenames.data(), size, channels);
 	}
 }
 

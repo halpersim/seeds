@@ -24,6 +24,11 @@ namespace Control{
 			std::for_each(planet_torus.begin(), planet_torus.end(), func);
 		}
 
+		void for_each_planet_const(const std::function<void(const DTO::planet<DTO::any_shape>&)>& func)const{
+			std::for_each(planet_sphere.begin(), planet_sphere.end(), func);
+			std::for_each(planet_torus.begin(), planet_torus.end(), func);
+		}
+
 		DTO::planet<DTO::any_shape>* find_planet(int id){
 			DTO::planet<DTO::any_shape>* selected_planet = NULL;
 

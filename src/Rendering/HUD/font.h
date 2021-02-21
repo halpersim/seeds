@@ -22,7 +22,7 @@
 
 
 namespace Rendering{
-	namespace _2D{
+	namespace HUD{
 
 		class font{
 		private:
@@ -78,9 +78,10 @@ namespace Rendering{
 
 			std::map<int, font_size_data> loaded_sizes;
 			
-
-		public:
+			std::vector<glm::mat4> s2NDS_vector;
+			std::vector<int> index_vector;
 			float size;
+		public:
 			glm::vec3 font_color;
 
 			static const char* const ARIAL;
@@ -95,6 +96,8 @@ namespace Rendering{
 				matrix_buffer(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, GLYPHS_PER_RENDER_CALL * sizeof(glm::mat4)),
 				texture_index_buffer(GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW, GLYPHS_PER_RENDER_CALL * sizeof(int)),
 				program(),
+				s2NDS_vector(),
+				index_vector(),
 				size(size),
 				font_color(font_color)
 			{
@@ -107,8 +110,8 @@ namespace Rendering{
 
 				std::string error_msg = "";
 				std::array<GLuint, 2> shader;
-				shader[0] = my_utils::shader::load("../seeds/media/shader/font/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
-				shader[1] = my_utils::shader::load("../seeds/media/shader/font/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
+				shader[0] = my_utils::shader::load("../seeds/media/shader/HUD/font/vs.glsl", GL_VERTEX_SHADER, true, &error_msg);
+				shader[1] = my_utils::shader::load("../seeds/media/shader/HUD/font/fs.glsl", GL_FRAGMENT_SHADER, true, &error_msg);
 
 				if(!error_msg.empty()){
 					logger.error("GL_ERROR shader compilation error in class font: %s", error_msg.c_str());
@@ -119,6 +122,12 @@ namespace Rendering{
 				load_size(size);
 			}
 			
+			//the size should only be changed after a draw call is finished, otherwise it might have some undesired results
+			inline void set_size(float size){
+				this->size = size;
+				load_size(size);
+			}
+
 			inline ~font(){
 				FT_Done_Face(face);
 				FT_Done_FreeType(library);
@@ -212,7 +221,7 @@ namespace Rendering{
 				loaded_sizes.emplace(size_i, std::move(data));
 			}
 
-			inline int vertical_advance(float size = -1){
+			inline int vertical_advance(float size = -1) const{
 				if(size < 0)
 					size = this->size;
 
@@ -276,7 +285,7 @@ namespace Rendering{
 				}
 			}
 
-			inline void render_string(const std::string& str, glm::vec2 offset_begin, glm::vec3 font_color = glm::vec3(-1.f), float size = -1){
+			inline void render_string(const std::string& str, const glm::vec2& offset_begin, glm::vec3 font_color = glm::vec3(-1.f), float size = -1){
 				if(size == -1)
 					size = this->size;
 				if(font_color.x < -0.9)
@@ -286,12 +295,11 @@ namespace Rendering{
 				
 				glm::vec2 offset = offset_begin;
 
-				int viewport[4];
-				glGetIntegerv(GL_VIEWPORT, viewport);
+				glm::ivec2 viewport = my_utils::get_viewport();
 
 				glm::mat3 mat = glm::mat3(1.f);
-				mat[0][0] = 2.0 / viewport[2];
-				mat[1][1] = 2.0 / viewport[3];
+				mat[0][0] = 2.0 / viewport.x;
+				mat[1][1] = 2.0 / viewport.y;
 				mat[2][2] = 1;
 
 				FT_UInt glyph_idx, last_glyph_idx;
@@ -354,9 +362,8 @@ namespace Rendering{
 						if(data.metrics.count(ch)){
 							character_metrics& char_metric = data.metrics.at(ch);
 
-							//mat[2][0] = (2.0f * (offset.x + char_metric.bearing_x))/viewport[2] - 1;
-							mat[2][0] = (2.0f * (offset.x))/viewport[2] - 1;
-							mat[2][1] = 1 - (2.0f * (offset.y - data.yMax))/viewport[3];
+							mat[2][0] = (2.0f * (offset.x))/viewport.x - 1;
+							mat[2][1] = 1 - (2.0f * (offset.y - data.yMax))/viewport.y;
 
 							*texture_index_iterator = char_metric.texture_index;
 							*matrices_iterator = glm::mat4(mat);
@@ -369,7 +376,7 @@ namespace Rendering{
 
 						if(ch != '\n'){
 							offset.x += face->glyph->advance.x >> 6;
-						}else{
+						} else{
 							offset.x = offset_begin.x;
 							offset.y += vertical_advance();
 						}
@@ -396,6 +403,110 @@ namespace Rendering{
 
 				glDisable(GL_BLEND);
 			}
+		
+			inline void append(const std::string& str, const glm::vec2& offset_begin) {
+				FT_UInt glyph_idx, last_glyph_idx;
+				FT_Bool use_kerning;
+				FT_Error error;
+
+				int size_i = int(64*size);
+				FT_Set_Char_Size(face, size_i, 0, 0, 0);
+
+				use_kerning = FT_HAS_KERNING(face);
+				last_glyph_idx = 0;
+				
+				glm::vec2 offset = offset_begin;
+
+				int viewport[4];
+				glGetIntegerv(GL_VIEWPORT, viewport);
+
+				glm::mat3 mat = glm::mat3(1.f);
+				mat[0][0] = 2.0 / viewport[2];
+				mat[1][1] = 2.0 / viewport[3];
+				mat[2][2] = 1;
+
+				const font_size_data& data = loaded_sizes.at(size_i);
+
+				for(char ch : str){
+					glyph_idx = FT_Get_Char_Index(face, ch);
+
+					//---------kerning-------------
+					if(use_kerning && last_glyph_idx && glyph_idx){
+						FT_Vector delta;
+						error = FT_Get_Kerning(face, last_glyph_idx, glyph_idx, FT_KERNING_DEFAULT, &delta);
+						CHECK_ERROR(error, notice, "FT_Get_Kerning");
+
+						offset.x += delta.x >> 6;
+					}
+
+					//there might be no glyph for a blank e.g.
+					if(data.metrics.count(ch)){
+						const character_metrics& char_metric = data.metrics.at(ch);
+
+						//mat[2][0] = (2.0f * (offset.x + char_metric.bearing_x))/viewport[2] - 1;
+						mat[2][0] = (2.0f * (offset.x))/viewport[2] - 1;
+						mat[2][1] = 1 - (2.0f * (offset.y - data.yMax))/viewport[3];
+
+						index_vector.push_back(char_metric.texture_index);
+						s2NDS_vector.push_back(glm::mat4(mat));
+					}
+
+					if(ch != '\n'){
+						offset.x += face->glyph->advance.x >> 6;
+					} else{
+						offset.x = offset_begin.x;
+						offset.y += vertical_advance();
+					}
+					last_glyph_idx = glyph_idx;
+				}
+			}
+
+			inline void flush(const glm::vec3& color = glm::vec3(-1)){
+				int size_i = int(64 * size);
+				font_size_data& data = loaded_sizes.at(size_i);
+				float* ptr = reinterpret_cast<float*>(outline_ab.map(GL_WRITE_ONLY));
+
+				//0
+				*ptr++ = 0;
+				*ptr++ = 0;
+
+				//1
+				*ptr++ = float(data.width);
+				*ptr++ = 0;
+
+				//2
+				*ptr++ = 0;
+				*ptr++ = -float(data.height);
+
+				//3
+				*ptr++ = float(data.width);
+				*ptr++ = -float(data.height);
+
+				outline_ab.unmap();
+				outline_ab.bind();
+				glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+				glEnableVertexAttribArray(0);
+				
+
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+				texture_index_buffer.copy_vector_in_buffer(index_vector);
+				texture_index_buffer.bind_base(0);
+				matrix_buffer.copy_vector_in_buffer(s2NDS_vector);
+				matrix_buffer.bind_base(1);
+
+				data.texture.bind_unit(0);
+
+				program.set<Uniform::color>() = font_color;
+				program.use();
+
+				glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, index_vector.size());
+				glDisable(GL_BLEND);
+
+				index_vector.clear();
+				s2NDS_vector.clear();
+			}
 		};
 
 
@@ -406,7 +517,7 @@ namespace Rendering{
 		const char* const font::TIMES_NEW_ROMAN = "C:\\WINDOWS\\Fonts\\TIMES.TTF";
 		
 
-		log4cpp::Category& font::logger = log4cpp::Category::getInstance("Rendering._2D.font");
+		log4cpp::Category& font::logger = log4cpp::Category::getInstance("Rendering.HUD.font");
 	}
 
 #undef CHECK_ERROR
