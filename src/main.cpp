@@ -20,7 +20,7 @@
 #define NOMINMAX
 
 #include "Control/game.h"
-#include "Control/timer.h"
+#include "Control/Utils/timer.h"
 
 #include "HI/user_input.h"
 
@@ -59,39 +59,6 @@ int main() {
 	glfwSetCursorPosCallback(window, window_cursor_pos_callback);
 	Rendering::HUD::cursor_singleton::Instance().init(window);
 
-/*
-	FT_Library ft_library;
-	FT_Error ft_error;
-
-	ft_error = FT_Init_FreeType(&ft_library);
-
-	if(ft_error){
-		printf("failed to init freetype!");
-		return 0;
-	}
-
-	FT_Face ft_face; // a font
-	
-	ft_error = FT_New_Face(ft_library, "C:\\Windows\\Fonts\\arial.ttf", 0, &ft_face);
-	if(ft_error)
-		printf("wos woars i: [%d]", ft_error);
-
-	FT_Set_Char_Size(ft_face, 64*20, 0, 100, 0);
-	FT_GlyphSlot ft_slot;
-
-	ft_slot = ft_face->glyph;
-
-	FT_Load_Char(ft_face, 'A', FT_LOAD_RENDER);
-	FT_Bitmap bitmap = ft_slot->bitmap;
-
-	for(int i = 0; i<bitmap.width; i++){
-		for(int k = 0; k<bitmap.rows; k++){
-			printf("%03d ", bitmap.buffer[i*bitmap.width + k]);
-		}
-		printf("\n");
-	}
-			
-			*/
 	//glewExperimental = GL_TRUE;
 	glewExperimental = GL_FALSE;
 
@@ -133,22 +100,18 @@ int main() {
 
 	printf("GL_VERSION = [%s]\n", glGetString(GL_VERSION));
 
-
-
 	my_utils::dropout_array<double, 50> last_frames;
 	while (!glfwWindowShouldClose(window)) {
 		timer.start(glfwGetTime());
 
-		
 		glfwPollEvents();
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_HAND_CURSOR);
 
 		glClearBufferfv(GL_DEPTH, 0, &one);
 
 		Rendering::frame_data::delta_time = timer.diff;
 		user_input.fire_events();
 
-		game.update();
+		game.update(timer.diff);
 		game.render();
 
 

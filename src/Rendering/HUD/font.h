@@ -61,7 +61,8 @@ namespace Rendering{
 					texture(GL_R8),
 					width(0),
 					height(0),
-					yMax(0)
+					yMax(0),
+					bearing_y_captial_A(0)
 				{}
 			};
 

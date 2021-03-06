@@ -35,6 +35,7 @@ namespace Rendering{
 				PLANET,
 				SPEED,
 				SWOARM,
+				TREE,
 				NUM_ICONS
 			};
 
@@ -138,10 +139,11 @@ namespace Rendering{
 
 				program.set<Uniform::bw>() = is_bw;
 				program.use();
-
+				glEnable(GL_BLEND);
 				glDisable(GL_DEPTH_TEST);
 				glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, size);
 				glEnable(GL_DEPTH_TEST);
+				glDisable(GL_BLEND);
 			}
 	};
 
@@ -153,7 +155,8 @@ namespace Rendering{
 			"health.png",
 			"planet.png",
 			"speed.png",
-			"swoarm.png"
+			"swoarm.png",
+			"tree.png"
 		};
 
 		log4cpp::Category& icons::logger = log4cpp::Category::getInstance("Rendering.HUD.icons");

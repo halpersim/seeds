@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Constants/constants.h"
+
 #include "soldier_data.h"
 #include "planet.h"
 #include "id_generator.h"
@@ -21,6 +23,8 @@ namespace DTO {
 		float health;
 		float speed;
 
+		int id;
+
 		planet<any_shape>* host_planet;
 		const player* owner;
 
@@ -35,7 +39,8 @@ namespace DTO {
 			owner(NULL),
 			host_planet(NULL),
 			coord(glm::vec3()),
-			direction(glm::vec3())
+			direction(glm::vec3()),
+			id(0)
 		{}
 
 		soldier(const soldier_data& data, planet<any_shape>* host_planet, glm::vec3 coord, glm::vec3 direction) :
@@ -45,7 +50,9 @@ namespace DTO {
 			owner(&data.owner),
 			host_planet(host_planet),
 			coord(coord),
-			direction(glm::normalize(direction)){}
+			direction(glm::normalize(direction)),
+			id(0)
+		{}
 
 		inline void init(const soldier_data& data, planet<any_shape>* host_planet, glm::vec3 coord, glm::vec3 direction){
 			damage = data.damage;
@@ -62,15 +69,18 @@ namespace DTO {
 	public:
 		int sworm_id;
 		bool is_alive;
+		float time_since_last_shot;
 		
 		attacker(soldier_data& data, planet<any_shape>* host_planet, glm::vec3 coord, glm::vec3 direction) :
 			soldier(data, host_planet, coord, direction),
 			sworm_id(0),
-			is_alive(false)
+			is_alive(false),
+			time_since_last_shot(Constants::Control::ATTACKER_ATTACKSPEED * 10)		//so that time_since_last_shot > ATTACKER_ATTACKSPEED is always true
 		{}
 
 		attacker() :
 			soldier(),
+			sworm_id(0),
 			is_alive(false)
 		{}
 

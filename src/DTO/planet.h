@@ -32,10 +32,12 @@ namespace DTO {
 		player& owner;
 		int health;
 		int max_soldiers;
+		int max_trees;
 		float atmosphere_height;
 		soldier_data soldier_type;
 		glm::vec3 pos;
-
+		bool under_attack;
+		
 		std::list<tree<attacker>> attacker_tree_list;
 		std::list<tree<defender>> defender_tree_list;
 		std::list<planet_entry> planet_entry_list;
@@ -46,8 +48,10 @@ namespace DTO {
 			soldier_type(soldier_type),
 			health(10),
 			max_soldiers(30),
+			max_trees(5),
 			atmosphere_height(atmosphere_height),
 			pos(pos),
+			under_attack(false),
 			attacker_tree_list(std::list<tree<attacker>>()),
 			defender_tree_list(std::list<tree<defender>>()),
 			planet_entry_list(std::list<planet_entry>())
@@ -169,12 +173,10 @@ namespace DTO {
 		}
 
 		glm::vec3 get_local_pos(const glm::vec2& parameter, float height = 0.f)const override{
-			float theta = parameter.y / 2.f;
-			
 
 			glm::vec3 unscaled_point = glm::vec3(
-				cos(parameter.x) * sin(theta),
-				cos(parameter.x) * cos(theta),
+				cos(parameter.x) * sin(parameter.y),
+				cos(parameter.x) * cos(parameter.y),
 				sin(parameter.x)
 			);
 

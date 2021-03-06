@@ -133,7 +133,7 @@ void main(){
                     space_violated_idx = vertex_inside[vertex_to_remove_idx];
                     break;
                 }
-            //a sketch explaining this should be in this directory
+            //a sketch explaining this should be in the sketch directory
             vec3 new_vertices[5];
 
             uint first_idx = (vertex_to_remove_idx + 1) % 3;

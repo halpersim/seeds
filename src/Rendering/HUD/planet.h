@@ -28,7 +28,6 @@ namespace Rendering{
 			static log4cpp::Category& logger;
 
 
-			static const int ICONS_TO_HUD_SPACE = 5;
 			static const int PLANET_BUTTON_MARGIN = 5;
 			static const int CAPTION_INDENT = 5;
 			static const int SPACE_BETWEEN_ICONS = 2;
@@ -93,7 +92,7 @@ namespace Rendering{
 				for(unsigned int i = ALL_SOLDIERS; i<=QUATER_SOLDIERS; i++){
 					glm::vec2 pos;
 					pos.x = window_size.x - OUTLINE.top_left.x + PLANET_BUTTON_MARGIN + (i - ALL_SOLDIERS) * (fraction_texture.size.x + PLANET_BUTTON_MARGIN);
-					pos.y = window_size.y - OUTLINE.top_left.y - ICONS_TO_HUD_SPACE - fraction_texture.size.y - Constants::Rendering::HUD::FONT_SIZE;
+					pos.y = window_size.y - OUTLINE.top_left.y - PLANET_BUTTON_MARGIN - fraction_texture.size.y - Constants::Rendering::HUD::FONT_SIZE;
 
 					button_boxes[i] = my_utils::box(my_utils::rect(pos, fraction_texture.size), PLANET_BUTTON_MARGIN, Constants::Rendering::HUD::FONT_SIZE);
 				}
@@ -101,7 +100,7 @@ namespace Rendering{
 				for(unsigned int i = GROW_ATTACKER_TREE; i <= GROW_DEFENDER_TREE; i++){
 					glm::vec2 pos;
 					pos.x = window_size.x - ((GROW_DEFENDER_TREE - i + 1) * (tree_texture.size.x + PLANET_BUTTON_MARGIN));
-					pos.y = window_size.y - OUTLINE.top_left.y - ICONS_TO_HUD_SPACE - tree_texture.size.y;
+					pos.y = window_size.y - OUTLINE.top_left.y - PLANET_BUTTON_MARGIN - tree_texture.size.y;
 
 					button_boxes[i] = my_utils::box(my_utils::rect(pos, tree_texture.size), PLANET_BUTTON_MARGIN, 0.f);
 				}
@@ -163,15 +162,16 @@ namespace Rendering{
 
 				glDrawArrays(GL_LINES, 0, 2);
 				
-				static const std::array<int, 5> icons = {icons::PLANET, icons::DAMAGE, icons::HEALTH, icons::SPEED, icons::SWOARM};
+				static const std::array<int, 6> icons = {icons::PLANET, icons::DAMAGE, icons::HEALTH, icons::SPEED, icons::SWOARM, icons::TREE};
 				
 				//!! if the order of this elements is changed it also has to be changed in the position calculation !! 
-				std::array<std::string, 5> soldier_stats = {
-					std::string("Planet #") + std::to_string(planet.id & (~DTO::id_generator::PLANET_BIT)),
+				std::array<std::string, 6> soldier_stats = {
+					std::string("Planet #") + std::to_string(planet.id & (~DTO::id_generator::PLANET_BIT)),	
 					std::to_string(int(planet.soldier_type.damage)),
 					std::to_string(int(planet.soldier_type.health)),
 					std::to_string(int(planet.soldier_type.speed)),
-					std::to_string(solders_on_planet) + std::string("|") + std::to_string(planet.max_soldiers)
+					std::to_string(solders_on_planet) + std::string("|") + std::to_string(planet.max_soldiers),
+					std::to_string(planet.attacker_tree_list.size() + planet.defender_tree_list.size()) + std::string("|") + std::to_string(planet.max_trees)
 				};
 				
 				int icon_left = OUTLINE.top_left.x - Constants::Rendering::HUD::INDENT_FROM_BORDER;
@@ -179,14 +179,15 @@ namespace Rendering{
 				int font_left = icon_left - (icons::ICON_SIZE + Constants::Rendering::HUD::FONT_HORIZONTAL_INDENT);
 
 				//calculate icon positions
-				std::array<glm::vec2, 5> positions = {
+				std::array<glm::vec2, 6> positions = {
 					(window_size - glm::vec2(OUTLINE.top_left.x - hud_internal::center_with_icon(OUTLINE.top_left.x, font_obj.horizontal_advance(soldier_stats[0])), OUTLINE.top_left.y - CAPTION_INDENT)),
 
 					(window_size - glm::vec2(icon_left, OUTLINE.bottom_band + 3 * icon_space)),
 					(window_size - glm::vec2(icon_left, OUTLINE.bottom_band + 2 * icon_space)),
 					(window_size - glm::vec2(icon_left, OUTLINE.bottom_band + 1 * icon_space)),
 
-					(window_size - glm::vec2(OUTLINE.top_left.x - hud_internal::center_with_icon(OUTLINE.top_left.x/2, font_obj.horizontal_advance(soldier_stats[4])), OUTLINE.top_left.y - OUTLINE.top_band + icon_space + CAPTION_INDENT))
+					(window_size - glm::vec2(OUTLINE.top_left.x - hud_internal::center_with_icon(OUTLINE.top_left.x/2, font_obj.horizontal_advance(soldier_stats[4])), OUTLINE.top_left.y - OUTLINE.top_band + icon_space + CAPTION_INDENT)),
+					(window_size - glm::vec2(OUTLINE.top_left.x/2 - hud_internal::center_with_icon(OUTLINE.top_left.x/2, font_obj.horizontal_advance(soldier_stats[5])), OUTLINE.top_left.y - OUTLINE.top_band + icon_space + CAPTION_INDENT)),
 				};
 
 				//render icons + icon descriptions

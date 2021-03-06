@@ -27,6 +27,8 @@ namespace Constants {
 		
 		static const float BACKGROUND[] = {0.1f, 0.1f, 0.1f, 1.f};
 
+		static const glm::vec3 BULLET_SCALE = glm::vec3(0.5f);
+
 		static const int BOARDER_THICKNESS = 9; 
 
 		namespace HUD{
@@ -39,7 +41,8 @@ namespace Constants {
 
 			static const int FONT_SIZE = 15.f;
 
-			static const int FONT_HORIZONTAL_INDENT = 5;
+			//a scatch explaingin these constants should be in the scatch directory
+			static const int FONT_HORIZONTAL_INDENT = 5;		
 			static const int FONT_VERTICAL_INDENT = 5;
 			static const int INDENT_FROM_BORDER = 5;
 		}	
@@ -49,5 +52,14 @@ namespace Constants {
 		static const float TURN_VELOCITY = 1/1.f; //radians per second
 		static const float VELOCITY_ON_PLANET = 1/5.f; //radians per second
 		static const float BEGIN_TURN_TO_PLANET = 5.f; //distance untis; when the attacker is within this distance of its target planet it will start turning towards its orientation on the planets
+
+		static const float ATTACKER_ATTACKSPEED = 1.5f;
+		static const float ATTACKER_BULLET_DAMAGE_FACTOR = 0.4f; 
+		static const float BULLET_SPEED = 20.f;
+		static const float BULLET_HIT_DISTANCE = 0.1f;
+		static const float SOLDIER_ENEMY_AWARENESS = 15.f; //enemies that are closer to the solder then this distance are being attacked
+		static const float DEFENDER_MAX_TIME_TO_IMPACT = 5.f; //seconds //enemy soldiers that could be reached faster than this value are attacked
+		static const float DEFENDER_HIT_TOLERANCE = 2.f; //length units; defender hits are only counted if it is that close ore closer to its target
+
 	}
 };

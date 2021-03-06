@@ -120,7 +120,7 @@ namespace Rendering{
 
 				//render text
 				glm::vec2 font_offset = hud_internal::get_font_offset(font_obj);
-				for(int i = 0; i<positions.size(); i++){
+				for(unsigned int i = 0; i<positions.size(); i++){
 					font_obj.append(strings[i], positions[i] + font_offset);
 				}
 				font_obj.flush();

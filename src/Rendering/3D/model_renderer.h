@@ -4,7 +4,6 @@
 #include "Rendering/Utils/render_utils.h"
 #include "Rendering/Utils/gl_wrapper.h"
 #include "Rendering/Utils/uniform_naming.h"
-#include "Rendering/Utils/matrix_generator.h"
 
 #include "Rendering/Data/rendering_structs.h"
 #include "Rendering/Data/data_lists.h"

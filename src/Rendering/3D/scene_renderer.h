@@ -1,8 +1,6 @@
 #pragma once
-#include "model_renderer.h"
-#include "camera.h"
+#include "Rendering/3D/model_renderer.h"
 
-#include "Rendering/Utils/matrix_generator.h"
 #include "Rendering/Data/data_lists.h"
 
 

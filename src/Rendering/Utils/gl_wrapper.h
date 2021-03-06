@@ -78,6 +78,10 @@ namespace gl_wrapper {
 
 		typedef T UnderlyingType;
 
+		inline uniform():
+			loc(0)
+		{}
+
 		void operator=(const typename T::Base& value){
 			this->value = (T&)value;
 		}

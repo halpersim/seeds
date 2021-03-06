@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -137,14 +137,21 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Constants\constants.h" />
-    <ClInclude Include="src\Control\attacker_states.h" />
     <ClInclude Include="src\Control\game.h" />
     <ClInclude Include="src\Control\hud_manager.h" />
-    <ClInclude Include="src\Control\object_lists.h" />
-    <ClInclude Include="src\Control\object_manager.h" />
+    <ClInclude Include="src\Control\Movement\attacker_states.h" />
+    <ClInclude Include="src\Control\Movement\bullet.h" />
+    <ClInclude Include="src\Control\Movement\defender_states.h" />
+    <ClInclude Include="src\Control\Movement\moveable_object.h" />
+    <ClInclude Include="src\Control\Movement\movement_utils.h" />
+    <ClInclude Include="src\Control\Movement\soldier.h" />
     <ClInclude Include="src\Control\render_manager.h" />
-    <ClInclude Include="src\Control\soldiers_on_planet.h" />
-    <ClInclude Include="src\Control\timer.h" />
+    <ClInclude Include="src\Control\soldier_tracker.h" />
+    <ClInclude Include="src\Control\Utils\camera.h" />
+    <ClInclude Include="src\Control\Utils\matrix_generator.h" />
+    <ClInclude Include="src\Control\Utils\object_lists.h" />
+    <ClInclude Include="src\Control\Utils\soldier_tracker.h" />
+    <ClInclude Include="src\Control\Utils\timer.h" />
     <ClInclude Include="src\DTO\hole.h" />
     <ClInclude Include="src\DTO\id_generator.h" />
     <ClInclude Include="src\DTO\planet.h" />
@@ -156,7 +163,6 @@
     <ClInclude Include="src\DTO\tree.h" />
     <ClInclude Include="src\HI\input_state.h" />
     <ClInclude Include="src\HI\user_input.h" />
-    <ClInclude Include="src\Rendering\3D\camera.h" />
     <ClInclude Include="src\Rendering\3D\model_renderer.h" />
     <ClInclude Include="src\Rendering\3D\scene_renderer.h" />
     <ClInclude Include="src\Rendering\Data\data_lists.h" />
@@ -172,7 +178,6 @@
     <ClInclude Include="src\Rendering\Models\data_supplier.h" />
     <ClInclude Include="src\Rendering\Models\model.h" />
     <ClInclude Include="src\Rendering\Utils\gl_wrapper.h" />
-    <ClInclude Include="src\Rendering\Utils\matrix_generator.h" />
     <ClInclude Include="src\Rendering\Utils\render_utils.h" />
     <ClInclude Include="src\Rendering\Utils\uniform_naming.h" />
     <ClInclude Include="src\Utils\general_utils.h" />

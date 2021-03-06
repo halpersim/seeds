@@ -1,6 +1,4 @@
 #pragma once
-#include "Control/attacker_states.h"
-
 #include "DTO/tree.h"
 
 #include "Constants/constants.h"
@@ -19,10 +17,10 @@
 #include <string>
 #include <array>
 
-namespace Rendering {
+namespace Control {
 	namespace MatrixGenerator{
 		glm::mat4 generate_matrix(const DTO::defender& def);
-		glm::mat4 generate_matrix(const std::unique_ptr<Control::attacker>& att);
+		glm::mat4 generate_matrix(const glm::vec3& pos, const glm::vec3& forward, const glm::vec3& normal, const glm::vec3& scale);
 
 		//0 = trunk pallet; 1 = branch pallet
 		template <class T>
@@ -67,7 +65,7 @@ namespace Rendering {
 			return glm::make_mat4(mat);
 		}
 		
-		static glm::mat4 generate_lookat_matrix(glm::vec3 pos, glm::vec3 dir, glm::vec3 normal){
+		static glm::mat4 generate_lookat_matrix(const glm::vec3& pos, const glm::vec3& dir, const glm::vec3& normal){
 			float mat[16] = {0.f};
 			mat[15] = 1.f;
 			float* ptr = mat;
@@ -87,15 +85,12 @@ namespace Rendering {
 
 			return glm::make_mat4(mat);
 		}
-
-
-		static glm::mat4 generate_matrix(const std::unique_ptr<Control::attacker>& att_ptr){
-			Control::attacker* att = att_ptr.get();
-
-			return glm::scale(generate_lookat_matrix(att->pos(), att->forward(), att->normal()), glm::vec3(att->dto->health, att->dto->damage, att->dto->health) * Constants::Rendering::SOLDIER_SCALE);
+		
+		glm::mat4 generate_matrix(const glm::vec3& pos, const glm::vec3& forward, const glm::vec3& normal, const glm::vec3& scale){
+			return glm::scale(generate_lookat_matrix(pos, forward, normal), scale);
 		}
 
-		static glm::mat4 generate_matrix(const DTO::defender& def){
+		glm::mat4 generate_matrix(const DTO::defender& def){
 			glm::vec3 pos = def.host_planet->get_pos(def.coord, def.coord.z);
 			glm::vec3 next_vector = glm::normalize(def.direction) * 0.001f;
 			glm::vec3 next = def.host_planet->get_pos(def.coord + next_vector, def.coord.z + next_vector.z);
@@ -118,12 +113,12 @@ namespace Rendering {
 		}
 
 		static void get_tree_node_data_per_type(Loki::Type2Type<DTO::attacker> dummy, int side, glm::vec3& y, glm::vec3& pos, glm::vec3& x_ref){
-			y = glm::make_vec3(&Models::data_supplier<DTO::attacker>::normals[(side+1)*3]);
+			y = glm::make_vec3(&Rendering::Models::data_supplier<DTO::attacker>::normals[(side+1)*3]);
 			pos = glm::vec3(0.f);
 
 			for(int i = 0; i<3; i++){
-				pos += glm::make_vec3(&Models::data_supplier<DTO::attacker>::positions
-															[(Models::data_supplier<DTO::attacker>::position_indices[(side+2)*3 + i])*3]);
+				pos += glm::make_vec3(&Rendering::Models::data_supplier<DTO::attacker>::positions
+															[(Rendering::Models::data_supplier<DTO::attacker>::position_indices[(side+2)*3 + i])*3]);
 				if(i == 0)
 					x_ref = pos;
 			}
@@ -131,9 +126,9 @@ namespace Rendering {
 		}
 
 		static void get_tree_node_data_per_type(Loki::Type2Type<DTO::defender> dummy, int side, glm::vec3& y, glm::vec3& pos, glm::vec3& x_ref){
-			y = glm::make_vec3(&Models::data_supplier<DTO::defender>::normals[(6 + side)*3]);
-			pos = glm::make_vec3(&Models::data_supplier<DTO::defender>::positions[(26 + side)*3]);
-			x_ref = glm::make_vec3(&Models::data_supplier<DTO::defender>::positions[side == 1 ? 19 : (9+side)*3]);
+			y = glm::make_vec3(&Rendering::Models::data_supplier<DTO::defender>::normals[(6 + side)*3]);
+			pos = glm::make_vec3(&Rendering::Models::data_supplier<DTO::defender>::positions[(26 + side)*3]);
+			x_ref = glm::make_vec3(&Rendering::Models::data_supplier<DTO::defender>::positions[side == 1 ? 19 : (9+side)*3]);
 		}
 
 		template<class T>
@@ -180,7 +175,7 @@ namespace Rendering {
 			glm::vec3 z = glm::normalize(glm::cross(x, y));
 			x = glm::normalize(glm::cross(z, y));
 
-			model_to_world = glm::translate(glm::mat4(1.f), tree.host_planet.pos + Data::planet_hole(tree.host_planet, tree.ground).bottom_mid) * align_to_axis(x, y, z);
+			model_to_world = glm::translate(glm::mat4(1.f), tree.host_planet.pos + Rendering::Data::planet_hole(tree.host_planet, tree.ground).bottom_mid) * align_to_axis(x, y, z);
 
 			auto pallet = generate_matrix_tree_recursive(tree.nodes, tree.nodes.front(), Constants::Rendering::TREE_FIRST_TRUNK_SCALE);
 

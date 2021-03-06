@@ -127,25 +127,6 @@ namespace Rendering{
 				program.set<Uniform::color>() = color;
 				program.use();
 			}
-
-
-
-
-			/*
-			inline void render(const DTO::sworm_metrics& metrics){
-				static const std::array<int, 5> icons = {icons::SWOARM, icons::DAMAGE, icons::HEALTH, icons::SPEED, icons::ATTACKER};
-
-
-				std::array<std::string, 5> strings = {std::string("Sworm #") + std::to_string(metrics.id & (~DTO::id_generator::SWORM_BIT)),
-					my_utils::to_string(metrics.dmg, 1),
-					my_utils::to_string(metrics.health, 1),
-					my_utils::to_string(metrics.speed, 1),
-					std::to_string(metrics.count)
-				};
-
-				render_internal(icons, strings);
-				font_obj.flush();
-			}*/
 		};
 
 		log4cpp::Category& hud_internal::logger = log4cpp::Category::getInstance("Rendering.HUD.hud_internal");

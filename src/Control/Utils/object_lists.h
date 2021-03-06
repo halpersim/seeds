@@ -3,17 +3,20 @@
 #include <list>
 #include <functional>
 
-#include "Control/attacker_states.h"
+#include "Control/Movement/attacker_states.h"
+#include "Control/Movement/defender_states.h"
 #include "DTO/planet.h"
 
 namespace Control{
 
 	class object_lists{
 	public:
-		std::list<DTO::defender> def;
-		std::list<std::unique_ptr<Control::attacker>> att;
+		std::list<std::shared_ptr<std::unique_ptr<Movement::defender>>> def;
+		std::list<std::shared_ptr<std::unique_ptr<Movement::attacker>>> att;
 		std::list<DTO::tree<DTO::defender>*> tree_def;
 		std::list<DTO::tree<DTO::attacker>*> tree_att;
+
+		std::list<Movement::bullet> bullets;
 
 		std::list<DTO::planet<DTO::sphere>> planet_sphere;
 		std::list<DTO::planet<DTO::torus>> planet_torus;
@@ -27,6 +30,11 @@ namespace Control{
 		void for_each_planet_const(const std::function<void(const DTO::planet<DTO::any_shape>&)>& func)const{
 			std::for_each(planet_sphere.begin(), planet_sphere.end(), func);
 			std::for_each(planet_torus.begin(), planet_torus.end(), func);
+		}
+		
+		void for_each_soldier_const(const std::function<void(const Movement::soldier&)>& func)const{
+			std::for_each(att.begin(), att.end(), [&func](auto& ptr) {func(*(*ptr)); });
+			std::for_each(def.begin(), def.end(), [&func](auto& ptr) {func(*(*ptr)); });
 		}
 
 		DTO::planet<DTO::any_shape>* find_planet(int id){

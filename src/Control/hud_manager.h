@@ -4,8 +4,8 @@
 #include "Rendering/HUD/player.h"
 #include "Rendering/HUD/sworm.h"
 
-#include "Control/object_lists.h"
-#include "Control/soldiers_on_planet.h"
+#include "Control/Utils/object_lists.h"
+#include "Control/Utils/soldier_tracker.h"
 
 #include <map>
 
@@ -48,32 +48,34 @@ namespace Control{
 			return hud_planet.get_render_outline().contains(click);
 		}
 
-		inline void render(const DTO::planet<DTO::any_shape>& planet, const Control::object_lists& lists, const std::map<int, soldiers_on_planet>& soldiers_on_planet_map, bool grow_tree_possible){
-			
-			const soldiers_on_planet& sop = soldiers_on_planet_map.find(planet.id)->second;
-
-			hud_planet.render(planet, sop.attacker + sop.defender, sop.attacker, grow_tree_possible);
-			render_player(planet.owner, lists, soldiers_on_planet_map);
+		inline void render(const DTO::planet<DTO::any_shape>& planet, const Control::object_lists& lists, const Control::soldier_tracker& soldiers_on_planet_tracker, bool grow_tree_possible){
+			hud_planet.render(planet, soldiers_on_planet_tracker.num_soldiers(planet), soldiers_on_planet_tracker.num_attacker(planet), grow_tree_possible);
+			render_player(planet.owner, lists, soldiers_on_planet_tracker);
 		}
 
-		inline void render(const DTO::sworm_metrics& metric, const Control::object_lists& lists, const std::map<int, soldiers_on_planet>& soldiers_on_planet_map){
+		inline void render(const DTO::sworm_metrics& metric, const Control::object_lists& lists, const Control::soldier_tracker& soldiers_on_planet_tracker){
 			hud_sworm.render(metric);
-			render_player(*metric.owner, lists, soldiers_on_planet_map);
+			render_player(*metric.owner, lists, soldiers_on_planet_tracker);
 		}
 
 	private:
 
-		inline void render_player(const DTO::player& player, const Control::object_lists& lists, const std::map<int, soldiers_on_planet>& soldiers_on_planet_map){
+		inline void render_player(const DTO::player& player, const Control::object_lists& lists, const Control::soldier_tracker& soldiers_on_planet_tracker){
 			int owned_planets = 0;
 			int num_planets = 0;
 			int num_soldiers = 0;
 
-			lists.for_each_planet_const([&owned_planets, &num_planets, &num_soldiers, &player, &soldiers_on_planet_map](const DTO::planet<DTO::any_shape>& other_planet){
-				if(&player == &other_planet.owner){
+			lists.for_each_planet_const([&owned_planets, &num_planets, &player, &soldiers_on_planet_tracker](const DTO::planet<DTO::any_shape>& planet){
+				if(&player == &planet.owner){
 					owned_planets++;
-					num_soldiers += soldiers_on_planet_map.find(other_planet.id)->second.sum();
 				}
 				num_planets++;
+			});
+
+			lists.for_each_soldier_const([&num_soldiers, &player](const Movement::soldier& soldier){
+				if(soldier.get_owner().idx == player.idx){
+					num_soldiers++;
+				}
 			});
 
 
