@@ -85,7 +85,7 @@ namespace Rendering {
 			}
 
 
-			void render(const Data::soldier& data){
+			void render(const Rendering::List::soldier& data){
 
 				//set unifroms
 				program.set<Uniform::vp>() = frame_data::view_projection_matrix;
@@ -117,27 +117,24 @@ namespace Rendering {
 		template<class T>
 		log4cpp::Category& soldier_renderer<T>::logger = log4cpp::Category::getInstance("Rendering._3D.soldier_renderer");
 
-		template<class T>
-		class tree_renderer;
+
+
 
 		template<class T>
-		class tree_renderer<DTO::tree<T>> {
+		class tree_renderer {
 		private:
 			gl_wrapper::program<LOKI_TYPELIST_3(Uniform::vp, Uniform::eye, Uniform::light)> program;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryLinearExpanding, sizeof(glm::mat4) * 5 *2> trunk_matrix_buffer;
-			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryLinearExpanding, sizeof(glm::mat4) * 5 *2> soldier_matrix_buffer;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryLinearExpanding, sizeof(int) * 4> id_buffer;
 			gl_wrapper::buffer<gl_wrapper::DeleteOldData, gl_wrapper::MemoryLinearExpanding, sizeof(int) * 4> owner_index_buffer;
 
-			typedef Loki::SingletonHolder<Models::model<DTO::tree<T>>> TrunkModel;
-			typedef Loki::SingletonHolder<Models::model<T>> SoldierModel;
+			typedef Loki::SingletonHolder<Models::model<Rendering::Models::trunk<T>>> TrunkModel;
 
 			static log4cpp::Category& logger;
 		public:
 
 			tree_renderer() :
 				trunk_matrix_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW),
-				soldier_matrix_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW),
 				id_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW),
 				owner_index_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW)
 			{
@@ -154,13 +151,10 @@ namespace Rendering {
 				program.create(shader, "shader/3D/model");
 
 				TrunkModel::Instance().load();
-				SoldierModel::Instance().load();
 			}
 
-			void render(const Data::tree& data){
-				const std::vector<glm::mat4>& trunk_pallet = data.pallet[0];
-				const std::vector<glm::mat4>& soldier_pallet = data.pallet[1];
-
+			void render(const Rendering::List::trunk& data){
+				const std::vector<glm::mat4>& trunk_pallet = data.pallet;
 
 				//set uniforms
 				program.set<Uniform::vp>() = frame_data::view_projection_matrix;
@@ -178,11 +172,6 @@ namespace Rendering {
 				trunk_matrix_buffer.copy_vector_in_buffer(trunk_pallet);
 				trunk_matrix_buffer.bind_base(0);
 				TrunkModel::Instance().render(0, 1, trunk_pallet.size());
-
-
-				soldier_matrix_buffer.copy_vector_in_buffer(soldier_pallet);
-				soldier_matrix_buffer.bind_base(0);
-				SoldierModel::Instance().render(0, 1, soldier_pallet.size());
 			}
 
 			~tree_renderer(){
@@ -192,7 +181,7 @@ namespace Rendering {
 		};
 
 		template<class T>
-		log4cpp::Category& tree_renderer<DTO::tree<T>>::logger = log4cpp::Category::getInstance("Rendering._3D.tree_renderer");
+		log4cpp::Category& tree_renderer<T>::logger = log4cpp::Category::getInstance("Rendering._3D.tree_renderer");
 
 
 		class planet_renderer{
@@ -203,6 +192,7 @@ namespace Rendering {
 			gl_wrapper::buffer<> render_data_buffer;
 			gl_wrapper::buffer<> id_buffer;
 			gl_wrapper::buffer<> owner_index_buffer;
+			gl_wrapper::buffer<> type_buffer;
 
 			gl_wrapper::program<LOKI_TYPELIST_3(Uniform::vp, Uniform::eye, Uniform::light)> program;
 
@@ -213,7 +203,8 @@ namespace Rendering {
 				matrix_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW),
 				render_data_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW),
 				id_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW),
-				owner_index_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW)
+				owner_index_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW),
+				type_buffer(GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW)
 			{
 				std::string error_msg = "";
 				std::array<GLuint, 5> shader;
@@ -231,11 +222,9 @@ namespace Rendering {
 				//	glGetSubroutineUniformLocation(program.name, GL_TESS_EVALUATION_SHADER, "mySubroutineUniform");
 			}
 
-			template<class T>
-			void render(Loki::Type2Type<DTO::planet<T>> dummy, const Rendering::Data::planet& data){
+			void render(const Rendering::List::planet& data){
 				if(data.pallet.size() == 0)
 					return;
-
 
 				//set uniforms
 				program.set<Uniform::vp>() = frame_data::view_projection_matrix;
@@ -248,28 +237,15 @@ namespace Rendering {
 				matrix_buffer.copy_vector_in_buffer(data.pallet);
 				id_buffer.copy_vector_in_buffer(data.ids);
 				owner_index_buffer.copy_vector_in_buffer(data.owner_indices);
+				type_buffer.copy_vector_in_buffer(data.type);
 
 				render_data_buffer.bind_base(0);
 				hole_buffer.bind_base(1);
 				matrix_buffer.bind_base(2);
 				id_buffer.bind_base(3);
 				owner_index_buffer.bind_base(4);
-
-				const GLuint subroutine_idx = Loki::TL::IndexOf<LOKI_TYPELIST_2(DTO::sphere, DTO::torus), T>::value;
-				glUniformSubroutinesuiv(GL_TESS_EVALUATION_SHADER, 1, &subroutine_idx);
-				GLenum error = glGetError();
-				if(error != GL_NO_ERROR){
-
-					if(error == GL_INVALID_VALUE){
-						GLint active_subroutines, max_uniform_location;
-						glGetProgramStageiv(program.name, GL_TESS_EVALUATION_SHADER, GL_ACTIVE_SUBROUTINE_UNIFORM_LOCATIONS, &active_subroutines);
-						glGetProgramStageiv(program.name, GL_TESS_EVALUATION_SHADER, GL_ACTIVE_SUBROUTINES, &max_uniform_location);
-
-						logger.warn("GL_ERROR [GL_INVALID_VALUE] -> planet renderer, glUniformSubroutinesuiv: (count = 1) == (active_subroutines = %d), 0 <= (subroutine_idx = %d) < (max_subroutine_idx = %d)", active_subroutines, subroutine_idx, max_uniform_location);
-					} else{
-						logger.warn("GL_ERROR [%s] -> planet renderer, glUniformSubroutinesuiv: count = 1, subroutine_idx = %d", gl_wrapper::get_enum_string(error).c_str(), subroutine_idx);
-					}
-				}
+				type_buffer.bind_base(6);
+				
 				glPatchParameteri(GL_PATCH_VERTICES, 4); //hiarz 4, ba an gscheiten TCS werns mehr wern
 				glDrawArraysInstanced(GL_PATCHES, 0, 4, data.pallet.size());
 			}
@@ -304,7 +280,7 @@ namespace Rendering {
 				program.create(shader, "shader/3D/ground");
 			}
 
-			void render(const Data::ground& data_struct){
+			void render(const Rendering::List::ground& data_struct){
 				data_buffer.copy_vector_in_buffer(data_struct.data);
 
 				program.set<Uniform::vp>() = frame_data::view_projection_matrix;

@@ -1,14 +1,14 @@
 #pragma once
 
 #include "DTO/soldier.h"
-#include "Control/Movement/soldier.h"
-#include "Control/Movement/bullet.h"
-#include "Control/Movement/movement_utils.h"
+#include "Control/GO/soldier.h"
+#include "Control/GO/bullet.h"
+#include "Control/GO/movement_utils.h"
 
 #include <glm/vec3.hpp>
 
 namespace Control{
-	namespace Movement{
+	namespace GO{
 
 		enum class defender_state{
 			ROAMING,
@@ -27,7 +27,7 @@ namespace Control{
 			}
 
 			inline virtual const DTO::player& get_owner()const override{
-				return *dto->owner;
+				return dto->owner;
 			}
 
 			inline virtual float get_speed() const override{
@@ -44,7 +44,7 @@ namespace Control{
 			public:
 				roaming_obj logic;
 
-				inline roaming(std::shared_ptr<DTO::defender> dto, DTO::planet<DTO::any_shape>& host, const glm::vec3& coords, const glm::vec3& direction) :
+				inline roaming(std::shared_ptr<DTO::defender> dto, GO::planet& host, const glm::vec3& coords, const glm::vec3& direction) :
 					defender(dto),
 					logic(host, coords, direction){}
 
@@ -64,7 +64,7 @@ namespace Control{
 					return logic.get_coords();
 				}
 
-				inline virtual DTO::planet<DTO::any_shape>* host_planet() const override{
+				inline virtual GO::planet* host_planet() const override{
 					return &logic.host;
 				}
 
@@ -85,21 +85,15 @@ namespace Control{
 			class fighting : public defender{
 			private:
 				my_utils::LERP<glm::vec3> coords_path;
-				DTO::planet<DTO::any_shape>& host;
+				GO::planet& host;
 				std::weak_ptr<std::unique_ptr<soldier>> target_ptr;
-
-
 			public:
-				glm::vec2 target_coords;
-				float time_to_impact;
 
-				inline fighting(std::shared_ptr<DTO::defender>& dto, DTO::planet<DTO::any_shape>& host, std::weak_ptr<std::unique_ptr<soldier>>& target_ptr, const glm::vec3& coords_start, const glm::vec3& coords_end, float time, const glm::vec2& target_coords):
+				inline fighting(std::shared_ptr<DTO::defender>& dto, GO::planet& host, std::weak_ptr<std::unique_ptr<soldier>>& target_ptr, const glm::vec3& coords_start, const glm::vec3& coords_end, float time):
 					defender(dto),
 					host(host),
 					target_ptr(target_ptr),
-					coords_path(my_utils::LERP<glm::vec3>(coords_start, coords_end, 1.f / time)),
-					target_coords(target_coords),
-					time_to_impact(time)
+					coords_path(my_utils::LERP<glm::vec3>(coords_start, coords_end, 1.f / time))
 				{}
 
 				inline virtual glm::vec3 pos() const override{
@@ -118,7 +112,7 @@ namespace Control{
 					return coords_path.mix();
 				}
 
-				inline virtual DTO::planet<DTO::any_shape>* host_planet() const override{
+				inline virtual GO::planet* host_planet() const override{
 					return &host;
 				}
 

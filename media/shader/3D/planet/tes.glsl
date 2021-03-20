@@ -22,10 +22,10 @@ layout(binding = 0, std140) readonly buffer shape_data_buffer{
     data shape_data[];
 };
 
-subroutine vec3[2] evaluate_patch_subroutine(in vec2 coord);
-layout(location = 0) subroutine uniform evaluate_patch_subroutine evaluate_patch;
+layout(binding = 6, std140) readonly buffer type_buffer{
+    ivec4 types[];
+};
 
-layout(index = 0) subroutine(evaluate_patch_subroutine)
 vec3[2] evaluate_patch_sphere(in vec2 coord){
     float alpha = coord.x * 2 * 3.1415;
     float theta = coord.y * 3.1415;
@@ -45,7 +45,6 @@ vec3[2] evaluate_patch_sphere(in vec2 coord){
     return ret_value;
 }
 
-layout(index = 1) subroutine(evaluate_patch_subroutine)
 vec3[2] evaluate_patch_torus(in vec2 coord){
     float alpha = coord.x * 2 * 3.1415;
     float theta = coord.y * 2 * 3.1415;
@@ -66,7 +65,12 @@ vec3[2] evaluate_patch_torus(in vec2 coord){
 }
 
 void main(){
-    vec3[2] ret_value = evaluate_patch(gl_TessCoord.xy);
+    vec3[2] ret_value;
+    
+    switch(types[tes_in[0].instance_id >> 2][tes_in[0].instance_id & 3]){
+        case 0: ret_value = evaluate_patch_sphere(gl_TessCoord.xy); break;
+        case 1: ret_value = evaluate_patch_torus(gl_TessCoord.xy); break;
+    }
 
     tes_out.N = ret_value[1];
     tes_out.instance_id = tes_in[0].instance_id;

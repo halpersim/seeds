@@ -1,11 +1,13 @@
 #pragma once
 
-#include "Control/Movement/moveable_object.h"
+#include "Control/GO/moveable_object.h"
+
+#include "Control/RDG/soldier.h"
 
 #include "DTO/planet.h"
 
 namespace Control{
-	namespace Movement{
+	namespace GO{
 
 		class soldier : public moveable_object{
 		public:
@@ -16,6 +18,10 @@ namespace Control{
 			virtual float get_speed() const = 0;
 			virtual const DTO::player& get_owner()const = 0;
 			virtual glm::vec3 get_direction() const = 0;
+
+			virtual RDG::soldier& get_rdg(){
+				return RDG::soldier_singleton::Instance();
+			}
 		};
 	}
 }

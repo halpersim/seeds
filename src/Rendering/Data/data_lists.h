@@ -6,7 +6,7 @@
 #include "rendering_structs.h"
 
 namespace Rendering{
-	namespace Data{
+	namespace List{
 
 		struct soldier{
 			std::vector<glm::mat4> pallet;
@@ -14,22 +14,23 @@ namespace Rendering{
 			std::vector<int> owner_indices;
 		};
 
-		struct tree{
-			std::array<std::vector<glm::mat4>, 2> pallet;
+		struct trunk{
+			std::vector<glm::mat4> pallet;
 			std::vector<int> ids;
 			std::vector<int> owner_indices;
 		};
 
 		struct planet{
 			std::vector<glm::mat4> pallet;
-			std::vector<Rendering::Data::planet_hole> holes;
-			std::vector<Rendering::Data::planet_renderer_data> render_data;
+			std::vector<Rendering::Struct::planet_hole> holes;
+			std::vector<Rendering::Struct::planet_renderer_data> render_data;
 			std::vector<int> ids;
 			std::vector<int> owner_indices;
+			std::vector<int> type;
 		};
 
 		struct ground{
-			std::vector<Rendering::Data::ground_render_data> data;
+			std::vector<Rendering::Struct::ground_render_data> data;
 		};
 	}
 }

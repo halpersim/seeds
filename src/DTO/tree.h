@@ -1,5 +1,11 @@
 #pragma once
-#include "hole.h"
+#include "DTO/hole.h"
+
+#include <GLM/vec3.hpp>
+
+#include <vector>
+
+/*
 #include "planet.h"
 #include "soldier.h"
 
@@ -9,9 +15,52 @@
 #include <vector>
 #include <loki/TypeTraits.h>
 #include <log4cpp/Category.hh>
+*/
 
 namespace DTO {
 
+	enum class tree_type : unsigned int{
+		ATTACKER,
+		DEFENDER,
+		NONE,
+	};
+
+	struct tree_node {
+		int id;
+		float size;
+		std::vector<int> next;
+
+		inline tree_node(int id, int branch_size) :
+			id(id),
+			size(0.f),
+			next()
+		{
+			for(int i = 0; i<branch_size; i++)
+				next.push_back(-1);
+		}
+	};
+
+	struct tree{
+		const unsigned int ID;
+		const DTO::tree_type TYPE;
+		const hole GROUND;
+
+		const unsigned int BRANCH_SIZE;
+		std::vector<tree_node> nodes;
+		float size;
+
+		inline tree(unsigned int id, DTO::tree_type type, const hole& ground, int brach_size) :
+			ID(id),
+			TYPE(type),
+			GROUND(ground),
+			BRANCH_SIZE(brach_size),
+			nodes(),
+			size(0.f)
+		{
+			nodes.push_back(tree_node(0, BRANCH_SIZE));
+		}
+	};
+/*
 	enum class tree_type{
 		ATTACKER,
 		DEFENDER,
@@ -58,7 +107,7 @@ namespace DTO {
 		const unsigned int id;
 		hole ground;
 		planet<any_shape>& host_planet;
-
+		
 		tree(planet<any_shape>& host_planet, const hole& ground) :
 			size(0),
 			time_since_last_spawn(0),
@@ -86,7 +135,7 @@ namespace DTO {
 		}
 
 		soldier_type produce_soldier(){
-			return soldier_type(host_planet.soldier_type, &host_planet, glm::vec3(ground.coords, Constants::Rendering::TREE_FIRST_TRUNK_SCALE), glm::vec3((float(rand()%100)/50)-1, (float(rand()%100)/50)-1, 0));
+			return soldier_type(host_planet.soldier_type, &host_planet);
 		}
 
 		float get_size(){
@@ -99,7 +148,7 @@ namespace DTO {
 				return;
 
 			if(((int)std::floor(size)) % Constants::DTO::TREE_GROWTH != 0 && ((int)std::floor(size + add)) % Constants::DTO::TREE_GROWTH == 0) {
-				//spawn new branches
+				//spawn new branche
 				logger.debug("adding new tree branch");
 
 				//fully grow old ones
@@ -160,4 +209,5 @@ namespace DTO {
 
 	template<class T>
 	log4cpp::Category& tree<T>::logger = log4cpp::Category::getInstance("DTO.tree");
+	*/
 }

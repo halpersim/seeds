@@ -1,10 +1,11 @@
 #pragma once
-#include "DTO/tree.h"
-
 #include "Constants/constants.h"
 
 #include "Rendering/Models/data_supplier.h"
 #include "Rendering/Data/rendering_structs.h"
+
+#include "Control/GO/planet.h"
+#include "Control/GO/tree.h"
 
 #include "Utils/general_utils.h"
 
@@ -17,6 +18,7 @@
 #include <string>
 #include <array>
 
+/*
 namespace Control {
 	namespace MatrixGenerator{
 		glm::mat4 generate_matrix(const DTO::defender& def);
@@ -24,7 +26,7 @@ namespace Control {
 
 		//0 = trunk pallet; 1 = branch pallet
 		template <class T>
-		std::array<std::vector<glm::mat4>, 2> generate_matrix_tree(const DTO::tree<T>& tree);
+		std::array<std::vector<glm::mat4>, 2> generate_matrix_tree(const GO::tree& tree);
 
 		template<class T>
 		void generate_planet_render_data(const std::list<DTO::planet<T>>& in, std::vector<Rendering::Data::planet_renderer_data>& data_list, std::vector<Rendering::Data::planet_hole>& hole_list);
@@ -90,16 +92,8 @@ namespace Control {
 			return glm::scale(generate_lookat_matrix(pos, forward, normal), scale);
 		}
 
-		glm::mat4 generate_matrix(const DTO::defender& def){
-			glm::vec3 pos = def.host_planet->get_pos(def.coord, def.coord.z);
-			glm::vec3 next_vector = glm::normalize(def.direction) * 0.001f;
-			glm::vec3 next = def.host_planet->get_pos(def.coord + next_vector, def.coord.z + next_vector.z);
-
-			return glm::scale(generate_lookat_matrix(pos, next - pos, def.host_planet->get_normal(def.coord)), glm::vec3(1, def.damage * 0.5f, 1) * def.health * Constants::Rendering::SOLDIER_SCALE);
-		}
-
-		static glm::mat4 generate_matrix(const DTO::planet<DTO::any_shape>& planet){
-			return glm::translate(glm::mat4(1.f), planet.pos);
+		static glm::mat4 generate_matrix(const GO::planet& planet){
+			return glm::translate(glm::mat4(1.f), planet.center_pos);
 		}
 
 		template<class T>
@@ -148,7 +142,7 @@ namespace Control {
 		}
 
 		template<class T>
-		static std::array<std::vector<glm::mat4>, 2> generate_matrix_tree_recursive(const std::vector<DTO::tree_node<T>>& other, DTO::tree_node<T> me, float scale = 1.f){
+		static std::array<std::vector<glm::mat4>, 2> generate_matrix_tree_recursive(const std::vector<GO::tree_node>& other, const GO::tree_node& me, float scale = 1.f){
 			std::array<std::vector<glm::mat4>, 2> pallet;
 
 			for(int side = 0; side < me.branch_size; side++){
@@ -167,7 +161,7 @@ namespace Control {
 		}
 
 		template<class T>
-		static std::array<std::vector<glm::mat4>, 2> generate_matrix_tree(const DTO::tree<T>& tree){
+		static std::array<std::vector<glm::mat4>, 2> generate_matrix_tree(const GO::tree& tree){
 			glm::mat4 model_to_world;
 
 			glm::vec3 x = glm::normalize(tree.host_planet.get_tangent_alpha(tree.ground.coords));
@@ -185,8 +179,7 @@ namespace Control {
 
 			return pallet;
 		}
-
-
+		
 		Rendering::Data::planet_renderer_data get_planet_renderer_data(const DTO::planet<DTO::torus>& planet){
 			Rendering::Data::planet_renderer_data data;
 			data.radius = planet.radius;
@@ -201,7 +194,7 @@ namespace Control {
 			return data;
 		}
 
-		static void handle_planet_data_generation(const DTO::planet<DTO::any_shape>& planet,
+		static void handle_planet_data_generation(const GO::planet& planet,
 																const DTO::planet_entry& entry,
 																std::vector<Rendering::Data::planet_hole>* hole_list,
 																std::vector<Rendering::Data::ground_render_data>* ground_data_list)
@@ -229,3 +222,4 @@ namespace Control {
 	}
 
 }
+*/

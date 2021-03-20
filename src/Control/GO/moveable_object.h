@@ -1,9 +1,9 @@
 #pragma once
 
-#include "DTO/planet.h"
+#include "Control/GO/planet.h"
 
 namespace Control{
-	namespace Movement{
+	namespace GO{
 
 		class moveable_object{
 		public:
@@ -12,7 +12,7 @@ namespace Control{
 			virtual glm::vec3 forward() const = 0;
 
 			virtual glm::vec3 get_coords() const = 0;
-			virtual DTO::planet<DTO::any_shape>* host_planet()const = 0;
+			virtual GO::planet* host_planet()const = 0;
 		};
 	}
 }

@@ -2,13 +2,14 @@
 
 #include "DTO/soldier.h"
 
-#include "Control/Movement/soldier.h"
-#include "Control/Movement/movement_utils.h"
+#include "Control/GO/soldier.h"
+#include "Control/GO/movement_utils.h"
+#include "Control/GO/planet.h"
 
 #include <glm/gtc/random.hpp>
 
 namespace Control{
-	namespace Movement{
+	namespace GO{
 
 		enum class attacker_state{
 			ROAMING,				// default movement; roaming around a friendly planet out of combat
@@ -31,7 +32,7 @@ namespace Control{
 			}
 
 			virtual inline const DTO::player& get_owner() const override{
-				return *dto->owner;
+				return dto->owner;
 			}
 
 			virtual inline float get_speed()const override{
@@ -39,7 +40,7 @@ namespace Control{
 			}
 
 			virtual ~attacker(){}
-			virtual const DTO::planet<DTO::any_shape>* target_planet() const = 0;
+			virtual const GO::planet* target_planet() const = 0;
 			virtual attacker* update(float time_elapsed) = 0;
 			virtual attacker_state get_state() const = 0;
 
@@ -54,15 +55,15 @@ namespace Control{
 			public:
 				roaming_obj logic;
 
-				inline roaming(std::shared_ptr<DTO::attacker> dto, DTO::planet<DTO::any_shape>& host_planet, const glm::vec3& coords, const glm::vec3& direction) :
+				inline roaming(std::shared_ptr<DTO::attacker> dto, GO::planet& host_planet, const glm::vec3& coords, const glm::vec3& direction) :
 					attacker(dto),
 					logic(host_planet, coords, direction){}
 
-				virtual inline DTO::planet<DTO::any_shape>* host_planet() const override{
+				virtual inline GO::planet* host_planet() const override{
 					return &logic.host;
 				}
 
-				virtual inline const DTO::planet<DTO::any_shape>* target_planet() const override{
+				virtual inline const GO::planet* target_planet() const override{
 					return NULL;
 				}
 
@@ -98,7 +99,7 @@ namespace Control{
 
 			class moving : public attacker{
 			private:
-				DTO::planet<DTO::any_shape>& target;
+				GO::planet& target;
 
 				my_utils::LERP<glm::vec3> path;
 				my_utils::LERP<glm::quat> turn;
@@ -110,7 +111,7 @@ namespace Control{
 				bool turn_to_target;
 
 			public:
-				inline moving(attacker& old_state, DTO::planet<DTO::any_shape>& target) :
+				inline moving(attacker& old_state, GO::planet& target) :
 					attacker(old_state.dto),
 					target(target),
 					target_coords(target.get_nearest_coords(old_state.pos())),
@@ -127,11 +128,11 @@ namespace Control{
 					normal_lerp = my_utils::LERP<glm::quat>(my_utils::vec3_to_quat(glm::normalize(old_state.normal())), my_utils::vec3_to_quat(glm::normalize(glm::cross(my_utils::quat_to_vec3(turn_start), my_utils::quat_to_vec3(turn_end)))), turn_factor);
 				}
 
-				virtual inline DTO::planet<DTO::any_shape>* host_planet() const override{
+				virtual inline GO::planet* host_planet() const override{
 					return NULL;
 				}
 
-				virtual inline const DTO::planet<DTO::any_shape>* target_planet() const override{
+				virtual inline const GO::planet* target_planet() const override{
 					return &target;
 				}
 
@@ -187,20 +188,21 @@ namespace Control{
 				glm::vec3 m_forward;
 
 			public:
-				DTO::planet_entry& entry;
+				std::weak_ptr<DTO::planet_entry> entry_ptr;
 
-				inline stuck(attacker& old_state, DTO::planet_entry& entry) :
+				inline stuck(attacker& old_state, std::weak_ptr<DTO::planet_entry> entry_ptr) :
 					attacker(old_state.dto),
-					entry(entry),
+					entry_ptr(entry_ptr),
 					m_pos(old_state.pos()),
 					m_normal(old_state.normal()),
-					m_forward(old_state.forward()){}
+					m_forward(old_state.forward())
+				{}
 
-				virtual DTO::planet<DTO::any_shape>* host_planet() const override{
+				virtual GO::planet* host_planet() const override{
 					return NULL;
 				}
 
-				virtual inline const DTO::planet<DTO::any_shape>* target_planet() const override{
+				virtual inline const GO::planet* target_planet() const override{
 					return NULL;
 				}
 
@@ -235,16 +237,17 @@ namespace Control{
 
 			class entering : public attacker{
 			private:
-				DTO::planet_entry& entry;
+				std::weak_ptr<DTO::planet_entry> entry;
 
 				my_utils::LERP<glm::quat> m_forward;
 				my_utils::LERP<glm::quat> m_normal;
 				my_utils::LERP<glm::vec3> m_pos;
 			public:
 
-				inline entering(attacker& old_state, DTO::planet_entry& entry, const glm::vec3& target) :
+				inline entering(attacker& old_state, std::weak_ptr<DTO::planet_entry> entry, const glm::vec3& target) :
 					attacker(old_state.dto),
-					entry(entry){
+					entry(entry)
+				{
 					glm::quat begin = my_utils::vec3_to_quat(glm::normalize(old_state.forward()));
 					glm::quat end = my_utils::vec3_to_quat(-glm::normalize(old_state.normal()));
 					m_forward = my_utils::LERP<glm::quat>(begin, end, calc_turn_factor(dto->speed, begin, end));
@@ -256,11 +259,11 @@ namespace Control{
 					m_pos = my_utils::LERP<glm::vec3>(old_state.pos(), target, dto->speed / glm::length(old_state.pos() - target));
 				}
 
-				virtual DTO::planet<DTO::any_shape>* host_planet() const override{
+				virtual GO::planet* host_planet() const override{
 					return NULL;
 				}
 
-				virtual inline const DTO::planet<DTO::any_shape>* target_planet() const override{
+				virtual inline const GO::planet* target_planet() const override{
 					return NULL;
 				}
 
@@ -303,7 +306,7 @@ namespace Control{
 
 			class ordered : public attacker{
 			private:
-				DTO::planet<DTO::any_shape>& host;
+				GO::planet& host;
 
 				glm::vec3 coords;
 				glm::vec3 direction;
@@ -311,43 +314,41 @@ namespace Control{
 				my_utils::LERP<glm::quat> turn;
 
 			public:
-				DTO::planet_entry& target;
+				std::weak_ptr<DTO::planet_entry> target_ptr;
 
-				inline ordered(attacker& old_state, DTO::planet<DTO::any_shape>& host_planet, DTO::planet_entry& target) :
+				inline ordered(attacker& old_state, GO::planet& host_planet, std::weak_ptr<DTO::planet_entry> target_ptr) :
 					attacker(old_state.dto),
 					host(host_planet),
-					target(target),
+					target_ptr(target_ptr),
 					coords(old_state.get_coords())
 				{
-					direction = get_coords_dir(coords, glm::vec3(target.ground.coords, 0));
-					glm::quat start = my_utils::vec3_to_quat(old_state.forward());
-					glm::quat end = my_utils::vec3_to_quat(forward());
+					if(auto target = target_ptr.lock()){
+						direction = get_coords_dir(coords, glm::vec3(target->ground.coords, 0));
+						glm::quat start = my_utils::vec3_to_quat(old_state.forward());
+						glm::quat end = my_utils::vec3_to_quat(forward());
 
-					turn = my_utils::LERP<glm::quat>(start, end, calc_turn_factor(dto->speed, start, end));
-
-					target.attackers_heading_to++;
+						turn = my_utils::LERP<glm::quat>(start, end, calc_turn_factor(dto->speed, start, end));
+					}
 				}
-
-				virtual inline ~ordered(){
-					target.attackers_heading_to--;
-				}
-
-				virtual inline DTO::planet<DTO::any_shape>* host_planet() const override{
+				
+				virtual inline GO::planet* host_planet() const override{
 					return &host;
 				}
 
-				virtual inline const DTO::planet<DTO::any_shape>* target_planet() const override{
+				virtual inline const GO::planet* target_planet() const override{
 					return NULL;
 				}
 
 				virtual inline attacker* update(float time_elapsed) override{
-					if(target.stage >= Constants::DTO::ATTACKERS_REQUIRED_TO_FILL_HOLE){
+					std::shared_ptr<DTO::planet_entry> target = target_ptr.lock();
+					
+					if(!target || target->stage >= Constants::DTO::ATTACKERS_REQUIRED_TO_FILL_HOLE){
 						return new roaming(dto, host, coords, direction);
 					}
 
 					if(turn.done()){
-						if(glm::length(host.get_pos(coords, 0.f) - host.get_pos(target.ground.coords, 0.f)) < Constants::DTO::MIN_DISTANCE_TO_PLANET_ENTRY) {
-							glm::vec3 end = target.is_established() ? host.get_pos(target.ground.coords, 0.f) - (host.get_normal(target.ground.coords) * host.get_radius()) : host.get_pos(target.ground.coords, 0.f);
+						if(glm::length(host.get_pos(coords, 0.f) - host.get_pos(target->ground.coords, 0.f)) < Constants::DTO::MIN_DISTANCE_TO_PLANET_ENTRY) {
+							glm::vec3 end = target->is_established() ? host.get_pos(target->ground.coords, 0.f) - (host.get_normal(target->ground.coords) * host.get_radius()) : host.get_pos(target->ground.coords, 0.f);
 
 							return new entering(*this, target, end);
 						} else {
@@ -390,7 +391,7 @@ namespace Control{
 			class fighting : public roaming {
 			public:
 
-				inline fighting(attacker& old_state, DTO::planet<DTO::any_shape>& host_planet) :
+				inline fighting(attacker& old_state, GO::planet& host_planet) :
 					roaming(old_state.dto, *old_state.host_planet(), old_state.get_coords(), old_state.get_direction())
 				{}
 

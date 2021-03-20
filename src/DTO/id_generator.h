@@ -8,7 +8,7 @@ namespace DTO{
 		static int counter;
 	public:
 
-		static const int PLANET_BIT = 1 << 22;
+		static const int PLANET_BIT = 1 << 22; // can't shift the bits further because they are converted to floats in rendering and thereby loose precision
 		static const int SWORM_BIT = 1 << 21;
 
 		inline static int next_id(){

@@ -15,8 +15,8 @@ namespace Rendering{
 		public:
 			Rendering::_3D::soldier_renderer<DTO::defender> def_renderer;
 			Rendering::_3D::soldier_renderer<DTO::attacker> att_renderer;
-			Rendering::_3D::tree_renderer<DTO::tree<DTO::defender>> tree_def_renderer;
-			Rendering::_3D::tree_renderer<DTO::tree<DTO::attacker>> tree_att_renderer;
+			Rendering::_3D::tree_renderer<DTO::defender> tree_def_renderer;
+			Rendering::_3D::tree_renderer<DTO::attacker> tree_att_renderer;
 			Rendering::_3D::planet_renderer planet_renderer;
 			Rendering::_3D::ground_renderer ground_renderer;
 

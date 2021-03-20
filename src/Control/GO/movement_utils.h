@@ -1,12 +1,17 @@
 #pragma once
 
 #include <GLM/gtc/matrix_transform.hpp>
+#include <GLM/vec4.hpp>
+
+#include "Control/GO/planet.h"
+
+#include "Utils/general_utils.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
 
 namespace Control{
-	namespace Movement{
+	namespace GO{
 		float calc_turn_factor(float speed, const glm::quat& begin, const glm::quat& end){
 			return speed / acos(glm::dot(begin, end)) * Constants::Control::TURN_VELOCITY;
 		}
@@ -14,11 +19,11 @@ namespace Control{
 		//pos(0) = 1.f
 		//pos(pi/2) = 0.5f
 		//pos(pi) = 0.f
-		glm::vec3 get_pos(const DTO::planet<DTO::any_shape>& host, const glm::vec3& coords){
-			return host.get_pos(coords, (std::sin(coords.z + 4.71238f) * 0.5f + 0.5f) * host.atmosphere_height);
+		glm::vec3 get_pos(const GO::planet& host, const glm::vec3& coords){
+			return host.get_pos(coords, (std::sin(coords.z + 4.71238f) * 0.5f + 0.5f) * host.dto.ATMOSPHERE_HEIGHT);
 		}
 
-		glm::vec3 forward_on_planet(const DTO::planet<DTO::any_shape>& host, const glm::vec3& coords, const glm::vec3& direction){
+		glm::vec3 forward_on_planet(const GO::planet& host, const glm::vec3& coords, const glm::vec3& direction){
 			glm::vec3 next_vector = glm::normalize(direction) * 0.001f;
 			glm::vec3 next = get_pos(host, coords + next_vector);
 			return glm::normalize(next - get_pos(host, coords));
@@ -79,12 +84,12 @@ namespace Control{
 
 		class roaming_obj{
 		public:
-			DTO::planet<DTO::any_shape>& host;
+			GO::planet& host;
 
 			glm::vec3 coords;
 			glm::vec3 direction;
 
-			inline roaming_obj(DTO::planet<DTO::any_shape>& host_planet, const glm::vec3& coords, const glm::vec3& direction) :
+			inline roaming_obj(GO::planet& host_planet, const glm::vec3& coords, const glm::vec3& direction) :
 				host(host_planet),
 				coords(coords),
 				direction(direction){}

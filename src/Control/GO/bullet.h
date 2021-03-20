@@ -2,8 +2,8 @@
 
 #include "DTO/planet.h"
 
-#include "Control/Movement/soldier.h"
-#include "Control/Movement/movement_utils.h"
+#include "Control/GO/soldier.h"
+#include "Control/GO/movement_utils.h"
 
 #include <glm/vec3.hpp>
 #include <log4cpp/Category.hh>
@@ -11,7 +11,7 @@
 
 
 namespace Control{
-	namespace Movement{
+	namespace GO{
 
 		class bullet : public moveable_object{
 		private:
@@ -20,12 +20,12 @@ namespace Control{
 			const int damage;
 			const float speed;
 
-			DTO::planet<DTO::any_shape>& host;
+			GO::planet& host;
 			std::weak_ptr<std::unique_ptr<soldier>> target_ptr;
 			glm::vec3 coords;
 
 
-			inline bullet(DTO::planet<DTO::any_shape>& host, std::weak_ptr<std::unique_ptr<soldier>> target, const glm::vec3& coords, int damage, float speed = Constants::Control::BULLET_SPEED) :
+			inline bullet(GO::planet& host, std::weak_ptr<std::unique_ptr<soldier>> target, const glm::vec3& coords, int damage, float speed = Constants::Control::BULLET_SPEED) :
 				host(host),
 				target_ptr(target),
 				coords(coords),
@@ -51,7 +51,7 @@ namespace Control{
 				return coords;
 			}
 
-			inline virtual DTO::planet<DTO::any_shape>* host_planet() const override{
+			inline virtual GO::planet* host_planet() const override{
 				return &host;
 			}
 

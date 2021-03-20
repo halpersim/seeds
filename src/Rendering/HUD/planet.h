@@ -1,13 +1,14 @@
 #pragma once
 
-#include "icons.h"
-#include "font.h"
+#include "Rendering/HUD/icons.h"
+#include "Rendering/HUD/font.h"
+#include "Rendering/HUD/hud_internal.h"
 
-#include <Rendering/Utils/gl_wrapper.h>
-#include <Rendering/Utils/render_utils.h>
-#include <Rendering/HUD/hud_internal.h>
+#include "Rendering/Utils/gl_wrapper.h"
+#include "Rendering/Utils/render_utils.h"
 
-#include <DTO/planet.h>
+#include "DTO/planet.h"
+#include "DTO/id_generator.h"
 
 namespace Rendering{
 	namespace HUD{
@@ -149,7 +150,7 @@ namespace Rendering{
 				return button_boxes[idx].outline();
 			}
 
-			inline void render(const DTO::planet<DTO::any_shape>& planet, int solders_on_planet, int attacker_on_planet, bool grow_tree_available){
+			inline void render(const DTO::planet& planet, int solders_on_planet, int attacker_on_planet, int trees_on_planet, bool grow_tree_available){
 				//render background
 				hud_internal_singleton::Instance().render_outline(outline_ab);
 
@@ -166,12 +167,12 @@ namespace Rendering{
 				
 				//!! if the order of this elements is changed it also has to be changed in the position calculation !! 
 				std::array<std::string, 6> soldier_stats = {
-					std::string("Planet #") + std::to_string(planet.id & (~DTO::id_generator::PLANET_BIT)),	
-					std::to_string(int(planet.soldier_type.damage)),
-					std::to_string(int(planet.soldier_type.health)),
-					std::to_string(int(planet.soldier_type.speed)),
-					std::to_string(solders_on_planet) + std::string("|") + std::to_string(planet.max_soldiers),
-					std::to_string(planet.attacker_tree_list.size() + planet.defender_tree_list.size()) + std::string("|") + std::to_string(planet.max_trees)
+					std::string("Planet #") + std::to_string(planet.ID & (~DTO::id_generator::PLANET_BIT)),	
+					std::to_string(int(planet.SOLDIER_DATA.damage)),
+					std::to_string(int(planet.SOLDIER_DATA.health)),
+					std::to_string(int(planet.SOLDIER_DATA.speed)),
+					std::to_string(solders_on_planet) + std::string("|") + std::to_string(planet.MAX_SOLDIERS),
+					std::to_string(trees_on_planet) + std::string("|") + std::to_string(planet.MAX_TREES)
 				};
 				
 				int icon_left = OUTLINE.top_left.x - Constants::Rendering::HUD::INDENT_FROM_BORDER;

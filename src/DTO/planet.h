@@ -1,17 +1,39 @@
 #pragma once
 #include "player.h"
 #include "soldier_data.h"
-#include "soldier.h"
-#include "planet_model.h"
-#include "tree.h"
 #include "planet_entry.h"
-#include "planet_model.h"
-#include "id_generator.h"
+
+#include <GLM/vec3.hpp>
 
 #include <list>
+#include <memory>
 
 namespace DTO {
 
+	struct planet{
+		const unsigned int ID;
+		const player& owner;
+		
+		const glm::vec3 CENTER_POS;
+		const soldier_data SOLDIER_DATA;
+		const int MAX_SOLDIERS;
+		const int MAX_TREES;
+		const float ATMOSPHERE_HEIGHT;
+		std::shared_ptr<DTO::planet_entry> entry;
+
+		inline planet(unsigned int id, const player& owner, const soldier_data& sol_data, int max_soldiers, int max_trees, float atmosphere_height, const glm::vec3& center_pos) :
+			ID(id),
+			owner(owner),
+			CENTER_POS(center_pos),
+			MAX_SOLDIERS(max_soldiers),
+			MAX_TREES(max_trees),
+			ATMOSPHERE_HEIGHT(atmosphere_height),
+			SOLDIER_DATA(sol_data),
+			entry()
+		{}
+	};
+
+	/*
 	class defender;
 	class attacker;
 	class sworm;
@@ -36,7 +58,6 @@ namespace DTO {
 		float atmosphere_height;
 		soldier_data soldier_type;
 		glm::vec3 pos;
-		bool under_attack;
 		
 		std::list<tree<attacker>> attacker_tree_list;
 		std::list<tree<defender>> defender_tree_list;
@@ -51,7 +72,6 @@ namespace DTO {
 			max_trees(5),
 			atmosphere_height(atmosphere_height),
 			pos(pos),
-			under_attack(false),
 			attacker_tree_list(std::list<tree<attacker>>()),
 			defender_tree_list(std::list<tree<defender>>()),
 			planet_entry_list(std::list<planet_entry>())
@@ -236,6 +256,8 @@ namespace DTO {
 
 		virtual int get_render_idx()const override{
 			return Loki::TL::IndexOf<LOKI_TYPELIST_2(sphere, torus), planet_model>::value;
+		
 		}
 	};
+	*/
 }

@@ -1,10 +1,7 @@
 #pragma once
 
 #include "DTO/soldier.h"
-#include "DTO/tree.h"
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
 
 #define GEN_SUPPLIER(obj, v_cnt)\
 template<>\
@@ -28,10 +25,15 @@ namespace Rendering {
 		template<class Obj>
 		class data_supplier;
 
+		template<class T>
+		class trunk;
+
 		GEN_SUPPLIER(DTO::defender, 180);
 		GEN_SUPPLIER(DTO::attacker, 18);
-		GEN_SUPPLIER(DTO::tree<DTO::defender>, 96);
-		GEN_SUPPLIER(DTO::tree<DTO::attacker>, 192);	
+		GEN_SUPPLIER(trunk<DTO::defender>, 96);
+		GEN_SUPPLIER(trunk<DTO::attacker>, 192);	
+
+#undef GEN_SUPPLIER
 
 		const float data_supplier<DTO::defender>::positions[] = {
 	/*		0.0000, -1.1135, -0.8507,    //0
@@ -114,6 +116,7 @@ namespace Rendering {
 			0.42533, 0.22362, -0.13821,	     //30
 			0.00000, 0.22362, -0.44724	     //31
 		};
+
 		const GLubyte data_supplier<DTO::defender>::position_indices[] = {
 				20,   0,   1,
 				20,   1,   2,
@@ -250,7 +253,7 @@ namespace Rendering {
 		static const float half_SIN45 = 0.35355f;
 		static const float SIN22_5 = 0.38268f;
 		static const float COS22_5 = 0.92587f;
-		const float data_supplier<DTO::tree<DTO::defender>>::positions[] = {
+		const float data_supplier<trunk<DTO::defender>>::positions[] = {
 								0, 0,					0.5,
 			-half_SIN45, 0, half_SIN45,
 						 -0.5, 0,						0,
@@ -271,7 +274,7 @@ namespace Rendering {
 			 half_SIN45, 1,  half_SIN45,
 					 0, 1,     0,
 		};
-		const GLubyte data_supplier<DTO::tree<DTO::defender>>::position_indices[] = {
+		const GLubyte data_supplier<trunk<DTO::defender>>::position_indices[] = {
 			//bottom
 			0, 1, 8,
 			1, 2, 8,
@@ -310,7 +313,7 @@ namespace Rendering {
 			16, 15, 17,
 			 9, 16, 17,
 		};
-		const float data_supplier<DTO::tree<DTO::defender>>::normals[] = {
+		const float data_supplier<trunk<DTO::defender>>::normals[] = {
 			0, -1, 0,
 			-SIN22_5, 0,  COS22_5,
 			-COS22_5, 0,  SIN22_5,
@@ -322,7 +325,7 @@ namespace Rendering {
 			 SIN22_5, 0,  COS22_5,
 			0, 1, 0,
 		};
-		const normal_index_data data_supplier<DTO::tree<DTO::defender>>::normal_indices[] = {
+		const normal_index_data data_supplier<trunk<DTO::defender>>::normal_indices[] = {
 			{8, 0},
 
 			{2, 1},
@@ -340,7 +343,7 @@ namespace Rendering {
 
 		static const float third_SIN22_5 = SIN22_5 * 0.33333f;
 		static const float third_COS22_5 = COS22_5 * 0.33333f;
-		const float data_supplier<DTO::tree<DTO::attacker>>::positions[] = {
+		const float data_supplier<trunk<DTO::attacker>>::positions[] = {
 
 			//bottom
 			//inner
@@ -387,7 +390,7 @@ namespace Rendering {
 								half_SIN45, 1,  half_SIN45,
 													0, 1,						0,
 		};
-		const GLubyte data_supplier<DTO::tree<DTO::attacker>>::position_indices[] = {
+		const GLubyte data_supplier<trunk<DTO::attacker>>::position_indices[] = {
 			//bot
 			8,  0, 16,
 			0,  9, 16,
@@ -466,7 +469,7 @@ namespace Rendering {
 			24, 32, 33,
 			25, 24, 33,
 		};
-		const float data_supplier<DTO::tree<DTO::attacker>>::normals[] = {
+		const float data_supplier<trunk<DTO::attacker>>::normals[] = {
 			0, -1, 0,
 
 			-COS22_5, 0, SIN22_5,
@@ -491,7 +494,7 @@ namespace Rendering {
 
 			0, 1, 0,
 		};
-		const normal_index_data data_supplier<DTO::tree<DTO::attacker>>::normal_indices[] = {
+		const normal_index_data data_supplier<trunk<DTO::attacker>>::normal_indices[] = {
 			{16, 0},
 			{2, 1},
 			{2, 2},
@@ -512,6 +515,7 @@ namespace Rendering {
 			{16, 17},
 		};
 	}
+
 
 
 }

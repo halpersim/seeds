@@ -5,7 +5,7 @@
 #include "Rendering/HUD/sworm.h"
 
 #include "Control/Utils/object_lists.h"
-#include "Control/Utils/soldier_tracker.h"
+#include "Control/Utils/planet_state_tracker.h"
 
 #include <map>
 
@@ -48,31 +48,31 @@ namespace Control{
 			return hud_planet.get_render_outline().contains(click);
 		}
 
-		inline void render(const DTO::planet<DTO::any_shape>& planet, const Control::object_lists& lists, const Control::soldier_tracker& soldiers_on_planet_tracker, bool grow_tree_possible){
-			hud_planet.render(planet, soldiers_on_planet_tracker.num_soldiers(planet), soldiers_on_planet_tracker.num_attacker(planet), grow_tree_possible);
-			render_player(planet.owner, lists, soldiers_on_planet_tracker);
+		inline void render(const GO::planet& planet, const Control::Utils::object_lists& lists, const Control::Utils::planet_state_tracker& planet_state_tracker, bool grow_tree_possible){
+			hud_planet.render(planet.dto, planet_state_tracker.num_soldiers(planet), planet_state_tracker.num_attacker(planet), planet_state_tracker.num_trees(planet), grow_tree_possible);
+			render_player(planet.dto.owner, lists, planet_state_tracker);
 		}
 
-		inline void render(const DTO::sworm_metrics& metric, const Control::object_lists& lists, const Control::soldier_tracker& soldiers_on_planet_tracker){
+		inline void render(const DTO::sworm_metrics& metric, const Control::Utils::object_lists& lists, const Control::Utils::planet_state_tracker& planet_state_tracker){
 			hud_sworm.render(metric);
-			render_player(*metric.owner, lists, soldiers_on_planet_tracker);
+			render_player(*metric.owner, lists, planet_state_tracker);
 		}
 
 	private:
 
-		inline void render_player(const DTO::player& player, const Control::object_lists& lists, const Control::soldier_tracker& soldiers_on_planet_tracker){
+		inline void render_player(const DTO::player& player, const Control::Utils::object_lists& lists, const Control::Utils::planet_state_tracker& planet_state_tracker){
 			int owned_planets = 0;
 			int num_planets = 0;
 			int num_soldiers = 0;
 
-			lists.for_each_planet_const([&owned_planets, &num_planets, &player, &soldiers_on_planet_tracker](const DTO::planet<DTO::any_shape>& planet){
-				if(&player == &planet.owner){
+			std::for_each(lists.planet.begin(), lists.planet.end(), [&owned_planets, &num_planets, &player, &planet_state_tracker](const std::unique_ptr<GO::planet>& planet){
+				if(player.idx == planet->dto.owner.idx){
 					owned_planets++;
 				}
 				num_planets++;
 			});
-
-			lists.for_each_soldier_const([&num_soldiers, &player](const Movement::soldier& soldier){
+			
+			lists.for_each_soldier_const([&num_soldiers, &player](const GO::soldier& soldier){
 				if(soldier.get_owner().idx == player.idx){
 					num_soldiers++;
 				}
