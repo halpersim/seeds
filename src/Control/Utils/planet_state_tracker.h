@@ -13,8 +13,8 @@
 namespace Control{
 	namespace Utils{
 		struct per_planet_data{
-			std::list<std::weak_ptr<std::unique_ptr<GO::attacker>>> att_list;
-			std::list<std::weak_ptr<std::unique_ptr<GO::defender>>> def_list;
+			std::list<std::weak_ptr<GO::attacker>> att_list;
+			std::list<std::weak_ptr<GO::defender>> def_list;
 			std::list<std::weak_ptr<DTO::tree>> trees;
 			std::set<int> player_indices;
 		};
@@ -43,19 +43,19 @@ namespace Control{
 				});
 			}
 
-			inline void add(const GO::planet& planet, std::weak_ptr<std::unique_ptr<GO::attacker>> attacker){
+			inline void add(const GO::planet& planet, std::weak_ptr<GO::attacker> attacker){
 				add(planet.dto.ID, attacker);
 			}
 
-			inline void add(int planet_id, std::weak_ptr<std::unique_ptr<GO::attacker>> attacker){
+			inline void add(int planet_id, std::weak_ptr<GO::attacker> attacker){
 				map.find(planet_id)->second.att_list.push_back(attacker);
 			}
 
-			inline void add(const GO::planet& planet, std::weak_ptr<std::unique_ptr<GO::defender>> defender){
+			inline void add(const GO::planet& planet, std::weak_ptr<GO::defender> defender){
 				add(planet.dto.ID, defender);
 			}
 
-			inline void add(int planet_id, std::weak_ptr<std::unique_ptr<GO::defender>> defender){
+			inline void add(int planet_id, std::weak_ptr<GO::defender> defender){
 				map.find(planet_id)->second.def_list.push_back(defender);
 			}
 
@@ -107,19 +107,19 @@ namespace Control{
 				return map.find(planet_id)->second.trees;
 			}
 
-			inline std::list<std::weak_ptr<std::unique_ptr<GO::attacker>>>& get_attacker_list(const GO::planet& planet){
+			inline std::list<std::weak_ptr<GO::attacker>>& get_attacker_list(const GO::planet& planet){
 				return get_attacker_list(planet.dto.ID);
 			}
 
-			inline std::list<std::weak_ptr<std::unique_ptr<GO::attacker>>>& get_attacker_list(int planet_id){
+			inline std::list<std::weak_ptr<GO::attacker>>& get_attacker_list(int planet_id){
 				return map.find(planet_id)->second.att_list;
 			}
 
-			inline std::list<std::weak_ptr<std::unique_ptr<GO::defender>>>& get_defender_list(const GO::planet& planet){
+			inline std::list<std::weak_ptr<GO::defender>>& get_defender_list(const GO::planet& planet){
 				return get_defender_list(planet.dto.ID);
 			}
 
-			inline std::list<std::weak_ptr<std::unique_ptr<GO::defender>>>& get_defender_list(int planet_id){
+			inline std::list<std::weak_ptr<GO::defender>>& get_defender_list(int planet_id){
 				return map.find(planet_id)->second.def_list;
 			}
 
@@ -139,20 +139,20 @@ namespace Control{
 				return map.find(planet_id)->second.player_indices;
 			}
 
-			inline void for_each_soldier(const GO::planet& planet, const std::function<void(std::shared_ptr<std::unique_ptr<GO::soldier>>&)>& func){
+			inline void for_each_soldier(const GO::planet& planet, const std::function<void(std::shared_ptr<GO::soldier>)>& func){
 				for_each_soldier(planet.dto.ID, func);
 			}
 
 
-			inline void for_each_soldier(int planet_id, const std::function<void(std::shared_ptr<std::unique_ptr<GO::soldier>>&)>& func){
-				for(std::weak_ptr<std::unique_ptr<GO::attacker>> ptr : get_attacker_list(planet_id)){
+			inline void for_each_soldier(int planet_id, const std::function<void(std::shared_ptr<GO::soldier>)>& func){
+				for(std::weak_ptr<GO::attacker> ptr : get_attacker_list(planet_id)){
 					if(auto sol = ptr.lock()){
-						func(*(reinterpret_cast<std::shared_ptr<std::unique_ptr<GO::soldier>>*>(&ptr)));
+						func(std::static_pointer_cast<GO::soldier>(sol));
 					}
 				}
-				for(std::weak_ptr<std::unique_ptr<GO::defender>> ptr : get_defender_list(planet_id)){
+				for(std::weak_ptr<GO::defender> ptr : get_defender_list(planet_id)){
 					if(auto sol = ptr.lock()){
-						func(*(reinterpret_cast<std::shared_ptr<std::unique_ptr<GO::soldier>>*>(&ptr)));
+						func(std::static_pointer_cast<GO::soldier>(sol));
 					}
 				}
 			}

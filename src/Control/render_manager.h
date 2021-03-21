@@ -46,16 +46,18 @@ namespace Control{
 			Rendering::List::soldier soldier_data[static_cast<unsigned int>(DTO::tree_type::NONE)];
 			Rendering::List::trunk trunk_data[static_cast<unsigned int>(DTO::tree_type::NONE)];
 
-			std::for_each(lists.att.begin(), lists.att.end(), [&soldier_data](const std::shared_ptr<std::unique_ptr<GO::attacker>>& att_ptr){
-				const std::unique_ptr<GO::attacker>& att = *att_ptr;
-				
-				att->get_rdg().append_data(*att->dto, RDG::orientation(att->pos(), att->normal(), att->forward()), Constants::Rendering::SOLDIER_SCALE * glm::vec3(att->dto->health, att->dto->damage, att->dto->health), soldier_data[static_cast<unsigned int>(DTO::tree_type::ATTACKER)]);
+			std::for_each(lists.att.begin(), lists.att.end(), [&soldier_data](const std::shared_ptr<GO::attacker> att){
+				att->get_rdg().append_data(*att->get_dto(),
+																	 RDG::orientation(att->pos(), att->normal(), att->forward()),
+																	 Constants::Rendering::SOLDIER_SCALE * glm::vec3(att->get_dto()->health, att->get_dto()->damage, att->get_dto()->health),
+																	 soldier_data[static_cast<unsigned int>(DTO::tree_type::ATTACKER)]);
 			});
 
-			std::for_each(lists.def.begin(), lists.def.end(), [&soldier_data](const std::shared_ptr<std::unique_ptr<GO::defender>>& def_ptr){
-				const std::unique_ptr<GO::defender>& def = *def_ptr;
-
-				def->get_rdg().append_data(*def->dto, RDG::orientation(def->pos(), def->normal(), def->forward()), Constants::Rendering::SOLDIER_SCALE * glm::vec3(1.f, def->dto->damage * 0.5f, 1.f), soldier_data[static_cast<unsigned int>(DTO::tree_type::DEFENDER)]);
+			std::for_each(lists.def.begin(), lists.def.end(), [&soldier_data](const std::shared_ptr<GO::defender> def){
+				def->get_rdg().append_data(*def->get_dto(),
+																	 RDG::orientation(def->pos(), def->normal(), def->forward()),
+																	 Constants::Rendering::SOLDIER_SCALE * glm::vec3(1.f, def->get_dto()->damage * 0.5f, 1.f),
+																	 soldier_data[static_cast<unsigned int>(DTO::tree_type::DEFENDER)]);
 			});
 
 			std::for_each(lists.bullets.begin(), lists.bullets.end(), [&soldier_data](const GO::bullet& bullet){
@@ -66,13 +68,13 @@ namespace Control{
 				data.ids.push_back(0);
 			});
 
-			std::for_each(lists.tree.begin(), lists.tree.end(), [&trunk_data, &soldier_data](const std::unique_ptr<GO::tree>& tree){
+			std::for_each(lists.tree.begin(), lists.tree.end(), [&trunk_data, &soldier_data](const std::shared_ptr<GO::tree>& tree){
 				RDG::tree_state state = RDG::tree_state(
-					tree->host_planet.dto.CENTER_POS,
+					tree->host_planet()->dto.CENTER_POS,
 					tree->dto->GROUND.normal, 
-					tree->host_planet.get_tangent_x(tree->dto->GROUND.coords),
-					tree->host_planet.get_radius(),
-					tree->host_planet.dto.owner.idx);
+					tree->host_planet()->get_tangent_x(tree->dto->GROUND.coords),
+					tree->host_planet()->get_radius(),
+					tree->host_planet()->dto.owner.idx);
 
 				tree->get_rdg().append_data(*tree->dto, state, trunk_data[static_cast<unsigned int>(tree->dto->TYPE)], soldier_data[static_cast<unsigned int>(tree->dto->TYPE)]);
 			});

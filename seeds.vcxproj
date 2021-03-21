@@ -143,7 +143,7 @@
     <ClInclude Include="src\Control\GO\bullet.h" />
     <ClInclude Include="src\Control\GO\defender_states.h" />
     <ClInclude Include="src\Control\GO\defender_tree.h" />
-    <ClInclude Include="src\Control\GO\moveable_object.h" />
+    <ClInclude Include="src\Control\GO\game_object.h" />
     <ClInclude Include="src\Control\GO\movement_utils.h" />
     <ClInclude Include="src\Control\GO\planet.h" />
     <ClInclude Include="src\Control\GO\soldier.h" />

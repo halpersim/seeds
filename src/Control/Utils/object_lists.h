@@ -13,18 +13,18 @@ namespace Control{
 
 		class object_lists{
 		public:
-			std::list<std::shared_ptr<std::unique_ptr<GO::defender>>> def;
-			std::list<std::shared_ptr<std::unique_ptr<GO::attacker>>> att;
+			std::list<std::shared_ptr<GO::defender>> def;
+			std::list<std::shared_ptr<GO::attacker>> att;
 
+			std::list<std::shared_ptr<GO::tree>> tree;
 			std::list<std::unique_ptr<GO::planet>> planet;
-			std::list<std::unique_ptr<GO::tree>> tree;
 
 			std::list<GO::bullet> bullets;
 
 
 			void for_each_soldier_const(const std::function<void(const GO::soldier&)>& func)const{
-				std::for_each(att.begin(), att.end(), [&func](auto& ptr) {func(*(*ptr)); });
-				std::for_each(def.begin(), def.end(), [&func](auto& ptr) {func(*(*ptr)); });
+				std::for_each(att.begin(), att.end(), [&func](auto& ptr) {func(*ptr); });
+				std::for_each(def.begin(), def.end(), [&func](auto& ptr) {func(*ptr); });
 			}
 
 			GO::planet* get_planet_by_id(int id){

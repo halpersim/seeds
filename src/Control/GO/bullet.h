@@ -13,7 +13,7 @@
 namespace Control{
 	namespace GO{
 
-		class bullet : public moveable_object{
+		class bullet : public game_object{
 		private:
 			static log4cpp::Category& logger;
 		public:
@@ -21,11 +21,11 @@ namespace Control{
 			const float speed;
 
 			GO::planet& host;
-			std::weak_ptr<std::unique_ptr<soldier>> target_ptr;
+			std::weak_ptr<game_object> target_ptr;
 			glm::vec3 coords;
 
 
-			inline bullet(GO::planet& host, std::weak_ptr<std::unique_ptr<soldier>> target, const glm::vec3& coords, int damage, float speed = Constants::Control::BULLET_SPEED) :
+			inline bullet(GO::planet& host, std::weak_ptr<game_object> target, const glm::vec3& coords, int damage, float speed = Constants::Control::BULLET_SPEED) :
 				host(host),
 				target_ptr(target),
 				coords(coords),
@@ -38,7 +38,7 @@ namespace Control{
 
 			inline virtual glm::vec3 forward() const override{
 				if(auto target = target_ptr.lock()){
-					return forward_on_planet(host, coords, get_coords_dir(coords, target->get()->get_coords()));
+					return forward_on_planet(host, coords, get_coords_dir(coords, target->get_coords()));
 				}
 				return glm::vec3(0.f, 1.f, 0.f);
 			}
@@ -55,14 +55,18 @@ namespace Control{
 				return &host;
 			}
 
+			inline virtual void decrease_health(float amount) override{
+
+			}
+
 			//bool if bullet's there
 			inline bool update(float time_elapsed){
 				if(auto target = target_ptr.lock()){
-					glm::vec3 dir = get_coords_dir(coords, target->get()->get_coords());
+					glm::vec3 dir = get_coords_dir(coords, target->get_coords());
 
 					coords += dir * speed * Constants::Control::VELOCITY_ON_PLANET * time_elapsed;
 
-					return glm::length(pos() - target->get()->pos()) < Constants::Control::BULLET_HIT_DISTANCE;
+					return glm::length(pos() - target->pos()) < Constants::Control::BULLET_HIT_DISTANCE;
 				}
 				return true;
 			}

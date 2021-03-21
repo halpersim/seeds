@@ -5,7 +5,7 @@
 namespace Control{
 	namespace GO{
 
-		class moveable_object{
+		class game_object{
 		public:
 			virtual glm::vec3 pos() const = 0;
 			virtual glm::vec3 normal() const = 0;
@@ -13,6 +13,8 @@ namespace Control{
 
 			virtual glm::vec3 get_coords() const = 0;
 			virtual GO::planet* host_planet()const = 0;
+
+			virtual void decrease_health(float amount) = 0;
 		};
 	}
 }

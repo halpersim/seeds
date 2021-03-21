@@ -12,7 +12,7 @@ namespace DTO {
 
 	struct planet{
 		const unsigned int ID;
-		const player& owner;
+		player& owner;
 		
 		const glm::vec3 CENTER_POS;
 		const soldier_data SOLDIER_DATA;
@@ -21,7 +21,7 @@ namespace DTO {
 		const float ATMOSPHERE_HEIGHT;
 		std::shared_ptr<DTO::planet_entry> entry;
 
-		inline planet(unsigned int id, const player& owner, const soldier_data& sol_data, int max_soldiers, int max_trees, float atmosphere_height, const glm::vec3& center_pos) :
+		inline planet(unsigned int id, player& owner, const soldier_data& sol_data, int max_soldiers, int max_trees, float atmosphere_height, const glm::vec3& center_pos) :
 			ID(id),
 			owner(owner),
 			CENTER_POS(center_pos),

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Control/GO/moveable_object.h"
+#include "Control/GO/game_object.h"
 
 #include "Control/RDG/soldier.h"
 
@@ -9,12 +9,11 @@
 namespace Control{
 	namespace GO{
 
-		class soldier : public moveable_object{
+		class soldier : public game_object{
 		public:
 
 			virtual ~soldier(){}
 
-			virtual void decrease_health(float amount) = 0;
 			virtual float get_speed() const = 0;
 			virtual const DTO::player& get_owner()const = 0;
 			virtual glm::vec3 get_direction() const = 0;

@@ -27,11 +27,13 @@ namespace DTO {
 
 	struct tree_node {
 		int id;
+		int prev;
 		float size;
 		std::vector<int> next;
 
-		inline tree_node(int id, int branch_size) :
+		inline tree_node(int id, int prev, int branch_size) :
 			id(id),
+			prev(prev),
 			size(0.f),
 			next()
 		{
@@ -57,7 +59,7 @@ namespace DTO {
 			nodes(),
 			size(0.f)
 		{
-			nodes.push_back(tree_node(0, BRANCH_SIZE));
+			nodes.push_back(tree_node(0, -1, BRANCH_SIZE));
 		}
 	};
 /*

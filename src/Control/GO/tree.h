@@ -3,6 +3,7 @@
 #include "DTO/tree.h"
 #include "DTO/id_generator.h"
 
+#include "Control/GO/game_object.h"
 #include "Control/GO/planet.h"
 #include "Control/GO/soldier.h"
 
@@ -19,21 +20,23 @@
 namespace Control{
 	namespace GO{
 
-		class tree{
+		class tree : public game_object{
 		private:
 			static log4cpp::Category& logger;
 			float time_since_last_spawn;
 			float spawn_rate;
-
+		
+		protected:
+			planet& host;
+		
 		public:
 			std::shared_ptr<DTO::tree> dto;
-			planet& const host_planet;
 
 			inline tree(const DTO::hole& ground, DTO::tree_type type, planet& host_planet, int branch_size) :
 				time_since_last_spawn(0.f),
 				spawn_rate(Constants::DTO::INIT_SPAWN_RATE),
 				dto(std::make_unique<DTO::tree>(DTO::id_generator::next_id(), type, ground, branch_size)),
-				host_planet(host_planet)
+				host(host_planet)
 			{}
 			
 			virtual soldier* produce_solider()const = 0;
@@ -52,6 +55,63 @@ namespace Control{
 					return false;
 				time_since_last_spawn = 0;
 				return true;
+			}
+
+			virtual glm::vec3 pos() const override{
+				return host.get_pos(dto->GROUND.coords);
+			}
+
+			virtual glm::vec3 normal() const override{
+				return host.get_normal(dto->GROUND.coords);
+			}
+
+			virtual glm::vec3 forward() const override{
+				return host.get_tangent_x(dto->GROUND.coords);
+			}
+
+			virtual glm::vec3 get_coords() const override{
+				return glm::vec3(dto->GROUND.coords, 0.f);
+			}
+
+			virtual GO::planet* host_planet()const override{
+				return &host;
+			}
+
+			virtual void decrease_health(float amount) override{
+				if(dto->nodes.empty())
+					return;
+				
+				auto back_it = dto->nodes.end();
+				
+				std::vector<typename std::vector<DTO::tree_node>::iterator> to_delete;
+
+				do{
+					back_it--;
+					float reduction = std::min(amount, back_it->size);
+
+					amount -= reduction;
+					back_it->size -= reduction;
+
+					if(back_it->size < 0.001f){
+						to_delete.push_back(back_it);
+					}
+				} while(amount > 0.f && back_it != dto->nodes.begin());
+
+				if(!to_delete.empty()){
+					std::for_each(to_delete.begin(), to_delete.end(), [this](auto& it){
+						if(it->prev != -1){
+							DTO::tree_node& parent = dto->nodes.at(it->prev);
+							for(int& next : parent.next){
+								if(next == it->id){
+									next = -1;
+									break;
+								}
+							}
+						}
+
+						dto->nodes.erase(it); 
+					});
+				}
 			}
 			
 		private:
@@ -115,7 +175,7 @@ namespace Control{
 							spawn_idx = (spawn_idx + 1) % dto->BRANCH_SIZE;
 
 						node_to_spawn_on->next[spawn_idx] = dto->nodes.size();
-						dto->nodes.push_back(DTO::tree_node(dto->nodes.size(), dto->BRANCH_SIZE));
+						dto->nodes.push_back(DTO::tree_node(dto->nodes.size(), node_to_spawn_on->id, dto->BRANCH_SIZE));
 						roots_possible.erase(roots_possible.begin() + idx);
 					}
 				}
@@ -136,7 +196,7 @@ namespace Control{
 			{}
 
 			inline virtual soldier* produce_solider()const override{
-				return new GO::Attacker::roaming(std::shared_ptr<DTO::attacker>(new DTO::attacker(host_planet.dto.SOLDIER_DATA)), host_planet, glm::vec3(dto->GROUND.coords, 0.f), my_utils::get_random_dir());
+				return new GO::attacker(new GO::Attacker::roaming(std::shared_ptr<DTO::attacker>(new DTO::attacker(host.dto.SOLDIER_DATA)), host, glm::vec3(dto->GROUND.coords, 0.f), my_utils::get_random_dir()));
 			}
 
 			inline virtual RDG::tree& get_rdg()const override{
@@ -151,7 +211,7 @@ namespace Control{
 			{}
 
 			inline virtual soldier* produce_solider()const override{
-				return new GO::Defender::roaming(std::shared_ptr<DTO::defender>(new DTO::defender(host_planet.dto.SOLDIER_DATA)), host_planet, glm::vec3(dto->GROUND.coords, 0.f), my_utils::get_random_dir());
+				return new GO::defender(new GO::Defender::roaming(std::shared_ptr<DTO::defender>(new DTO::defender(host.dto.SOLDIER_DATA)), host, glm::vec3(dto->GROUND.coords, 0.f), my_utils::get_random_dir()));
 			}
 
 			inline virtual RDG::tree& get_rdg()const override{

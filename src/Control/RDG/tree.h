@@ -38,6 +38,9 @@ namespace Control{
 
 		public:
 			inline void append_data(const DTO::tree& tree, const tree_state& state, Rendering::List::trunk& trunk_list, Rendering::List::soldier& soldier_list){
+				if(tree.nodes.empty())
+					return;
+				
 				glm::vec3 x = glm::normalize(state.forward);
 				glm::vec3 y = glm::normalize(state.normal);
 				glm::vec3 z = glm::normalize(glm::cross(x, y));

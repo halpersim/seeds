@@ -20,43 +20,39 @@ namespace Control{
 			FIGHTING,				// state for combat
 		};
 
-		class attacker : public soldier{
-		public:
-			std::shared_ptr<DTO::attacker> dto;
-
-			inline attacker(std::shared_ptr<DTO::attacker> dto) :
-				dto(dto){}
-
-			virtual inline void decrease_health(float amount) override{
-				dto->health -= amount;
-			}
-
-			virtual inline const DTO::player& get_owner() const override{
-				return dto->owner;
-			}
-
-			virtual inline float get_speed()const override{
-				return dto->speed;
-			}
-
-			virtual ~attacker(){}
-			virtual const GO::planet* target_planet() const = 0;
-			virtual attacker* update(float time_elapsed) = 0;
-			virtual attacker_state get_state() const = 0;
-
-			inline bool has_host_planet()const{
-				return host_planet() != NULL;
-			}
-		};
-
 		namespace Attacker{
+				class state : public soldier{
+				public:
+					std::shared_ptr<DTO::attacker> dto;
 
-			class roaming : public attacker{
+					inline state(std::shared_ptr<DTO::attacker> dto) :
+						dto(dto){}
+
+					virtual inline void decrease_health(float amount) override{
+						dto->health -= amount;
+					}
+
+					virtual inline const DTO::player& get_owner() const override{
+						return dto->owner;
+					}
+
+					virtual inline float get_speed()const override{
+						return dto->speed;
+					}
+
+					virtual ~state(){}
+					virtual const GO::planet* target_planet() const = 0;
+					virtual state* update(float time_elapsed) = 0;
+					virtual attacker_state get_state() const = 0;
+				};
+
+
+			class roaming : public state{
 			public:
 				roaming_obj logic;
 
 				inline roaming(std::shared_ptr<DTO::attacker> dto, GO::planet& host_planet, const glm::vec3& coords, const glm::vec3& direction) :
-					attacker(dto),
+					state(dto),
 					logic(host_planet, coords, direction){}
 
 				virtual inline GO::planet* host_planet() const override{
@@ -67,7 +63,7 @@ namespace Control{
 					return NULL;
 				}
 
-				virtual inline attacker* update(float time_elapsed) override{
+				virtual inline state* update(float time_elapsed) override{
 					logic.update(time_elapsed, dto->speed);
 					return NULL;
 				}
@@ -97,7 +93,7 @@ namespace Control{
 				}
 			};
 
-			class moving : public attacker{
+			class moving : public state{
 			private:
 				GO::planet& target;
 
@@ -111,8 +107,8 @@ namespace Control{
 				bool turn_to_target;
 
 			public:
-				inline moving(attacker& old_state, GO::planet& target) :
-					attacker(old_state.dto),
+				inline moving(state& old_state, GO::planet& target) :
+					state(old_state.dto),
 					target(target),
 					target_coords(target.get_nearest_coords(old_state.pos())),
 					dir_on_target(my_utils::get_random_dir()),
@@ -136,7 +132,7 @@ namespace Control{
 					return &target;
 				}
 
-				virtual inline attacker* update(float time_elapsed) override{
+				virtual inline state* update(float time_elapsed) override{
 					if(!turn_to_target && glm::length(path.mix() - path.end) < Constants::Control::BEGIN_TURN_TO_PLANET) {
 						float turn_factor = path.factor / (1 - path.time);
 
@@ -181,7 +177,7 @@ namespace Control{
 				}
 			};
 
-			class stuck : public attacker{
+			class stuck : public state{
 			private:
 				glm::vec3 m_pos;
 				glm::vec3 m_normal;
@@ -190,8 +186,8 @@ namespace Control{
 			public:
 				std::weak_ptr<DTO::planet_entry> entry_ptr;
 
-				inline stuck(attacker& old_state, std::weak_ptr<DTO::planet_entry> entry_ptr) :
-					attacker(old_state.dto),
+				inline stuck(state& old_state, std::weak_ptr<DTO::planet_entry> entry_ptr) :
+					state(old_state.dto),
 					entry_ptr(entry_ptr),
 					m_pos(old_state.pos()),
 					m_normal(old_state.normal()),
@@ -206,7 +202,7 @@ namespace Control{
 					return NULL;
 				}
 
-				virtual attacker* update(float time_elapsed) override{
+				virtual state* update(float time_elapsed) override{
 					return NULL;
 				}
 
@@ -235,7 +231,7 @@ namespace Control{
 				}
 			};
 
-			class entering : public attacker{
+			class entering : public state{
 			private:
 				std::weak_ptr<DTO::planet_entry> entry;
 
@@ -244,8 +240,8 @@ namespace Control{
 				my_utils::LERP<glm::vec3> m_pos;
 			public:
 
-				inline entering(attacker& old_state, std::weak_ptr<DTO::planet_entry> entry, const glm::vec3& target) :
-					attacker(old_state.dto),
+				inline entering(state& old_state, std::weak_ptr<DTO::planet_entry> entry, const glm::vec3& target) :
+					state(old_state.dto),
 					entry(entry)
 				{
 					glm::quat begin = my_utils::vec3_to_quat(glm::normalize(old_state.forward()));
@@ -279,7 +275,7 @@ namespace Control{
 					return my_utils::quat_to_vec3(m_forward.mix());
 				}
 
-				virtual attacker* update(float time_elapsed) override{
+				virtual state* update(float time_elapsed) override{
 					m_forward.add(time_elapsed);
 					m_normal.add(time_elapsed);
 
@@ -304,7 +300,7 @@ namespace Control{
 				}
 			};
 
-			class ordered : public attacker{
+			class ordered : public state{
 			private:
 				GO::planet& host;
 
@@ -316,8 +312,8 @@ namespace Control{
 			public:
 				std::weak_ptr<DTO::planet_entry> target_ptr;
 
-				inline ordered(attacker& old_state, GO::planet& host_planet, std::weak_ptr<DTO::planet_entry> target_ptr) :
-					attacker(old_state.dto),
+				inline ordered(state& old_state, GO::planet& host_planet, std::weak_ptr<DTO::planet_entry> target_ptr) :
+					state(old_state.dto),
 					host(host_planet),
 					target_ptr(target_ptr),
 					coords(old_state.get_coords())
@@ -339,7 +335,7 @@ namespace Control{
 					return NULL;
 				}
 
-				virtual inline attacker* update(float time_elapsed) override{
+				virtual inline state* update(float time_elapsed) override{
 					std::shared_ptr<DTO::planet_entry> target = target_ptr.lock();
 					
 					if(!target || target->stage >= Constants::DTO::ATTACKERS_REQUIRED_TO_FILL_HOLE){
@@ -391,7 +387,7 @@ namespace Control{
 			class fighting : public roaming {
 			public:
 
-				inline fighting(attacker& old_state, GO::planet& host_planet) :
+				inline fighting(state& old_state, GO::planet& host_planet) :
 					roaming(old_state.dto, *old_state.host_planet(), old_state.get_coords(), old_state.get_direction())
 				{}
 
@@ -400,5 +396,78 @@ namespace Control{
 				}
 			};
 		}
+	
+		class attacker : public soldier{
+		private:
+			std::unique_ptr<Attacker::state> state;
+
+		public:
+			inline attacker(Attacker::state* state) :
+				state(std::unique_ptr<Attacker::state>(state)){}
+
+			inline void change_state(Attacker::state* new_state){
+				state.reset(new_state);
+			}
+
+			inline virtual float get_speed() const override{
+				return state->get_speed();
+			}
+
+			inline virtual const DTO::player& get_owner()const override{
+				return state->get_owner();
+			}
+
+			inline virtual glm::vec3 get_direction() const override{
+				return state->get_direction();
+			}
+
+			inline virtual glm::vec3 pos() const override{
+				return state->pos();
+			}
+
+			inline virtual glm::vec3 normal() const override{
+				return state->normal();
+			}
+
+			inline virtual glm::vec3 forward() const override{
+				return state->forward();
+			}
+
+			inline virtual glm::vec3 get_coords() const override{
+				return state->get_coords();
+			}
+
+			inline virtual GO::planet* host_planet()const override{
+				return state->host_planet();
+			}
+
+			inline virtual void decrease_health(float amount) override{
+				state->decrease_health(amount);
+			}
+
+			inline const GO::planet* target_planet() const{
+				return state->target_planet();
+			}
+
+			inline Attacker::state* update(float time_elapsed) const{
+				return state->update(time_elapsed);
+			}
+
+			inline attacker_state get_state() const{
+				return state->get_state();
+			}
+
+			inline Attacker::state& get_state_obj()const{
+				return *state;
+			}
+
+			inline std::shared_ptr<DTO::attacker> get_dto()const{
+				return state->dto;
+			}
+
+			inline bool has_host_planet()const{
+				return host_planet() != NULL;
+			}
+		};
 	}
 }
