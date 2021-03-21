@@ -27,8 +27,14 @@ namespace Rendering{
 			inline sworm(const glm::vec2& window_size) :
 				outline_ab(GL_ARRAY_BUFFER, GL_STATIC_DRAW),
 				font_obj(Constants::Rendering::HUD::FONT_TYPE, Constants::Rendering::HUD::FONT_COLOR, Constants::Rendering::HUD::FONT_SIZE),
-				window_size(window_size)
+				window_size(glm::vec2(0.f))
 			{
+				set_window_size(window_size);
+			}
+
+			inline void set_window_size(const glm::ivec2& new_window_size){
+				window_size = new_window_size;
+
 				std::array<float, 24> outline_pos = hud_internal::get_outline_data(OUTLINE, window_size);
 				outline_ab.fill_data(outline_pos.data(), outline_pos.size() * sizeof(float));
 			}

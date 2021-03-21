@@ -30,6 +30,12 @@ namespace Control{
 			grow_tree_callbacks(std::vector<std::function<void(DTO::tree_type)>>())
 		{}
 
+		inline void update_window_size(const glm::ivec2& new_size){
+			hud_player.set_window_size(new_size);
+			hud_planet.set_window_size(new_size);
+			hud_sworm.set_window_size(new_size);
+		}
+
 		inline bool check_hud_clicked(const glm::vec2& click){
 			for(int i = hud_planet.ALL_SOLDIERS; i <= hud_planet.QUATER_SOLDIERS; i++){
 				if(hud_planet.get_button_outline(i).contains(click)){

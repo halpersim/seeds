@@ -21,7 +21,7 @@ namespace Rendering{
 			Rendering::_3D::ground_renderer ground_renderer;
 
 		private:
-			const glm::mat4 projection_matrix;
+			glm::mat4 projection_matrix;
 			
 			enum fbo_color_attachments{
 				COLOR_TEXTURE = 0,
@@ -56,13 +56,13 @@ namespace Rendering{
 
 		public:
 			inline scene_renderer(const glm::vec2& window_size) :
-				window_size(window_size),
-				projection_matrix(glm::perspective<float>(90, window_size.x/window_size.y, 0.1, 100)),
-				color_texture(window_size, GL_RGBA8),
-				id_texture_0(window_size, GL_R32F),
-				id_texture_1(window_size, GL_R32F),
-				border_texture_0(window_size, GL_R8I),
-				border_texture_1(window_size, GL_R8I),
+				window_size(glm::vec2(0.f)),
+				projection_matrix(glm::mat4(1.f)),
+				color_texture(GL_RGBA8),
+				id_texture_0(GL_R32F),
+				id_texture_1(GL_R32F),
+				border_texture_0(GL_R8I),
+				border_texture_1(GL_R8I),
 				cur_id_texture(NULL),
 				priv_id_texture(NULL),
 				cur_border_texture(NULL),
@@ -74,14 +74,11 @@ namespace Rendering{
 				frame_started(false),
 				frame_ended(false)
 			{
+
 				GLenum error;
 
-				fbo.set_color_texture(color_texture, COLOR_TEXTURE);
-				fbo.set_color_texture(id_texture_0, ID_TEXTURE);
-				fbo.set_color_texture(border_texture_0, BORDER_TEXTURE);
-
-				fbo.add_depth_component(window_size);
-
+				update_viewport_size(window_size);
+				
 				GLenum framebuffer_status = fbo.check();
 				if(framebuffer_status != GL_FRAMEBUFFER_COMPLETE)
 					logger.warn("GL_FRAMEBUFFER not complete! -> scene_renderer constructor; status = [%s]", gl_wrapper::get_enum_string(framebuffer_status).c_str());
@@ -125,6 +122,23 @@ namespace Rendering{
 				priv_id_texture = &id_texture_0;
 				cur_border_texture = &border_texture_0;
 				next_border_texture = &border_texture_0;
+			}
+
+			inline void update_viewport_size(const glm::ivec2& new_size){
+				window_size = new_size;
+				projection_matrix = glm::perspective<float>(90, window_size.x/window_size.y, 0.1, 100);
+
+				color_texture.resize(new_size);
+				id_texture_0.resize(new_size);
+				id_texture_1.resize(new_size);
+				border_texture_0.resize(new_size);
+				border_texture_1.resize(new_size);
+
+				fbo.set_color_texture(color_texture, COLOR_TEXTURE);
+				fbo.set_color_texture(id_texture_0, ID_TEXTURE);
+				fbo.set_color_texture(border_texture_0, BORDER_TEXTURE);
+
+				fbo.add_depth_component(window_size);
 			}
 
 			inline void fill_player_buffer(const std::vector<glm::vec4>& colors){

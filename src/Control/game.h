@@ -169,6 +169,13 @@ namespace Control{
 			render_man.update_cam(state, time_elapsed);
 		}
 
+		inline void window_size_changed(const glm::ivec2& new_size){
+			glViewport(0, 0, new_size.x, new_size.y);
+
+			render_man.update_viewport_size(new_size);
+			hud_man.update_window_size(new_size);
+		}
+
 		inline void update(float d_time){
 			if(!freeze){
 				using namespace std::placeholders;

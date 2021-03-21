@@ -38,6 +38,7 @@ HI::user_input user_input;
 void window_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void window_mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void window_cursor_pos_callback(GLFWwindow* window, double x, double y);
+void window_size_callback(GLFWwindow* window, int width, int height);
 
 int main() {
 
@@ -57,6 +58,8 @@ int main() {
 	glfwSetKeyCallback(window, window_key_callback);
 	glfwSetMouseButtonCallback(window, window_mouse_button_callback);
 	glfwSetCursorPosCallback(window, window_cursor_pos_callback);
+	glfwSetWindowSizeCallback(window, window_size_callback);
+
 	Rendering::HUD::cursor_singleton::Instance().init(window);
 
 	//glewExperimental = GL_TRUE;
@@ -90,6 +93,7 @@ int main() {
 	{
 		using std::placeholders::_1;
 		user_input.add_listener(std::bind(&Control::game::process_user_input, &game, _1));
+		user_input.add_window_size_listener(std::bind(&Control::game::window_size_changed, &game, _1));
 	}
 	const float& one = 1.f;
 	GLenum error;
@@ -156,6 +160,9 @@ void window_cursor_pos_callback(GLFWwindow* window, double x, double y){
 	user_input.mouse_move(x, y);
 }
 
+void window_size_callback(GLFWwindow* window, int width, int height){
+	user_input.window_size_changed(width, height);
+}
 
 
 	/*

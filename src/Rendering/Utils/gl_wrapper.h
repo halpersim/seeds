@@ -539,7 +539,8 @@ namespace gl_wrapper {
 		std::array<GLenum, 16> attachments;
 
 		texture<Texture_2D> depth_component;
-		//	GLuint depth;
+		bool depth_initialised;
+
 		GLenum error;
 	public:
 		GLuint name;
@@ -548,7 +549,9 @@ namespace gl_wrapper {
 
 		inline framebuffer() :
 			error(GL_NONE),
-			depth_component(GL_DEPTH_COMPONENT32F){
+			depth_component(GL_DEPTH_COMPONENT32F),
+			depth_initialised(false)
+		{
 			if(MAX_DRAW_BUFFERS == -1)
 				glGetIntegerv(GL_MAX_DRAW_BUFFERS, &MAX_DRAW_BUFFERS);
 
@@ -562,6 +565,14 @@ namespace gl_wrapper {
 
 		inline static void unbind(){
 			glBindFramebuffer(GL_FRAMEBUFFER, NULL);
+		}
+
+		inline bool has_depth_component()const{
+			return depth_initialised;
+		}
+
+		inline texture<Texture_2D>& get_depth_component(){
+			return depth_component;
 		}
 
 		inline void bind(){
@@ -595,7 +606,8 @@ namespace gl_wrapper {
 		}
 
 		inline void add_depth_component(const glm::vec2& size){
-			depth_component.create(size);
+			depth_initialised = true;
+			depth_component.resize(size);
 			bind();
 			glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth_component.name, 0);
 		}

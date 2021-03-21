@@ -29,6 +29,8 @@ namespace HI{
 		std::vector<std::function<void(const input_state&)>> listener;
 		bool fire_listener;
 
+		std::vector<std::function<void(const glm::ivec2&)>> window_size_change_listener;
+
 	public:
 
 		inline user_input() :
@@ -110,6 +112,13 @@ namespace HI{
 			listener.push_back(func);
 		}
 
+		inline void add_window_size_listener(std::function<void(const glm::ivec2&)> func){
+			window_size_change_listener.push_back(func);
+		}
+
+		inline void window_size_changed(int x, int y){
+			std::for_each(window_size_change_listener.begin(), window_size_change_listener.end(), [x, y](const auto& func){func(glm::ivec2(x, y)); });
+		}
 	};
 
 	log4cpp::Category& user_input::logger = log4cpp::Category::getInstance("HI.input_state");

@@ -65,7 +65,7 @@ namespace Rendering{
 				tree_texture_bw(TREE_TEXTURE_SIZE, GL_RGBA8),
 				fraction_texture(FRACTION_TEXTURE_SIZE, GL_RGBA8),
 				button_boxes(std::array<my_utils::box, NONE>()),
-				window_size(window_size),
+				window_size(glm::vec2(0.f)),
 				font_obj(Constants::Rendering::HUD::FONT_TYPE, Constants::Rendering::HUD::FONT_COLOR, Constants::Rendering::HUD::FONT_SIZE)
 			{
 
@@ -89,6 +89,12 @@ namespace Rendering{
 				fraction_texture.fill_data(GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
 				delete[] tex_data;
 
+				set_window_size(window_size);
+			}
+
+			inline void set_window_size(const glm::ivec2& window_size){
+				this->window_size = window_size;
+				
 				//--------init buttons------------------
 				for(unsigned int i = ALL_SOLDIERS; i<=QUATER_SOLDIERS; i++){
 					glm::vec2 pos;
@@ -111,7 +117,7 @@ namespace Rendering{
 
 				glm::vec2 fraction_top_left_nds = button_boxes[ALL_SOLDIERS].size();
 				fraction_top_left_nds.x = (QUATER_SOLDIERS - ALL_SOLDIERS + 1) * (fraction_top_left_nds.x - PLANET_BUTTON_MARGIN) + PLANET_BUTTON_MARGIN;
-				fraction_top_left_nds /= window_size / 2.f;
+				fraction_top_left_nds /= glm::vec2(window_size) / 2.f;
 
 
 				float fractions_bg_pos[] = {
@@ -128,7 +134,7 @@ namespace Rendering{
 					outline_pos[1] + fraction_top_left_nds.y
 				};
 
-				float line_diff_y_nds = OUTLINE.top_band / window_size.y;
+				float line_diff_y_nds = OUTLINE.top_band / float(window_size.y);
 
 				float line_pos[] = {
 					outline_pos[0], outline_pos[1] - line_diff_y_nds,

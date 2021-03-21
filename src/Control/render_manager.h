@@ -25,6 +25,10 @@ namespace Control{
 			cam()
 		{}
 
+		inline void update_viewport_size(const glm::ivec2& new_window_size){
+			renderer.update_viewport_size(new_window_size);
+		}
+
 		inline void init(const std::list<DTO::player>& players){
 			std::vector<glm::vec4> player_colors;
 			
