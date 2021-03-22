@@ -61,7 +61,7 @@ namespace Constants {
 		static const float DEFENDER_MAX_TIME_TO_IMPACT = 1.f; //seconds //enemy soldiers that could be reached faster than this value are attacked
 		static const float DEFENDER_HIT_TOLERANCE = 2.f; //length units; defender hits are only counted if it is that close ore closer to its target
 
-		static const float TREE_DAMAGE_MULTIPLIER = 2.5f; //how much more damage a bullet deals to a tree(, because trees have much more health)
+		static const float TREE_DAMAGE_MULTIPLIER = 1.0f; //how much more damage a bullet deals to a tree(, because trees have much more health)
 
 	}
 };
