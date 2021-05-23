@@ -8,29 +8,37 @@
 #include "Control/GO/planet.h"
 #include "Control/GO/tree.h"
 
+#include "MT/read_write_lock.h"
+
+#include <mutex>
+
 namespace Control{
 	namespace Utils{
 
 		class object_lists{
 		public:
-			std::list<std::shared_ptr<GO::defender>> def;
-			std::list<std::shared_ptr<GO::attacker>> att;
+			MT::read_write_lock<std::list<std::shared_ptr<GO::defender>>> def;
+			MT::read_write_lock<std::list<std::shared_ptr<GO::attacker>>> att;
 
-			std::list<std::shared_ptr<GO::tree>> tree;
-			std::list<std::unique_ptr<GO::planet>> planet;
+			MT::read_write_lock<std::list<std::shared_ptr<GO::tree>>> tree;
+			std::list<std::shared_ptr<GO::planet>> planet;
 
-			std::list<GO::bullet> bullets;
+			MT::read_write_lock<std::list<std::shared_ptr<GO::bullet>>> bullets;
 
+			void for_each_soldier_const(const std::function<void(std::shared_ptr<GO::soldier>)>& func) {
+				for(auto ptr : *att.read_lock()){
+					func(ptr);
+				}
 
-			void for_each_soldier_const(const std::function<void(const GO::soldier&)>& func)const{
-				std::for_each(att.begin(), att.end(), [&func](auto& ptr) {func(*ptr); });
-				std::for_each(def.begin(), def.end(), [&func](auto& ptr) {func(*ptr); });
+				for(auto ptr : *def.read_lock()){
+					func(ptr);
+				}
 			}
 
-			GO::planet* get_planet_by_id(int id){
-				auto it = std::find_if(planet.begin(), planet.end(), [id](const std::unique_ptr<GO::planet>& planet) {return planet->dto.ID == id; });
+			std::shared_ptr<GO::planet> get_planet_by_id(int id){
+				auto it = std::find_if(planet.begin(), planet.end(), [id](const std::shared_ptr<GO::planet>& planet) {return planet->dto.ID == id; });
 				if(it != planet.end()){
-					return it->get();
+					return *it;
 				}
 				return NULL;
 			}

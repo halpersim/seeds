@@ -46,15 +46,15 @@ namespace Control{
 				glm::vec3 z = glm::normalize(glm::cross(x, y));
 				x = glm::normalize(glm::cross(z, y));
 
-				Rendering::Struct::planet_hole hole_data = get_planet_hole_data(tree.GROUND, state.host_planet_radius);
+				Rendering::Struct::planet_hole hole_data = get_planet_hole_data(tree.GROUND, state.host_planet_radius, 0);
 				glm::mat4	model_to_world = glm::translate(glm::mat4(1.f), state.host_pos + hole_data.bottom_mid) * align_to_axis(x, y, z);
-				unsigned int trunk_start_idx = trunk_list.pallet.size();
-				unsigned int soldier_start_idx = soldier_list.pallet.size();
+				unsigned int trunk_start_idx = trunk_list.pallet[std::this_thread::get_id()].size();
+				unsigned int soldier_start_idx = soldier_list.pallet[std::this_thread::get_id()].size();
 
 				append_data_recursive(tree.ID, state.owner_idx, tree.nodes, tree.nodes.front(), Constants::Rendering::TREE_FIRST_TRUNK_SCALE, trunk_list, soldier_list);
 
-				apply_transform_to_end(trunk_list.pallet, trunk_start_idx, model_to_world);
-				apply_transform_to_end(soldier_list.pallet, soldier_start_idx, model_to_world);
+				apply_transform_to_end(trunk_list.pallet[std::this_thread::get_id()], trunk_start_idx, model_to_world);
+				apply_transform_to_end(soldier_list.pallet[std::this_thread::get_id()], soldier_start_idx, model_to_world);
 			}
 
 		private:
@@ -70,26 +70,26 @@ namespace Control{
 			inline void append_data_recursive(int tree_id, int tree_owner_index, const std::vector<DTO::tree_node>& other, const DTO::tree_node& me, float scale, Rendering::List::trunk& trunk_data, Rendering::List::soldier& soldier_data){
 				for(unsigned int side = 0; side < me.next.size(); side++){
 					if(me.next[side] != -1){
-						unsigned int trunk_start_idx = trunk_data.pallet.size();
-						unsigned int soldier_start_idx = soldier_data.pallet.size();
+						unsigned int trunk_start_idx = trunk_data.pallet[std::this_thread::get_id()].size();
+						unsigned int soldier_start_idx = soldier_data.pallet[std::this_thread::get_id()].size();
 
 						glm::mat4 side_transform = get_tree_node_side_data(side, scale);
 						
 						append_data_recursive(tree_id, tree_owner_index, other, other.at(me.next[side]), scale * Constants::Rendering::TREE_BRANCHES_SIZE_DECREASE, trunk_data, soldier_data);
 
-						apply_transform_to_end(trunk_data.pallet, trunk_start_idx, side_transform);
-						apply_transform_to_end(soldier_data.pallet, soldier_start_idx, side_transform);
+						apply_transform_to_end(trunk_data.pallet[std::this_thread::get_id()], trunk_start_idx, side_transform);
+						apply_transform_to_end(soldier_data.pallet[std::this_thread::get_id()], soldier_start_idx, side_transform);
 					}
 				}
 				scale *= me.size/Constants::DTO::TREE_GROWTH;
 
-				trunk_data.pallet.push_back(glm::scale(glm::mat4(1.f), glm::vec3(scale)));
-				trunk_data.ids.push_back(tree_id);
-				trunk_data.owner_indices.push_back(tree_owner_index);
+				trunk_data.pallet[std::this_thread::get_id()].push_back(glm::scale(glm::mat4(1.f), glm::vec3(scale)));
+				trunk_data.ids[std::this_thread::get_id()].push_back(tree_id);
+				trunk_data.owner_indices[std::this_thread::get_id()].push_back(tree_owner_index);
 				
-				soldier_data.pallet.push_back(glm::scale(glm::translate(glm::mat4(1.f), scale * glm::vec3(0, 1, 0)), glm::vec3(scale)));
-				soldier_data.ids.push_back(tree_id);
-				soldier_data.owner_indices.push_back(tree_owner_index);
+				soldier_data.pallet[std::this_thread::get_id()].push_back(glm::scale(glm::translate(glm::mat4(1.f), scale * glm::vec3(0, 1, 0)), glm::vec3(scale)));
+				soldier_data.ids[std::this_thread::get_id()].push_back(tree_id);
+				soldier_data.owner_indices[std::this_thread::get_id()].push_back(tree_owner_index);
 			}
 
 			

@@ -17,39 +17,6 @@
 
 namespace Rendering {
 	namespace _3D{
-		/*	template<class T>
-			class renderer {
-			private:
-				gl_wrapper::Program<UniformTypeList> program;
-				int matrix_buffer;
-				//model(s)
-
-			public:
-
-				renderer()
-					:
-				{
-					//load shader
-					//create program
-					//set up buffers
-				}
-
-				void render() {
-					//generate matrix pallete
-					//set unifroms
-					//set buffer
-					//[CPU culling]
-					//draw logic
-				}
-
-				~renderer() {
-					//delete buffer
-					//delete program
-				}
-			};*/
-
-
-
 
 		template<class T>
 		class soldier_renderer {
@@ -85,7 +52,8 @@ namespace Rendering {
 			}
 
 
-			void render(const Rendering::List::soldier& data){
+			void render(Rendering::List::soldier& data){
+
 
 				//set unifroms
 				program.set<Uniform::vp>() = frame_data::view_projection_matrix;
@@ -93,19 +61,25 @@ namespace Rendering {
 				program.set<Uniform::light>() = frame_data::light;
 				program.use();
 				//set buffer
-				matrix_buffer.copy_vector_in_buffer(data.pallet);
-				owner_index_buffer.copy_vector_in_buffer(data.owner_indices);
+				int pallet_size = 0;
+				std::for_each(data.pallet.begin(), data.pallet.end(), [&pallet_size](auto& pair){
+					pallet_size += pair.second.size();
+				});
+				
+				matrix_buffer.copy_thread_map_in_buffer(data.pallet, pallet_size);
+				owner_index_buffer.copy_thread_map_in_buffer(data.owner_indices, pallet_size);
+								
 				matrix_buffer.bind_base(0);
 				owner_index_buffer.bind_base(2);
 
 				if(!data.ids.empty()){
-					id_buffer.copy_vector_in_buffer(data.ids);
+					id_buffer.copy_thread_map_in_buffer(data.ids, pallet_size);
 					id_buffer.bind_base(1);
 				} else {
 					glBindBufferBase(id_buffer.target, 1, 0);
 				}
 				//draw logic
-				Model::Instance().render(0, 1, data.pallet.size());
+				Model::Instance().render(0, 1, pallet_size);
 			}
 
 			~soldier_renderer(){
@@ -154,24 +128,27 @@ namespace Rendering {
 			}
 
 			void render(const Rendering::List::trunk& data){
-				const std::vector<glm::mat4>& trunk_pallet = data.pallet;
-
 				//set uniforms
 				program.set<Uniform::vp>() = frame_data::view_projection_matrix;
 				program.set<Uniform::eye>() = frame_data::eye;
 				program.set<Uniform::light>() = frame_data::light;
 				program.use();
 
-				id_buffer.copy_vector_in_buffer(data.ids);
+				int pallet_size = 0;
+				std::for_each(data.pallet.begin(), data.pallet.end(), [&pallet_size](auto& pair){
+					pallet_size += pair.second.size();
+				});
+
+				id_buffer.copy_thread_map_in_buffer(data.ids, pallet_size);
 				id_buffer.bind_base(1);
 
-				owner_index_buffer.copy_vector_in_buffer(data.owner_indices);
+				owner_index_buffer.copy_thread_map_in_buffer(data.owner_indices, pallet_size);
 				owner_index_buffer.bind_base(2);
 
 				//set buffer
-				trunk_matrix_buffer.copy_vector_in_buffer(trunk_pallet);
+				trunk_matrix_buffer.copy_thread_map_in_buffer(data.pallet, pallet_size);
 				trunk_matrix_buffer.bind_base(0);
-				TrunkModel::Instance().render(0, 1, trunk_pallet.size());
+				TrunkModel::Instance().render(0, 1, pallet_size);
 			}
 
 			~tree_renderer(){
@@ -219,7 +196,6 @@ namespace Rendering {
 				}
 
 				program.create(shader, "shader/3D/planet");
-				//	glGetSubroutineUniformLocation(program.name, GL_TESS_EVALUATION_SHADER, "mySubroutineUniform");
 			}
 
 			void render(const Rendering::List::planet& data){
@@ -232,12 +208,12 @@ namespace Rendering {
 				program.set<Uniform::light>() = frame_data::light;
 				program.use();
 				
-				render_data_buffer.copy_vector_in_buffer(data.render_data);
-				hole_buffer.copy_vector_in_buffer(data.holes);
-				matrix_buffer.copy_vector_in_buffer(data.pallet);
-				id_buffer.copy_vector_in_buffer(data.ids);
-				owner_index_buffer.copy_vector_in_buffer(data.owner_indices);
-				type_buffer.copy_vector_in_buffer(data.type);
+				render_data_buffer.copy_thread_map_in_buffer(data.render_data);
+				hole_buffer.copy_thread_map_in_buffer(data.holes);
+				matrix_buffer.copy_thread_map_in_buffer(data.pallet);
+				id_buffer.copy_thread_map_in_buffer(data.ids);
+				owner_index_buffer.copy_thread_map_in_buffer(data.owner_indices);
+				type_buffer.copy_thread_map_in_buffer(data.type);
 
 				render_data_buffer.bind_base(0);
 				hole_buffer.bind_base(1);
@@ -281,7 +257,8 @@ namespace Rendering {
 			}
 
 			void render(const Rendering::List::ground& data_struct){
-				data_buffer.copy_vector_in_buffer(data_struct.data);
+
+				data_buffer.copy_thread_map_in_buffer(data_struct.data);
 
 				program.set<Uniform::vp>() = frame_data::view_projection_matrix;
 				program.set<Uniform::max_size>() = float(Constants::DTO::ATTACKERS_REQUIRED_TO_FILL_HOLE);

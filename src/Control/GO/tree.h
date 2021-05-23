@@ -31,15 +31,18 @@ namespace Control{
 		
 		public:
 			std::shared_ptr<DTO::tree> dto;
+			
+			std::atomic_bool is_dead;
 
 			inline tree(const DTO::hole& ground, DTO::tree_type type, planet& host_planet, int branch_size) :
 				time_since_last_spawn(0.f),
 				spawn_rate(Constants::DTO::INIT_SPAWN_RATE),
 				dto(std::make_unique<DTO::tree>(DTO::id_generator::next_id(), type, ground, branch_size)),
-				host(host_planet)
+				host(host_planet),
+				is_dead(false)
 			{}
 			
-			virtual soldier* produce_solider()const = 0;
+			virtual std::shared_ptr<soldier> produce_solider()const = 0;
 			virtual RDG::tree& get_rdg()const = 0;
 
 
@@ -195,8 +198,8 @@ namespace Control{
 				tree(ground, DTO::tree_type::ATTACKER, host_planet, 4)
 			{}
 
-			inline virtual soldier* produce_solider()const override{
-				return new GO::attacker(new GO::Attacker::roaming(std::shared_ptr<DTO::attacker>(new DTO::attacker(host.dto.SOLDIER_DATA)), host, glm::vec3(dto->GROUND.coords, 0.f), my_utils::get_random_dir()));
+			inline virtual std::shared_ptr<soldier> produce_solider()const override{
+				return std::make_shared<GO::attacker>(new GO::Attacker::roaming(std::make_shared<DTO::attacker>(host.dto.SOLDIER_DATA), host, glm::vec3(dto->GROUND.coords, 0.f), my_utils::get_random_dir()));
 			}
 
 			inline virtual RDG::tree& get_rdg()const override{
@@ -210,8 +213,8 @@ namespace Control{
 				tree(ground, DTO::tree_type::DEFENDER, host_planet, 6)
 			{}
 
-			inline virtual soldier* produce_solider()const override{
-				return new GO::defender(new GO::Defender::roaming(std::shared_ptr<DTO::defender>(new DTO::defender(host.dto.SOLDIER_DATA)), host, glm::vec3(dto->GROUND.coords, 0.f), my_utils::get_random_dir()));
+			inline virtual std::shared_ptr<soldier> produce_solider()const override{
+				return std::make_shared<GO::defender>(new GO::Defender::roaming(std::make_shared<DTO::defender>(host.dto.SOLDIER_DATA), host, glm::vec3(dto->GROUND.coords, 0.f), my_utils::get_random_dir()));
 			}
 
 			inline virtual RDG::tree& get_rdg()const override{

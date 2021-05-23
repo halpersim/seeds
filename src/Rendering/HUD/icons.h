@@ -140,9 +140,7 @@ namespace Rendering{
 				program.set<Uniform::bw>() = is_bw;
 				program.use();
 				glEnable(GL_BLEND);
-				glDisable(GL_DEPTH_TEST);
 				glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, size);
-				glEnable(GL_DEPTH_TEST);
 				glDisable(GL_BLEND);
 			}
 	};

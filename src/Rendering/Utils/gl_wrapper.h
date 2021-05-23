@@ -109,6 +109,10 @@ namespace gl_wrapper {
 			name(-1),
 			is_graphics_program(graphics_program){}
 
+		inline ~program(){
+			glDeleteProgram(name);
+		}
+
 		template<int N>
 		inline void create(const std::array<GLuint, N> shader, const char* program_name = NULL){
 			std::string error_str;
@@ -263,10 +267,15 @@ namespace gl_wrapper {
 				target(target) 
 			{
 				GLenum error = glGetError();
-				if(error != GL_NO_ERROR)
-					printf("error before buffer [%s]\n", get_enum_string(error).c_str());
+				
+				if(error != GL_NO_ERROR) {
+					logger.warn("GL_ERROR [%s] -> Buffer Constructor; before buffer construction!\n", get_enum_string(error).c_str());
+				}
 
 				glGenBuffers(1, &name);
+				if(name == static_cast<unsigned int>(-1)){
+					logger.warn("GL_ERROR -> Buffer Constructor; cannot generate new OpenGL Buffer Object\n");
+				}
 				glBindBuffer(target, name);
 				if(size != 0){
 					StoragePolicy::ManageMemory(target, usage, 0, size, set_up);
@@ -278,18 +287,52 @@ namespace gl_wrapper {
 				}
 			}
 
+			inline ~buffer(){
+				if(name != -1 && name) {
+					glDeleteBuffers(1, &name);
+				}
+			}
+
+			template<class T>
+			void copy_vector_in_buffer(const std::vector<T>& vector, int offset){
+				bind();
+
+				if(!vector.empty()){
+					T* ptr = reinterpret_cast<T*>(map(GL_WRITE_ONLY));
+					if(ptr){
+						std::memcpy(ptr + offset, vector.data(), sizeof(T) * vector.size());
+					}
+					unmap();
+				}
+			}
+
 			template<class T>
 			void copy_vector_in_buffer(const std::vector<T>& vector){
 				bind();
 				resize(vector.size() * sizeof(T));
 
-				if(!vector.empty()){
-					T* ptr = (T*)map(GL_WRITE_ONLY);
-					if(ptr){
-						std::memcpy(ptr, vector.data(), sizeof(T) * vector.size());
-					}
-					unmap();
+				copy_vector_in_buffer(vector, 0);
+			}
+
+			template<class T>
+			void copy_thread_map_in_buffer(const std::map<std::thread::id, std::vector<T>>& map, int size = -1){
+				int cnt = 0;
+				
+				if(size == -1){
+					std::for_each(map.begin(), map.end(), [&cnt](auto& pair){
+						cnt += pair.second.size();
+					});
+				} else{
+					cnt = size;
 				}
+
+				bind();
+				resize(cnt * sizeof(T));
+				int offset = 0;
+				std::for_each(map.begin(), map.end(), [this, &offset](auto& pair){
+					copy_vector_in_buffer(pair.second, offset);
+					offset += pair.second.size();
+				});
 			}
 
 			//fills the data with the given data, the buffer has the given size afterwards
@@ -577,11 +620,27 @@ namespace gl_wrapper {
 
 		inline void bind(){
 			glBindFramebuffer(GL_FRAMEBUFFER, name);
+		}
+
+		inline void activate_attachments(){
 			glDrawBuffers(MAX_DRAW_BUFFERS, attachments.data());
+		}
+
+		template<int N>
+		inline void activate_attachments(const std::array<int, N>& attachments_to_activate){
+			std::array<GLenum, N> mapped_attachments;
+
+			for(int i = 0; i<N; i++) {
+				mapped_attachments[i] = GL_COLOR_ATTACHMENT0 + attachments_to_activate[i];
+			}
+
+			glDrawBuffers(N, mapped_attachments.data());
+
 			error = glGetError();
 			if(error != GL_NONE)
 				logger.warn("GL_ERROR [%s] -> glDrawBuffers", get_enum_string(error).c_str());
 		}
+
 
 		inline GLenum check(){
 			bind();

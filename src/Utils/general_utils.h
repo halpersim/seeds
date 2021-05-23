@@ -116,14 +116,35 @@ namespace my_utils{
 			idx = (idx + 1) % N;
 		}
 
-		inline void for_each(const std::function<void(const T&)>& func){
-			std::for_each(array.begin(), array.end(), func);
+		inline void for_each(std::function<void(const T&)>&& func){
+			std::for_each(array.begin(), array.end(), std::move(func));
 		}
 
 		inline int size(){
 			return N;
 		}
 
+	};
+
+	class timer{
+	private:
+		double last_time;
+
+	public:
+		double diff;
+
+		inline timer() :
+			last_time(0),
+			diff(0){}
+
+		inline void start(double time){
+			last_time = time;
+		}
+
+		inline void end(double time){
+			diff = time - last_time;
+			last_time = time;
+		}
 	};
 
 	class box{

@@ -8,6 +8,7 @@
 #include <glm/vec3.hpp>
 #include <log4cpp/Category.hh>
 
+#include <MT/read_write_lock.h>
 
 
 namespace Control{
@@ -19,18 +20,41 @@ namespace Control{
 		public:
 			const int damage;
 			const float speed;
+			
+			std::atomic_bool target_reached;
 
 			GO::planet& host;
-			std::weak_ptr<game_object> target_ptr;
+			std::weak_ptr<GO::game_object> target_ptr;
 			glm::vec3 coords;
 
 
-			inline bullet(GO::planet& host, std::weak_ptr<game_object> target, const glm::vec3& coords, int damage, float speed = Constants::Control::BULLET_SPEED) :
+			inline bullet(GO::planet& host, std::weak_ptr<GO::game_object> target, const glm::vec3& coords, int damage, float speed = Constants::Control::BULLET_SPEED) :
 				host(host),
 				target_ptr(target),
 				coords(coords),
 				damage(damage),
-				speed(speed){}
+				speed(speed),
+				target_reached(false)
+			{}
+
+			inline bullet(const bullet& rhs) :
+				host(rhs.host),
+				target_ptr(rhs.target_ptr),
+				coords(rhs.coords),
+				damage(rhs.damage),
+				speed(rhs.speed),
+				target_reached(rhs.target_reached.load())
+			{}
+
+			inline bullet(bullet&& rhs) :
+				host(rhs.host),
+				target_ptr(rhs.target_ptr),
+				coords(rhs.coords),
+				damage(rhs.damage),
+				speed(rhs.speed),
+				target_reached(rhs.target_reached.load())
+			{}
+
 
 			inline virtual glm::vec3 pos() const override{
 				return get_pos(host, coords);
@@ -38,6 +62,7 @@ namespace Control{
 
 			inline virtual glm::vec3 forward() const override{
 				if(auto target = target_ptr.lock()){
+					auto token = target->get_lock().read_lock();
 					return forward_on_planet(host, coords, get_coords_dir(coords, target->get_coords()));
 				}
 				return glm::vec3(0.f, 1.f, 0.f);
@@ -59,16 +84,22 @@ namespace Control{
 
 			}
 
-			//bool if bullet's there
+			//@return if the bullet has reached its target
 			inline bool update(float time_elapsed){
 				if(auto target = target_ptr.lock()){
-					glm::vec3 dir = get_coords_dir(coords, target->get_coords());
+					auto token = target->get_lock().read_lock();
 
+					glm::vec3 dir = get_coords_dir(coords, target->get_coords());
+				
 					coords += dir * speed * Constants::Control::VELOCITY_ON_PLANET * time_elapsed;
 
-					return glm::length(pos() - target->pos()) < Constants::Control::BULLET_HIT_DISTANCE;
+					glm::vec3 pos_after = pos();
+			
+					target_reached.store(glm::length(pos() - target->pos()) < Constants::Control::BULLET_HIT_DISTANCE);
+				} else {
+					target_reached.store(true);
 				}
-				return true;
+				return target_reached.load();
 			}
 		};
 

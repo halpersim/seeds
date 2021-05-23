@@ -72,13 +72,13 @@ namespace Rendering{
 				//-----------texture setup-------------
 				std::string folderpath = "../seeds/media/textures/icons/";
 
-				std::array<std::string, 3> str_array = {"attacker_tree_transparent.png", "defender_tree_transparent.png"};
+				std::array<std::string, 3> str_array = {"attacker_tree.png", "defender_tree.png"};
 				unsigned char* tex_data = my_utils::loadHUD_array_texture(folderpath, str_array, tree_texture.size);
 				tree_texture.fill_data(GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
 				delete[] tex_data;
 
 				glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
-				str_array = {"attacker_tree_transparent_BW.png", "defender_tree_transparent_BW.png"};
+				str_array = {"attacker_tree_BW.png", "defender_tree_BW.png"};
 				tex_data = my_utils::loadHUD_array_texture(folderpath, str_array, tree_texture_bw.size, 2);
 				tree_texture_bw.fill_data(GL_RG, GL_UNSIGNED_BYTE, tex_data);
 				delete[] tex_data;
@@ -197,6 +197,8 @@ namespace Rendering{
 					(window_size - glm::vec2(OUTLINE.top_left.x/2 - hud_internal::center_with_icon(OUTLINE.top_left.x/2, font_obj.horizontal_advance(soldier_stats[5])), OUTLINE.top_left.y - OUTLINE.top_band + icon_space + CAPTION_INDENT)),
 				};
 
+				glDisable(GL_DEPTH_TEST);
+
 				//render icons + icon descriptions
 				icon_singleton::Instance().render_icons(icons, positions);
 				glm::vec2 font_offset = hud_internal::get_font_offset(font_obj);
@@ -213,9 +215,6 @@ namespace Rendering{
 				for(unsigned int i = GROW_ATTACKER_TREE; i<=GROW_DEFENDER_TREE; i++){
 					tree_positions[i - GROW_ATTACKER_TREE] = button_boxes[i].icon.pos;
 				}
-
-				glDisable(GL_DEPTH_TEST);
-				glEnable(GL_BLEND);
 
 				fractions_ab.bind();
 				glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
@@ -240,8 +239,6 @@ namespace Rendering{
 				}
 				font_obj.flush(Constants::Rendering::HUD::FONT_COLOR);
 
-
-				glDisable(GL_BLEND);
 				glEnable(GL_DEPTH_TEST);
 			}
 

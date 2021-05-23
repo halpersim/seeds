@@ -24,14 +24,14 @@ struct hole{
 	vec3 bottom_mid;
 	float rad;
 	vec3 height;
-    int padding;
+    int planet_id;
 };
 
 struct data{ 
     float radius;
     float thickness;
-    uint start_idx;
-    uint end_idx;
+    uint padding1;
+    uint padding2;
 };
 
 layout(binding = 0, std140) readonly buffer data_buffer{
@@ -44,6 +44,10 @@ layout(binding = 1, std140) readonly buffer hole_buffer{
  
 layout(binding = 2, std140) readonly buffer mw{
     mat4 mw_pallet[];
+};
+
+layout(binding = 3, std140) readonly buffer id_buffer{
+    ivec4 ids[];
 };
 
 
@@ -90,26 +94,26 @@ void main(){
     bool emitPrimitive = false;
 	uint vertex_inside[3];
 	int inside_count = 0;
+    int my_id = ids[gs_in[0].instance_id >> 2][gs_in[0].instance_id & 3];
 
 	for(int i=0; i<3; i++)
 		vertex_inside[i] = -1;
 		
 	for(int k=0; k < gl_in.length(); k++){
-		bool broke = false;
-		vec4 pos;
-	
-		for(uint i=hole_idx_data[gs_in[0].instance_id].start_idx; i < hole_idx_data[gs_in[0].instance_id].end_idx; i++){
-			vec3 normal = normalize(excluded_space[i].height);
-			float dot_value = dot(normal, gl_in[k].gl_Position.xyz - excluded_space[i].bottom_mid);
-			vec3 proj_point = gl_in[k].gl_Position.xyz - normal * dot_value;
-			
-            //length(excluded_space[i].height) * 1.5f - because points might not match the shape exactly
-			if(dot_value > 0 && dot_value < length(excluded_space[i].height) * 1.5f && length(proj_point - excluded_space[i].bottom_mid) < excluded_space[i].rad){
-				vertex_inside[k] = i;
-				inside_count++;
-				break;
-			}	
-		}
+        for(uint i = 0; i<excluded_space.length(); i++){
+            if(excluded_space[i].planet_id == my_id){
+                vec3 normal = normalize(excluded_space[i].height);
+                float dot_value = dot(normal, gl_in[k].gl_Position.xyz - excluded_space[i].bottom_mid);
+                vec3 proj_point = gl_in[k].gl_Position.xyz - normal * dot_value;
+                
+                //length(excluded_space[i].height) * 1.5f - because points might not match the shape exactly
+                if(dot_value > 0 && dot_value < length(excluded_space[i].height) * 1.5f && length(proj_point - excluded_space[i].bottom_mid) < excluded_space[i].rad){
+                    vertex_inside[k] = i;
+                    inside_count++;
+                    break;
+                }	
+            }
+        }
 	}
 
     switch(inside_count){

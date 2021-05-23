@@ -2,10 +2,11 @@
 #include "icons.h"
 #include "font.h"
 
-#include <Utils/general_utils.h>
-#include <Rendering/Utils/render_utils.h>
+#include "Utils/general_utils.h"
+#include "Rendering/Utils/render_utils.h"
+#include "Rendering/framebuffer.h"
 
-#include <Constants/constants.h>
+#include "Constants/constants.h"
 
 #include <log4cpp/Category.hh>
 #include <loki/Typelist.h>
@@ -48,7 +49,6 @@ namespace Rendering{
 			static inline glm::vec2 get_font_offset(font& font_obj){
 				return glm::vec2(icons::ICON_SIZE + Constants::Rendering::HUD::FONT_HORIZONTAL_INDENT, Constants::Rendering::HUD::FONT_VERTICAL_INDENT + font_obj.bearing_y_capital_A());
 			}
-
 
 			inline hud_internal() :
 				program(),

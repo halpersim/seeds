@@ -3,8 +3,11 @@
 #include "Control/GO/attacker_states.h"
 #include "Control/GO/defender_states.h"
 #include "Control/GO/planet.h"
+#include "Control/GO/tree.h"
 
 #include <log4cpp/Category.hh>
+
+#include <MT/read_write_lock.h>
 
 #include <map>
 #include <set>
@@ -15,7 +18,7 @@ namespace Control{
 		struct per_planet_data{
 			std::list<std::weak_ptr<GO::attacker>> att_list;
 			std::list<std::weak_ptr<GO::defender>> def_list;
-			std::list<std::weak_ptr<DTO::tree>> trees;
+			std::list<std::weak_ptr<GO::tree>> trees;
 			std::set<int> player_indices;
 		};
 
@@ -59,11 +62,11 @@ namespace Control{
 				map.find(planet_id)->second.def_list.push_back(defender);
 			}
 
-			inline void add(const GO::planet& planet, std::weak_ptr<DTO::tree> tree){
+			inline void add(const GO::planet& planet, std::weak_ptr<GO::tree> tree){
 				add(planet.dto.ID, tree);
 			}
 
-			inline void add(int planet_id, std::weak_ptr<DTO::tree> tree){
+			inline void add(int planet_id, std::weak_ptr<GO::tree> tree){
 				map.find(planet_id)->second.trees.push_back(tree);
 			}
 
@@ -99,11 +102,11 @@ namespace Control{
 				return map.find(planet_id)->second.trees.size();
 			}
 
-			inline const std::list<std::weak_ptr<DTO::tree>>& get_tree_list(const GO::planet& planet)const{
+			inline const std::list<std::weak_ptr<GO::tree>>& get_tree_list(const GO::planet& planet)const{
 				return get_tree_list(planet.dto.ID);
 			}
 
-			inline const std::list<std::weak_ptr<DTO::tree>>& get_tree_list(int planet_id)const{
+			inline const std::list<std::weak_ptr<GO::tree>>& get_tree_list(int planet_id)const{
 				return map.find(planet_id)->second.trees;
 			}
 
@@ -147,12 +150,12 @@ namespace Control{
 			inline void for_each_soldier(int planet_id, const std::function<void(std::shared_ptr<GO::soldier>)>& func){
 				for(std::weak_ptr<GO::attacker> ptr : get_attacker_list(planet_id)){
 					if(auto sol = ptr.lock()){
-						func(std::static_pointer_cast<GO::soldier>(sol));
+						func(sol);
 					}
 				}
 				for(std::weak_ptr<GO::defender> ptr : get_defender_list(planet_id)){
 					if(auto sol = ptr.lock()){
-						func(std::static_pointer_cast<GO::soldier>(sol));
+						func(sol);
 					}
 				}
 			}

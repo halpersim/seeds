@@ -53,16 +53,16 @@ namespace Control{
 			return generate_lookat_matrix(o.pos, o.forward, o.normal);
 		}
 
-		Rendering::Struct::planet_hole get_planet_hole_data(const DTO::hole& hole, float planet_radius){
+		Rendering::Struct::planet_hole get_planet_hole_data(const DTO::hole& hole, float planet_radius, int planet_id){
 			Rendering::Struct::planet_hole hole_data;
 
 			float theta = acos(hole.rad / planet_radius);
 
 			hole_data.height = hole.normal * planet_radius * (1 - sin(theta));
-			hole_data.height *= 1.5f;		//that way it looks better visually than with the exact figures
+			hole_data.height *= 1.5;		//that way it looks better visually than with the exact figures
 			hole_data.bottom_mid = hole.local_pos - hole_data.height;
 			hole_data.rad = hole.rad;
-			hole_data.padding = 0;
+			hole_data.planet_id = planet_id;
 			return hole_data;
 		}
 	}

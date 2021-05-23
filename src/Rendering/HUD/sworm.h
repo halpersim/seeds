@@ -7,6 +7,8 @@
 
 #include "Rendering/Utils/gl_wrapper.h"
 
+#include "Rendering/framebuffer.h"
+
 #include "DTO/soldier.h"
 
 namespace Rendering{

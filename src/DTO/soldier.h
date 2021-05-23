@@ -32,12 +32,12 @@ namespace DTO {
 
 	class attacker : public soldier {
 	public:
-		bool is_alive;
+		std::atomic_bool is_alive;
 		float time_since_last_shot;
 		
 		attacker(const soldier_data& data) :
 			soldier(data),
-			is_alive(false),
+			is_alive(true),
 			time_since_last_shot(Constants::Control::ATTACKER_ATTACKSPEED * 10)		//so that time_since_last_shot > ATTACKER_ATTACKSPEED is always true
 		{}
 	};
