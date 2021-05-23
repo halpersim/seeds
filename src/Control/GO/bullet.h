@@ -19,6 +19,8 @@ namespace Control{
 		public:
 			const int damage;
 			const float speed;
+			
+			std::atomic_bool target_reached;
 
 			GO::planet& host;
 			std::weak_ptr<game_object> target_ptr;
@@ -30,7 +32,28 @@ namespace Control{
 				target_ptr(target),
 				coords(coords),
 				damage(damage),
-				speed(speed){}
+				speed(speed),
+				target_reached(false)
+			{}
+
+			inline bullet(const bullet& rhs) :
+				host(rhs.host),
+				target_ptr(rhs.target_ptr),
+				coords(rhs.coords),
+				damage(rhs.damage),
+				speed(rhs.speed),
+				target_reached(rhs.target_reached.load())
+			{}
+
+			inline bullet(bullet&& rhs) :
+				host(rhs.host),
+				target_ptr(rhs.target_ptr),
+				coords(rhs.coords),
+				damage(rhs.damage),
+				speed(rhs.speed),
+				target_reached(rhs.target_reached.load())
+			{}
+
 
 			inline virtual glm::vec3 pos() const override{
 				return get_pos(host, coords);
@@ -66,9 +89,9 @@ namespace Control{
 
 					coords += dir * speed * Constants::Control::VELOCITY_ON_PLANET * time_elapsed;
 
-					return glm::length(pos() - target->pos()) < Constants::Control::BULLET_HIT_DISTANCE;
+					return target_reached = glm::length(pos() - target->pos()) < Constants::Control::BULLET_HIT_DISTANCE;
 				}
-				return true;
+				return target_reached = true;
 			}
 		};
 

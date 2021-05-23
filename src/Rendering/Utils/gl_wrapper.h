@@ -263,10 +263,15 @@ namespace gl_wrapper {
 				target(target) 
 			{
 				GLenum error = glGetError();
-				if(error != GL_NO_ERROR)
-					printf("error before buffer [%s]\n", get_enum_string(error).c_str());
+				
+				if(error != GL_NO_ERROR) {
+					logger.warn("GL_ERROR [%s] -> Buffer Constructor; before buffer construction!\n", get_enum_string(error).c_str());
+				}
 
 				glGenBuffers(1, &name);
+				if(name == static_cast<unsigned int>(-1)){
+					logger.warn("GL_ERROR -> Buffer Constructor; cannot generate new OpenGL Buffer Object\n");
+				}
 				glBindBuffer(target, name);
 				if(size != 0){
 					StoragePolicy::ManageMemory(target, usage, 0, size, set_up);
@@ -279,17 +284,45 @@ namespace gl_wrapper {
 			}
 
 			template<class T>
+			void copy_vector_in_buffer(const std::vector<T>& vector, int offset){
+				bind();
+
+				if(!vector.empty()){
+					T* ptr = reinterpret_cast<T*>(map(GL_WRITE_ONLY));
+					if(ptr){
+						std::memcpy(ptr + offset, vector.data(), sizeof(T) * vector.size());
+					}
+					unmap();
+				}
+			}
+
+			template<class T>
 			void copy_vector_in_buffer(const std::vector<T>& vector){
 				bind();
 				resize(vector.size() * sizeof(T));
 
-				if(!vector.empty()){
-					T* ptr = (T*)map(GL_WRITE_ONLY);
-					if(ptr){
-						std::memcpy(ptr, vector.data(), sizeof(T) * vector.size());
-					}
-					unmap();
+				copy_vector_in_buffer(vector, 0);
+			}
+
+			template<class T>
+			void copy_thread_map_in_buffer(const std::map<std::thread::id, std::vector<T>>& map, int size = -1){
+				int cnt = 0;
+				
+				if(size == -1){
+					std::for_each(map.begin(), map.end(), [&cnt](auto& pair){
+						cnt += pair.second.size();
+					});
+				} else{
+					cnt = size;
 				}
+
+				bind();
+				resize(cnt * sizeof(T));
+				int offset = 0;
+				std::for_each(map.begin(), map.end(), [this, &offset](auto& pair){
+					copy_vector_in_buffer(pair.second, offset);
+					offset += pair.second.size();
+				});
 			}
 
 			//fills the data with the given data, the buffer has the given size afterwards

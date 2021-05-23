@@ -44,7 +44,7 @@ namespace Control{
 				render_data.start_idx = planet_list.holes.size();
 
 				for(const std::weak_ptr<DTO::tree>& tree_ptr : trees){
-					if(auto tree = tree_ptr.lock()){
+					if(auto tree = std::atomic_load(&tree_ptr.lock())){
 						append_hole_and_ground_data(planet, tree->GROUND, state.radius, Constants::DTO::ATTACKERS_REQUIRED_TO_FILL_HOLE, planet_list, ground_list);
 					}
 				}
@@ -53,11 +53,11 @@ namespace Control{
 				}
 				render_data.end_idx = planet_list.holes.size();
 
-				planet_list.render_data.push_back(render_data);
-				planet_list.ids.push_back(planet.ID);
-				planet_list.owner_indices.push_back(planet.owner.idx);
-				planet_list.pallet.push_back(RDG::generate_lookat_matrix(state._orientation));
-				planet_list.type.push_back(state.type);
+				planet_list.render_data[std::this_thread::get_id()].push_back(render_data);
+				planet_list.ids[std::this_thread::get_id()].push_back(planet.ID);
+				planet_list.owner_indices[std::this_thread::get_id()].push_back(planet.owner.idx);
+				planet_list.pallet[std::this_thread::get_id()].push_back(RDG::generate_lookat_matrix(state._orientation));
+				planet_list.type[std::this_thread::get_id()].push_back(state.type);
 			}
 
 		private:
@@ -73,8 +73,8 @@ namespace Control{
 				ground_data.set_id(planet.ID);
 				ground_data.set_stage(stage);
 
-				planet_list.holes.push_back(hole_data);
-				ground_list.data.push_back(ground_data);
+				planet_list.holes[std::this_thread::get_id()].push_back(hole_data);
+				ground_list.data[std::this_thread::get_id()].push_back(ground_data);
 			}
 		};
 

@@ -146,12 +146,12 @@ namespace Control{
 
 			inline void for_each_soldier(int planet_id, const std::function<void(std::shared_ptr<GO::soldier>)>& func){
 				for(std::weak_ptr<GO::attacker> ptr : get_attacker_list(planet_id)){
-					if(auto sol = ptr.lock()){
+					if(auto sol = std::atomic_load(&ptr.lock())){
 						func(std::static_pointer_cast<GO::soldier>(sol));
 					}
 				}
 				for(std::weak_ptr<GO::defender> ptr : get_defender_list(planet_id)){
-					if(auto sol = ptr.lock()){
+					if(auto sol = std::atomic_load(&ptr.lock())){
 						func(std::static_pointer_cast<GO::soldier>(sol));
 					}
 				}

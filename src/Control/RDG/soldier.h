@@ -15,9 +15,9 @@ namespace Control{
 		class soldier{
 		public:
 			inline void append_data(const DTO::soldier& soldier, const RDG::orientation& orient, const glm::vec3& scale, Rendering::List::soldier& soldier_list){
-				soldier_list.pallet.push_back(glm::scale(RDG::generate_lookat_matrix(orient), scale));
-				soldier_list.ids.push_back(soldier.id);
-				soldier_list.owner_indices.push_back(soldier.owner.idx);
+				soldier_list.pallet[std::this_thread::get_id()].push_back(glm::scale(RDG::generate_lookat_matrix(orient), scale));
+				soldier_list.ids[std::this_thread::get_id()].push_back(soldier.id);
+				soldier_list.owner_indices[std::this_thread::get_id()].push_back(soldier.owner.idx);
 			}
 		};
 
