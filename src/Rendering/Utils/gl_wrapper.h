@@ -109,6 +109,10 @@ namespace gl_wrapper {
 			name(-1),
 			is_graphics_program(graphics_program){}
 
+		inline ~program(){
+			glDeleteProgram(name);
+		}
+
 		template<int N>
 		inline void create(const std::array<GLuint, N> shader, const char* program_name = NULL){
 			std::string error_str;
@@ -280,6 +284,12 @@ namespace gl_wrapper {
 				error = glGetError();
 				if(error != GL_NO_ERROR){
 					logger.warn("GL_ERROR [%s] -> Buffer Constructor; target = 0x%X, usage = 0x%X", get_enum_string(error).c_str(), target, usage);
+				}
+			}
+
+			inline ~buffer(){
+				if(name != -1 && name) {
+					glDeleteBuffers(1, &name);
 				}
 			}
 

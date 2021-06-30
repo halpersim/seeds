@@ -10,14 +10,13 @@ namespace Rendering{
 			glm::vec3 bottom_mid;
 			float rad;
 			glm::vec3 height;
-			int padding;
+			int planet_id;
 		};
 
 		struct planet_renderer_data{
 			float radius;
 			float thickness;
-			unsigned int start_idx;
-			unsigned int end_idx;
+			unsigned int padding[2];
 		};
 		
 		struct ground_render_data{

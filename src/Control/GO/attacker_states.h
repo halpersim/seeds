@@ -184,9 +184,9 @@ namespace Control{
 				glm::vec3 m_forward;
 
 			public:
-				std::weak_ptr<DTO::planet_entry> entry_ptr;
+				std::weak_ptr<MT::read_write_lock<DTO::planet_entry>> entry_ptr;
 
-				inline stuck(state& old_state, std::weak_ptr<DTO::planet_entry> entry_ptr) :
+				inline stuck(state& old_state, std::weak_ptr<MT::read_write_lock<DTO::planet_entry>> entry_ptr) :
 					state(old_state.dto),
 					entry_ptr(entry_ptr),
 					m_pos(old_state.pos()),
@@ -233,14 +233,14 @@ namespace Control{
 
 			class entering : public state{
 			private:
-				std::weak_ptr<DTO::planet_entry> entry;
+				std::weak_ptr<MT::read_write_lock<DTO::planet_entry>> entry;
 
 				my_utils::LERP<glm::quat> m_forward;
 				my_utils::LERP<glm::quat> m_normal;
 				my_utils::LERP<glm::vec3> m_pos;
 			public:
 
-				inline entering(state& old_state, std::weak_ptr<DTO::planet_entry> entry, const glm::vec3& target) :
+				inline entering(state& old_state, std::weak_ptr<MT::read_write_lock<DTO::planet_entry>> entry, const glm::vec3& target) :
 					state(old_state.dto),
 					entry(entry)
 				{
@@ -310,15 +310,17 @@ namespace Control{
 				my_utils::LERP<glm::quat> turn;
 
 			public:
-				std::weak_ptr<DTO::planet_entry> target_ptr;
+				std::weak_ptr<MT::read_write_lock<DTO::planet_entry>> target_ptr;
 
-				inline ordered(state& old_state, GO::planet& host_planet, std::weak_ptr<DTO::planet_entry> target_ptr) :
+				inline ordered(state& old_state, GO::planet& host_planet, std::weak_ptr<MT::read_write_lock<DTO::planet_entry>> target_ptr) :
 					state(old_state.dto),
 					host(host_planet),
 					target_ptr(target_ptr),
 					coords(old_state.get_coords())
 				{
-					if(auto target = target_ptr.lock()){
+					if(auto target_lock = target_ptr.lock()){
+						auto target = target_lock->read_lock();
+
 						direction = get_coords_dir(coords, glm::vec3(target->ground.coords, 0));
 						glm::quat start = my_utils::vec3_to_quat(old_state.forward());
 						glm::quat end = my_utils::vec3_to_quat(forward());
@@ -336,9 +338,15 @@ namespace Control{
 				}
 
 				virtual inline state* update(float time_elapsed) override{
-					std::shared_ptr<DTO::planet_entry> target = target_ptr.lock();
+					std::shared_ptr<MT::read_write_lock<DTO::planet_entry>> target_lock = target_ptr.lock();
 					
-					if(!target || target->stage >= Constants::DTO::ATTACKERS_REQUIRED_TO_FILL_HOLE){
+					if(!target_lock) {
+						return new roaming(dto, host, coords, direction);
+					}
+
+					auto target = target_lock->read_lock();
+
+					if(target->stage >= Constants::DTO::ATTACKERS_REQUIRED_TO_FILL_HOLE){
 						return new roaming(dto, host, coords, direction);
 					}
 
@@ -346,7 +354,7 @@ namespace Control{
 						if(glm::length(host.get_pos(coords, 0.f) - host.get_pos(target->ground.coords, 0.f)) < Constants::DTO::MIN_DISTANCE_TO_PLANET_ENTRY) {
 							glm::vec3 end = target->is_established() ? host.get_pos(target->ground.coords, 0.f) - (host.get_normal(target->ground.coords) * host.get_radius()) : host.get_pos(target->ground.coords, 0.f);
 
-							return new entering(*this, target, end);
+							return new entering(*this, target_ptr, end);
 						} else {
 							coords += direction * dto->speed * Constants::Control::VELOCITY_ON_PLANET * time_elapsed;
 						}

@@ -44,6 +44,12 @@ namespace Control{
 			});
 		}
 
+		inline void shutdown(){
+			hud_planet.reset(NULL);
+			hud_player.reset(NULL);
+			hud_sworm.reset(NULL);
+		}
+
 		inline void update_window_size(const glm::ivec2& new_size){
 			opengl_thread.add_command_current_frame([this, new_size]{
 				hud_player->set_window_size(new_size);
@@ -75,7 +81,7 @@ namespace Control{
 			thread_pool.add_task([this, frame, &planet, planet_state_tracker, tracker_latch, grow_tree_possible]{
 				tracker_latch->wait_for(std::chrono::milliseconds(2000), "waiting for tracker latch; hud_manager line 76");
 
-				opengl_thread.add_command(frame, [this, &planet, &planet_state_tracker, grow_tree_possible]{
+				opengl_thread.add_command(frame, [this, &planet, planet_state_tracker, grow_tree_possible]{
 					hud_planet->render(planet.dto, planet_state_tracker->num_soldiers(planet), planet_state_tracker->num_attacker(planet), planet_state_tracker->num_trees(planet), grow_tree_possible);
 				});
 			});
@@ -105,8 +111,8 @@ namespace Control{
 					num_planets++;
 				});
 
-				lists.for_each_soldier_const([&num_soldiers, &player](const GO::soldier& soldier){
-					if(soldier.get_owner().idx == player.idx){
+				lists.for_each_soldier_const([&num_soldiers, &player](std::shared_ptr<GO::soldier> soldier){
+					if(soldier->get_owner().idx == player.idx){
 						num_soldiers++;
 					}
 				});

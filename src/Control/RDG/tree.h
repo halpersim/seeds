@@ -46,7 +46,7 @@ namespace Control{
 				glm::vec3 z = glm::normalize(glm::cross(x, y));
 				x = glm::normalize(glm::cross(z, y));
 
-				Rendering::Struct::planet_hole hole_data = get_planet_hole_data(tree.GROUND, state.host_planet_radius);
+				Rendering::Struct::planet_hole hole_data = get_planet_hole_data(tree.GROUND, state.host_planet_radius, 0);
 				glm::mat4	model_to_world = glm::translate(glm::mat4(1.f), state.host_pos + hole_data.bottom_mid) * align_to_axis(x, y, z);
 				unsigned int trunk_start_idx = trunk_list.pallet[std::this_thread::get_id()].size();
 				unsigned int soldier_start_idx = soldier_list.pallet[std::this_thread::get_id()].size();

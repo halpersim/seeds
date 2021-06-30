@@ -152,16 +152,10 @@ namespace MT{
 				glfwMakeContextCurrent(window);
 				printf("GL_VERSION = [%s]\n", glGetString(GL_VERSION));
 
-				//glewExperimental = GL_TRUE;
-				glewExperimental = GL_FALSE;
-
 				glew_initialized = true;
 				worker_thread_initialized = true;
 				main_thread_cv.notify_all();
 
-				if(!glew_initialized){
-					return;
-				}
 				font = std::make_unique<Rendering::HUD::font>(Rendering::HUD::font::CONSOLAS, glm::vec3(1.f), 20.f);
 			}
 
@@ -201,6 +195,7 @@ namespace MT{
 				}
 				task();
 			}
+			glfwMakeContextCurrent(NULL);
 		}
 	};
 

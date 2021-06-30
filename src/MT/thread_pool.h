@@ -2,7 +2,7 @@
 
 #include <loki/Singleton.h>
 
-#include <queue>
+#include <deque>
 #include <functional>
 #include <mutex>
 #include <atomic>
@@ -11,7 +11,7 @@
 namespace MT{
 	class thread_pool_impl{
 	private:
-		std::queue<std::function<void()>> task_queue;
+		std::deque<std::function<void()>> task_queue;
 		std::mutex mutex;
 		std::condition_variable worker_cv;
 		bool terminate;
@@ -62,10 +62,18 @@ namespace MT{
 			return task_queue.size();
 		}
 
-		inline void add_task(std::function<void()> task){
+		inline void add_task(std::function<void()>&& task){
 			{
 				std::lock_guard<std::mutex> lock(mutex);
-				task_queue.push(task);
+				task_queue.push_back(std::move(task));
+			}
+			worker_cv.notify_one();
+		}
+
+		inline void add_task_front(std::function<void()>&& task){
+			{
+				std::lock_guard<std::mutex> lock(mutex);
+				task_queue.push_front(std::move(task));
 			}
 			worker_cv.notify_one();
 		}
@@ -99,7 +107,7 @@ namespace MT{
 
 				if(!task_queue.empty()){
 					task = std::move(task_queue.front());
-					task_queue.pop();
+					task_queue.pop_front();
 				} else {
 					return;
 				}
@@ -123,7 +131,7 @@ namespace MT{
 
 					if(!task_queue.empty()){
 						task = std::move(task_queue.front());
-						task_queue.pop();
+						task_queue.pop_front();
 
 					} else {
 						break;

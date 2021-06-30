@@ -41,17 +41,22 @@ namespace Control{
 				render_data.radius = state.radius;
 				render_data.thickness = state.thickness;
 
-				render_data.start_idx = planet_list.holes.size();
 
 				for(const std::weak_ptr<DTO::tree>& tree_ptr : trees){
-					if(auto tree = std::atomic_load(&tree_ptr.lock())){
+					if(auto tree = tree_ptr.lock()){
 						append_hole_and_ground_data(planet, tree->GROUND, state.radius, Constants::DTO::ATTACKERS_REQUIRED_TO_FILL_HOLE, planet_list, ground_list);
 					}
 				}
-				if(planet.entry && planet.entry->stage >= 0){
-					append_hole_and_ground_data(planet, planet.entry->ground, state.radius, planet.entry->stage, planet_list, ground_list);
+
+				std::shared_ptr<MT::read_write_lock<DTO::planet_entry>> entry_lock = std::atomic_load(&planet.entry);
+
+				if(entry_lock) {
+					MT::smart_ref<DTO::planet_entry> entry = entry_lock->read_lock();
+
+					if(entry->stage >= 0){
+						append_hole_and_ground_data(planet, entry->ground, state.radius, entry->stage, planet_list, ground_list);
+					}
 				}
-				render_data.end_idx = planet_list.holes.size();
 
 				planet_list.render_data[std::this_thread::get_id()].push_back(render_data);
 				planet_list.ids[std::this_thread::get_id()].push_back(planet.ID);
@@ -63,7 +68,7 @@ namespace Control{
 		private:
 
 			inline static void append_hole_and_ground_data(const DTO::planet& planet, const DTO::hole& hole, float radius, int stage, Rendering::List::planet& planet_list, Rendering::List::ground& ground_list){
-				Rendering::Struct::planet_hole hole_data = get_planet_hole_data(hole, radius);
+				Rendering::Struct::planet_hole hole_data = get_planet_hole_data(hole, radius, planet.ID);
 
 				Rendering::Struct::ground_render_data ground_data;
 

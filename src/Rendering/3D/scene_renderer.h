@@ -154,7 +154,7 @@ namespace Rendering{
 				glReadBuffer(GL_COLOR_ATTACHMENT0 + ID_TEXTURE);
 				glReadPixels(int(clicked.x), int(window_size.y - clicked.y), 1, 1, GL_RED, GL_FLOAT, &id);
 				fbo.unbind();
-
+				printf("clicked id = [%.2f]\n", id);
 				return int(id);
 			}
 

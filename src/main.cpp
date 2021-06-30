@@ -73,9 +73,7 @@ int main() {
 	}
 	glfwMakeContextCurrent(NULL);
 	
-	if(!MT::opengl_thread::Instance().init(window)){
-		
-	}
+	MT::opengl_thread::Instance().init(window);
 	Rendering::HUD::cursor_singleton::Instance().init(window);
 
 	MT::opengl_thread::Instance().add_command(0, []{
@@ -132,8 +130,11 @@ int main() {
 		//printf("queue sizes = [pool: %d] [opengl: %d]\n", MT::thread_pool::Instance().queue_size(), MT::opengl_thread::Instance().queue_size());
 	}
 
+	MT::thread_pool::Instance().shutdown();
 	MT::opengl_thread::Instance().shutdown();
-	glfwDestroyWindow(window),
+	glfwMakeContextCurrent(window);
+	game.shutdown();
+	glfwDestroyWindow(window);
 	glfwTerminate();
 }
 

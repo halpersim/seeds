@@ -23,22 +23,22 @@ namespace Control{
 			MT::read_write_lock<std::list<std::shared_ptr<GO::tree>>> tree;
 			std::list<std::shared_ptr<GO::planet>> planet;
 
-			MT::read_write_lock<std::list<GO::bullet>> bullets;
+			MT::read_write_lock<std::list<std::shared_ptr<GO::bullet>>> bullets;
 
-			void for_each_soldier_const(const std::function<void(const GO::soldier&)>& func) {
-				for(auto& ptr : *att.read_lock()){
-					func(*ptr);
+			void for_each_soldier_const(const std::function<void(std::shared_ptr<GO::soldier>)>& func) {
+				for(auto ptr : *att.read_lock()){
+					func(ptr);
 				}
 
-				for(auto& ptr : *def.read_lock()){
-					func(*ptr);
+				for(auto ptr : *def.read_lock()){
+					func(ptr);
 				}
 			}
 
-			GO::planet* get_planet_by_id(int id){
+			std::shared_ptr<GO::planet> get_planet_by_id(int id){
 				auto it = std::find_if(planet.begin(), planet.end(), [id](const std::shared_ptr<GO::planet>& planet) {return planet->dto.ID == id; });
 				if(it != planet.end()){
-					return it->get();
+					return *it;
 				}
 				return NULL;
 			}
